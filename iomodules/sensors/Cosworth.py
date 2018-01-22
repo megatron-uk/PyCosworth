@@ -22,6 +22,7 @@ import time
 import timeit 
 import sys
 import os
+import copy
 
 # Python serial library
 import serial
@@ -61,13 +62,13 @@ class CosworthSensors():
 			logger.warn("Unsupported sensor type: %s" % sensorId)
 			return None
 	
-	def sensor(self, sensorId):
+	def sensor(self, sensorId, force = False):
 		""" Retrieve the latest value for a sensor """
 		
 		# Is it a valid sensor 
 		if sensorId in self.sensors.keys():
 			# Has the refresh timer expired
-			raw_v = self.sensors[sensorId].get(self.sensors[sensorId])
+			raw_v = self.sensors[sensorId].get(force = force)
 			v = self.__translate__(sensorId, raw_v)
 			return {  'sensor' : self.sensors[sensorId].data(), 'value' : v }
 		else:
@@ -105,6 +106,7 @@ class CosworthSensors():
 		
 	def close(self):
 		""" Disconnect the sensor and clean up any resources """
+		logger.info("Closing sensor module")
 		self.__disconnectECU__()
 	
 	##########################################
@@ -139,6 +141,7 @@ class CosworthSensors():
 			'parity' : "N",
 			'stopbits' : 1,
 		}
+		self.comms_timeout = 0.1
 		self.serial = False
 		
 		# Sensor types
@@ -157,17 +160,22 @@ class CosworthSensors():
 		# Available sensors for this ecu type
 		self.sensors = {}
 		
+		#
+		self.connected = False
+		
 		if ecuType not in self.supportedECU:
 			logger.fatal("Attempted initalisation of an unsupported ECU type %s" % ecuType)
 			logger.fatal("Supported types are:")
-			for ecu in self.supported_ecu:
-				logger.fatal(ecu)	
-			return None
+			for ecu in self.supportedECU:
+				logger.fatal("'%s'" % ecu)	
+			logger.fatal("Either set the correct ECU type in the settings file, or pass it manually to this class")
+			self.connected = False
 		else:
 			if ecuType:
 				self.ecu = ecuType
 			if pressureType:
 				self.pressureType = pressureType
+			logger.info("Bringing up serial interface")
 			self.__connectECU__()
 			if self.serial is False:
 				return None
@@ -251,25 +259,30 @@ class CosworthSensors():
 				self.sensors[sensorId] = newSensor
 				
 	
+	def __is_connected__(self):
+		
+		return self.connected
+	
 	def __connectECU__(self):
 		""" Connect to the ECU """
-		if self.ecuType:
-			try:
-				self.serial = serial.Serial(
-					port = self.comms['device'],
-					baudrate=self.comms['baud'], 
-					bytesize=self.comms['databits'], 
-					parity=self.comms['parity'], 
-					stopbits=self.comms['stopbits'], 
-					xonxoff=0, 
-					rtscts=0, 
-					dsrdtr=0, 
-					timeout=self.comms_timeout
-				)
-			except Exception as e:
-				self.serial = False
-				logger.fatal("Unable to open requested serial port for Cosworth ECU module")
-				logger.fatal("%s" % e)
+		try:
+			self.serial = serial.Serial(
+				port = self.comms['device'],
+				baudrate=self.comms['baud'], 
+				bytesize=self.comms['bits'], 
+				parity=self.comms['parity'], 
+				stopbits=self.comms['stopbits'], 
+				xonxoff=0, 
+				rtscts=0, 
+				dsrdtr=0, 
+				timeout=self.comms_timeout
+			)
+			logger.info("Serial interface up")
+			self.connected = True
+		except Exception as e:
+			self.serial = False
+			logger.fatal("Unable to open requested serial port for Cosworth ECU module")
+			logger.fatal("%s" % e)
 	
 	def __disconnectECU__(self):
 		""" Disconnect from ECU """

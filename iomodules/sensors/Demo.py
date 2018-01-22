@@ -22,6 +22,7 @@ import time
 import timeit 
 import sys
 import os
+import copy
 
 # Python serial library
 import serial
@@ -61,13 +62,13 @@ class DemoSensors():
 			logger.warn("Unsupported sensor type: %s" % sensorId)
 			return None
 	
-	def sensor(self, sensorId):
+	def sensor(self, sensorId, force = False):
 		""" Retrieve the latest value for a sensor """
 		
 		# Is it a valid sensor 
 		if sensorId in self.sensors.keys():
 			# Has the refresh timer expired
-			v = self.sensors[sensorId].get(self.sensors[sensorId])
+			v = self.sensors[sensorId].get(force = force)
 			return {  'sensor' : self.sensors[sensorId].data(), 'value' : v }
 		else:
 			# Not a valid sensor
@@ -81,8 +82,7 @@ class DemoSensors():
 		if sensorId in self.sensors.keys():
 			history = []
 			raw_history = self.sensors[sensorId].history()
-			for raw_v in raw_history:
-				history.append(v)
+			history = copy.copy(raw_history)
 			return history
 		else:
 			# Not a valid sensor
@@ -149,14 +149,17 @@ class DemoSensors():
 		get_start_time = timeit.default_timer()
 		idx = self.all_sensors[sensorId]['demo_idx']
 		value = self.all_sensors[sensorId]['demo_data'][idx]
-		
+			
 		if self.all_sensors[sensorId]['demo_idx'] < (len (self.all_sensors[sensorId]['demo_data']) - 1):
 			self.all_sensors[sensorId]['demo_idx'] += 1
 		else:
 			self.all_sensors[sensorId]['demo_idx'] = 0
 		
 		return value, (timeit.default_timer() - get_start_time)
-		
+	
+	def __is_connected__(self):
+		return True
+	
 	def __setSensors__(self):
 		""" Set up the list of sensors we can use """
 		

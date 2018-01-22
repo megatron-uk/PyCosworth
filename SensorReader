@@ -1,0 +1,94 @@
+#!/usr/bin/env python3
+
+# SensorReader - Attempts to read all of the sensors configured in settings.SENSORS
+# Copyright (C) 2018  John Snowdon
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# The Cosworth driver
+from iomodules.sensors.Cosworth import CosworthSensors
+
+# The demo driver
+from iomodules.sensors.Demo import DemoSensors
+
+# The settings file
+from libs import settings
+
+import time
+import timeit
+
+# Test sensor
+test_sensor = "TPS"
+
+# Uncomment the sensor module that you want to test:
+#driver = CosworthSensors(ecuType = settings.COSWORTH_ECU_TYPE)
+driver = DemoSensors()
+
+if driver.__is_connected__():
+	# Get all of our available sensors
+	sensors = driver.available()
+	
+	print("##########################################")
+	print("")
+	print("Test 1. We are going to attempt to read every sensor in turn...")
+	time.sleep(1)
+	
+	for sensorId in sensors:
+		data = driver.sensor(sensorId, force = True)
+		perf = driver.performance(sensorId)
+		print("Sensor: [%6s] Value: [%10s] Sample Speed: [%4.3fms] Description: [%s]" % (sensorId, data['value'], perf['last'], data['sensor']['description']))
+		time.sleep(0.1)
+
+	print("Check the above values!")
+	time.sleep(1)
+	
+	###############################################################
+	
+	print("")
+	print("Test 2. Now testing how fast we can read all sensors")
+	time.sleep(1)
+	t_start = timeit.default_timer()
+	for sensorId in sensors:
+		d = driver.sensor(sensorId, force = True)	
+	t_end = timeit.default_timer()
+	print("All sensors read in %4.3fms" % ((t_end - t_start) * 1000))
+	time.sleep(1)
+	
+	###############################################################
+	
+	print("")
+	print("Test 3. Sampling one sensor [%s] as fast as possible" % test_sensor)
+	time.sleep(1)
+	i = 0
+	t_start = timeit.default_timer()
+	while i <= settings.SENSOR_MAX_HISTORY:
+		d = driver.sensor(test_sensor, force = True)
+		i += 1
+	t_end = timeit.default_timer()
+	perf = driver.performance(sensorId)
+	ms_taken = (t_end - t_start) * 1000
+	sample_rate = (1000 / ms_taken) * settings.SENSOR_MAX_HISTORY
+	print("%s samples read in %4.3fms = %.2f samples/second" % (settings.SENSOR_MAX_HISTORY, ms_taken, sample_rate))
+	
+	print("Maximum sample time: %4.3fms" % perf['max'] )
+	print("Minimum sample time: %4.3fms" % perf['min'] )
+	print("Average sample time: %4.3fms" % perf['average'] )
+	
+	print("")
+	print("Sample data for [%s] looked like this: (press Control+C now to skip)" % test_sensor)
+	history = driver.history(test_sensor)
+	driver.close()
+	time.sleep(3)
+	for v in history:
+		print("%s" % v)

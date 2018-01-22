@@ -51,15 +51,19 @@ def SensorIO(transmitQueue, receiveQueue, controlQueue):
 	# Load any additional sensor types here
 	if settings.USE_COSWORTH:
 		cosworth = CosworthSensors(ecuType = settings.COSWORTH_ECU_TYPE, pressureType = "mbar")
+		cosworth_sensors = cosworth.available()
 	else:
 		cosworth = None
+		cosworth_sensors = []
 		
 	if settings.USE_SENSOR_DEMO:
 		SENSOR_DEMO = True
 		demo = DemoSensors()
+		demo_sensors = demo.available()
 	else:
 		SENSOR_DEMO = False
 		demo = None
+		demo_sensors = []
 	
 	####################################################
 	#
@@ -86,8 +90,10 @@ def SensorIO(transmitQueue, receiveQueue, controlQueue):
 				if (cdata.button) and (cdata.duration == settings.BUTTON_SHORT):
 					if SENSOR_DEMO:
 						demo = False
+						demo_sensors = []
 					else:
-						demo = DemoSensors()			
+						demo = DemoSensors()
+						demo_sensors = demo.available()
 		
 		####################################################
 		#
@@ -100,22 +106,18 @@ def SensorIO(transmitQueue, receiveQueue, controlQueue):
 			sensorId = sensor['sensorId']
 			valueData = False
 			
-			if cosworth:
-				if sensorId in cosworth.available():
-					valueData = cosworth.sensor(sensorId)
-					sampleData = cosworth.performance(sensorId)
-			else:
-				valueData = False
+			if sensorId in cosworth_sensors:
+				valueData = cosworth.sensor(sensorId)
+				sampleData = cosworth.performance(sensorId)
 				
-			if valueData is False and demo:
-				if sensorId in demo.available():
-					valueData = demo.sensor(sensorId)
-					sampleData = demo.performance(sensorId)
-				else:
-					logger.warn("No sensor modules available that match that sensor %s" % sensorId)
+			if (valueData is False) and (sensorId in demo_sensors):
+				valueData = demo.sensor(sensorId)
+				sampleData = demo.performance(sensorId)
 			
 			if valueData:
 				receiveQueue.put((settings.TYPE_DATA, sensor['sensorId'], valueData['value'], counter, sampleData['last']))
+			else:
+				logger.warn("No sensor modules available that match that sensor %s" % sensorId)
 		
 		# Sleep at the end of each round so that we don't
 		# consume too many processor cycles. May need to experiment
