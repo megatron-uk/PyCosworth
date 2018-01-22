@@ -16,11 +16,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# The Cosworth driver
-from iomodules.sensors.Cosworth import CosworthSensors
 
-# The demo driver
+from iomodules.sensors.Cosworth import CosworthSensors
 from iomodules.sensors.Demo import DemoSensors
+from iomodules.sensors.GPIOGearIndicator import GearIndicatorSensors
 
 # The settings file
 from libs import settings
@@ -28,12 +27,19 @@ from libs import settings
 import time
 import timeit
 
-# Test sensor
-test_sensor = "TPS"
-
 # Uncomment the sensor module that you want to test:
+
+# Cossie ECU
 #driver = CosworthSensors(ecuType = settings.COSWORTH_ECU_TYPE)
-driver = DemoSensors()
+#test_sensor = "TPS"
+
+# Gear indicator
+driver = GearIndicatorSensors()
+test_sensor = "GEAR"
+
+# Demo sensors
+#driver = DemoSensors()
+#test_sensor = "RPM"
 
 if driver.__is_connected__():
 	# Get all of our available sensors
@@ -86,9 +92,11 @@ if driver.__is_connected__():
 	print("Average sample time: %4.3fms" % perf['average'] )
 	
 	print("")
-	print("Sample data for [%s] looked like this: (press Control+C now to skip)" % test_sensor)
-	history = driver.history(test_sensor)
-	driver.close()
+	print("Test 4. Interactive display - Activate/move or update the [%s] sensor (Control+C to exit)" % test_sensor)
 	time.sleep(3)
-	for v in history:
-		print("%s" % v)
+	print("Running...")
+	while True: 
+		data = driver.sensor(test_sensor)
+		perf = driver.performance(test_sensor)
+		print("Sensor: [%6s] Value: [%10s] Sample Speed: [%4.3fms]" % (test_sensor, data['value'], perf['last']))
+		time.sleep(0.25)

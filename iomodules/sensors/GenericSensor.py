@@ -34,7 +34,7 @@ class GenericSensor():
 	def __init__(self, sensorData = None, getter = None):
 		""" Store all sensor-specific data """
 		self.sensorData = {}
-		self.refresh = 1
+		self.refreshTime = 1
 		self.timer = None
 		self.getter = None
 		
@@ -51,7 +51,7 @@ class GenericSensor():
 	def refreshTimer(self, interval = 1):
 		""" Set the refresh interval of this sensor """
 		
-		self.refresh = interval
+		self.refreshTime = interval
 	
 	def resetTimer(self):
 		""" Set an initial timer """
@@ -61,7 +61,7 @@ class GenericSensor():
 	def refresh(self):
 		""" Should the sensor be refreshed? """
 		
-		if (timeit.default_timer() - self.timer) >= self.refresh:
+		if (timeit.default_timer() - self.timer) >= self.refreshTime:
 			return True
 		else:
 			return False
