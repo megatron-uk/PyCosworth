@@ -1,0 +1,53 @@
+|--Sensor
+|  |-- RPM
+|  |   |-- Select as main (256x64)
+|  |   |-- Select as left (128x64)
+|  |   |-- Select as right (128x64)
+|  |   
+|  |-- MAP
+|  |-- TPM
+|  |-- etc.
+|  |-- ALL
+|      |-- Select as main (text values only)
+|
+|
+|--Config
+|  |-- Main display
+|  |   |-- Refresh rate
+|  |   |-- Visualisation (main-optional)
+|  |   |-- Visualisation (left-optional)
+|  |   |-- Visualisation (right-optional)
+|  |
+|  |-- Sub display
+|  |   |-- NO SUB DISPLAY
+|  |   |-- Select display (optional)
+|  |   |-- Next sensor (optional)
+|  |   |-- Next visualisation (optional)
+|  |
+|  |-- LCD display
+|      |-- NO LCD DISPLAY
+|      |-- Select LCD line (optional)
+|      |-- Next sensor (optional)
+|      |-- Next display mode (optional)
+|
+|
+|--Data
+|  |-- Logging Status
+|  |   |-- Show logging state, number of datapoints logged, etc
+|  |   |-- Load log
+|  |   |-- Step through last log
+|  |   
+|  |-- Start Log
+|  |-- Stop Log
+|  |-- Peak values
+|  |
+|  |-- Serial Config
+|      |-- Start/Stop Demo
+|      |-- Reset comms
+|      |-- Check comms|
+|
+|
+|--Diag
+   |-- All sensors 
+   |-- System info
+   |-- Restart
