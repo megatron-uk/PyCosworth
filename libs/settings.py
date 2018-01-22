@@ -23,10 +23,8 @@
 #
 ##############################################################
 
-# The physical serial port device that the datastream cable is plugged into
-DATA_SERIAL_PORT = "/dev/TTYS0"
 
-# The amount of time, in seconds, that the SerialIO process sleeps between each loop
+# The amount of time, in seconds, that the SensorIO process sleeps between each loop
 SERIAL_SLEEP_TIME = 0.001
 
 # Total amount of time the main process sleeps until trying to load data from the
@@ -36,7 +34,7 @@ MAIN_SLEEP_TIME = 0.02
 # Maximum number of errors that can be retrieved and buffered
 MAX_ERRORS = 255
 
-# Standard types of message we may get back from the SerialIO process
+# Standard types of message we may get back from the SensorIO process
 TYPE_ERROR = "ERR_MSG"
 TYPE_DATA = "DATA_MSG"
 
@@ -53,6 +51,8 @@ USE_BUTTONS = True		# Run a process which monitors Raspberry Pi GPIO buttons for
 USE_GRAPHICS = True		# Output to OLED modules or on-screen graphics
 USE_OLED_GRAPHICS = True # Try to output to an OLED module
 USE_SDL_GRAPHICS = True  # Try to output to on-screen windows
+USE_COSWORTH = True # Try to connect to a Cosworth L8/P8 ECU
+USE_SENSOR_DEMO = True # Enable demo data mode from the SensorIO module instead of real data
 
 # Should INFO category messages be shown
 INFO = True
@@ -64,10 +64,15 @@ DEBUG = False
 #
 ##############################################################
 
-# A list of the sensors we check on each normal loop in the serialio process.
+# A list of the sensors we check on each normal loop in the SensorIO process.
 #
 # This also controls the refresh rate of the sensors. The Magneti Marelli hardware can refresh some data
 # more frequently than others, but we can control, to some degree, how fast we refresh the data.
+#
+# We also have the possibility of adding other sensors to a Pi, or similar, that cannot be provided by an ECU
+# for example, an analogue temperature sensor for outside air temp, a DIY gearstick position sensor, brake pedal angle, etc.
+#
+# Any sensor available in a back-end sensor module, needs to be listed below.
 #
 # 'sensorId' 		value is the keyword by which that sensor value is accessed in any display routine. DO NOT CHANGE!
 # 'sensorUnit' 		parameter is the suffic that is printed after each sensor item.
@@ -76,113 +81,38 @@ DEBUG = False
 # 'defaultValue'	parameter is the value that should be sent in the event of no ECU signal being present (i.e for testing of display devices)
 # 'maxValue'		used to calculate maximum height of any graphs or displays for this sensor
 # 'warnValue'		the value, which, if exceeded, the system will try to warn the driver of that sensor
+
+# This needs to be simplified to remove min/max, unit, refresh etc. as it is all now defined per sensor module backend (see iomodules/sensors/Cosworth.py, demo.py etc.)
 SENSORS = [
-	{ 
-		'sensorId' 		: 'RPM',
-		'sensorUnit'	: 'rpm',
-		'byteCommand'	: '0x1',
-		'refresh'		: 0.1,
-		'defaultValue'	: 7250,
-		'minValue'		: 0,
-		'maxValue'		: 7500,
-		'warnValue'		: 6000,
-	},
-	{
-		'sensorId' 		: 'ECT',
-		'sensorUnit'	: 'c',
-		'byteCommand'	: '0xb',
-		'refresh'		: 0.5,
-		'defaultValue'	: 90,
-		'minValue'		: 0,
-		'maxValue'		: 150,
-		'warnValue'		: 110,
-	},
-	{
-		'sensorId' 		: 'IAT',
-		'sensorUnit'	: 'c',
-		'byteCommand'	: '0xc',
-		'refresh'		: 0.5,
-		'defaultValue'	: 32,
-		'minValue'		: 0,
-		'maxValue'		: 60,
-		'warnValue'		: 50,
-	},
-	{
-		'sensorId' 		: 'MAP',
-		'sensorUnit'	: 'mbar',
-		'byteCommand'	: '0xd',
-		'refresh'		: 0.2,
-		'defaultValue'	: 2850,
-		'minValue'		: -350,
-		'maxValue'		: 3000,
-		'warnValue'		: 2500,
-	},
-	{
-		'sensorId' 		: 'TPS',
-		'sensorUnit'	: 'deg.',
-		'byteCommand'	: '0xe',
-		'refresh'		: 0.1,
-		'defaultValue'	: 66,
-		'minValue'		: -0.3,
-		'maxValue'		: 90,
-		'warnValue'		: 100,
-	},
-	{
-		'sensorId' 		: 'CO',
-		'sensorUnit'	: '%',
-		'byteCommand'	: '0xf',
-		'refresh'		: 0.5,
-		'defaultValue'	: 5,
-		'minValue'		: 0,
-		'maxValue'		: 50,
-		'warnValue'		: 100,
-	},
-	{
-		'sensorId' 		: 'BAT',
-		'sensorUnit'	: 'v',
-		'byteCommand'	: '0x10',
-		'refresh'		: 0.5,
-		'defaultValue'	: 12,
-		'minValue'		: 0,
-		'maxValue'		: 14,
-		'warnValue'		: 15,
-	},
-	{
-		'sensorId' 		: 'INJ',
-		'sensorUnit'	: 'ms',
-		'byteCommand'	: '0x11',
-		'refresh'		: 0.1,
-		'defaultValue'	: 2.2,
-		'minValue'		: 0,
-		'maxValue'		: 5,
-		'warnValue'		: 20,
-	},
-	{
-		'sensorId' 		: 'BCV',
-		'sensorUnit'	: '%',
-		'byteCommand'	: '0x12',
-		'refresh'		: 0.2,
-		'defaultValue'	: 100,
-		'minValue'		: 0,
-		'maxValue'		: 100,
-		'warnValue'		: 110,
-	},
-	{
-		'sensorId' 		: 'IGN',
-		'sensorUnit'	: 'deg',
-		'byteCommand'	: '0x13',
-		'refresh'		: 0.2,
-		'defaultValue'	: 16.5,
-		'minValue'		: 0,
-		'maxValue'		: 40,
-		'warnValue'		: 36,
-	},
+	{ 	'sensorId'	: 'RPM',	'sensorUnit'	: 'rpm',	'refresh'	: 0.1,	'defaultValue'	: 7250,	'minValue' : 0,	'maxValue'	: 7500, 	'warnValue' : 6000, 	},
+	{	'sensorId' 	: 'ECT',	'sensorUnit'	: 'c',		'refresh'	: 0.5,	'defaultValue'	: 90,		'minValue' : 0,	'maxValue'	: 150,	'warnValue' : 110, 	},
+	{	'sensorId'	: 'IAT',	'sensorUnit'	: 'c',		'refresh'	: 0.5,	'defaultValue'	: 32,		'minValue' : 0,	'maxValue'	: 60,		'warnValue' : 50,		},
+	{	'sensorId' 	: 'MAP',	'sensorUnit'	: 'mbar',	'refresh'	: 0.2,	'defaultValue'	: 2850,	'minValue' : -350,	'maxValue'	: 3000,	'warnValue' : 2500,	},
+	{	'sensorId' 	: 'TPS',	'sensorUnit'	: 'deg.',	'refresh'	: 0.1,	'defaultValue'	: 66,		'minValue' : -0.3,	'maxValue'	: 90,		'warnValue' : 100,		},
+	#{	'sensorId' 	: 'CO',	'sensorUnit'	: '%',	'refresh'	: 0.5,	'defaultValue'	: 5,		'minValue' : 0,	'maxValue'	: 50,		'warnValue' : 100,		},
+	{	'sensorId' 	: 'BAT',	'sensorUnit'	: 'v',		'refresh'	: 0.5,	'defaultValue'	: 12,		'minValue' : 0,	'maxValue'	: 14,		'warnValue' : 15,		},
+	{	'sensorId' 	: 'INJDUR','sensorUnit'	: 'ms',	'refresh'	: 0.1,	'defaultValue'	: 2.2,	'minValue' : 0,	'maxValue'	: 5,		'warnValue' : 20,		},
+	{	'sensorId' 	: 'AMAL',	'sensorUnit'	: '%',	'refresh'	: 0.2,	'defaultValue'	: 100,	'minValue' : 0,	'maxValue'	: 100,	'warnValue' : 110,		},
+	{	'sensorId' 	: 'IGNADV','sensorUnit'	: 'deg',	'refresh'	: 0.2,	'defaultValue'	: 16.5,	'minValue' : 0,	'maxValue'	: 40,		'warnValue' : 36,		},
 ]
 # A list of all sensor id's
 SENSOR_IDS = []
 for s in SENSORS:
 	SENSOR_IDS.append(s['sensorId'])
-				
+	
+# How many previous sensor samples, for each sensor, to keep in memory
+SENSOR_MAX_HISTORY = 256
+	
+##########################################################
+#
+# Cosworth ECU settings
+#
+##########################################################
+COSWORTH_ECU_TYPE = "L8 Pectel" # see iomodules/sensors/CosworthSensors.py for available types
+
+# Which USB interface your USB to serial device is on
+COSWORTH_ECU_USB = "/dev/ttyUSB0" 
+	
 ##########################################################
 #
 # Matrix Orbital / Adafruit USB type LCD character display
@@ -302,10 +232,6 @@ MATRIX_CONFIG = {
 # Demo data module config
 #
 #######################################################
-
-# Enable demo data mode from the SerialIO module instead of real data
-# You probably want to disable this when connected to a real ECU!
-SERIALIO_DEMO = True
 
 # The number of steps between the minValue and the maxValue of a
 # sensor to simulate.

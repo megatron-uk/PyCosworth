@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-# PyCosworth - a serial datastream logger and display interface for
-# Magneti Marelli ECU modules as used on the Ford Sierra/Escort Cosworth.
+# PyCosworth - a datastream logger and digital dashboard display interface for
+# Magneti Marelli ECU modules as used on the Ford Sierra/Escort Cosworth as
+# well as OBDII engine interface systems.
 # Copyright (C) 2018  John Snowdon
 # 
 # This program is free software: you can redistribute it and/or modify
@@ -30,7 +31,7 @@ from libs import settings
 from libs.EcuData import EcuData
 
 # Any worker methods
-from iomodules.SerialIO import SerialIO
+from iomodules.SensorIO import SensorIO
 from iomodules.ConsoleIO import ConsoleIO
 from iomodules.MatrixIO import MatrixIO
 from iomodules.GPIOButtonIO import GPIOButtonIO
@@ -42,9 +43,9 @@ if getattr(sys, 'frozen', False):
 	__file__ = os.path.dirname(sys.executable)
 logger = newlog(__file__)
 
-def serialWorker(transmitQueue, receiveQueue, controlQueue):
-	""" Runs the serial IO process to send and receive data from the ECU """
-	SerialIO(transmitQueue, receiveQueue, controlQueue)
+def sensorWorker(transmitQueue, receiveQueue, controlQueue):
+	""" Runs the sensor IO process to send and receive data from the ECU and any other sensors """
+	SensorIO(transmitQueue, receiveQueue, controlQueue)
 	
 def consoleWorker(ecudata, controlQueue):
 	""" Print sensor data to the terminal screen """
@@ -76,9 +77,9 @@ def gpioButtonWorker(actionQueue, stdin):
 
 if __name__ == '__main__':
 	
-	# Send and receive queues
-	serialTransmitQueue = multiprocessing.Queue()
-	serialReceiveQueue = multiprocessing.Queue()
+	# Send and receive queues to pass data to/from the sensorIO worker
+	sensorTransmitQueue = multiprocessing.Queue()
+	sensorReceiveQueue = multiprocessing.Queue()
 	
 	# A new ecu data structure
 	dataManager = multiprocessing.Manager()
@@ -105,12 +106,12 @@ if __name__ == '__main__':
 	# A list of all control queues
 	messageQueues = []
 
-	# Start the serial IO process
-	serialControlQueue = multiprocessing.Queue()
-	serial_p = multiprocessing.Process(target=serialWorker, args=(serialTransmitQueue, serialReceiveQueue, serialControlQueue))
-	serial_p.start()
-	workers.append(serial_p)
-	messageQueues.append(serialControlQueue)
+	# Start the Sensor IO process
+	sensorControlQueue = multiprocessing.Queue()
+	sensor_p = multiprocessing.Process(target=sensorWorker, args=(sensorTransmitQueue, sensorReceiveQueue, sensorControlQueue))
+	sensor_p.start()
+	workers.append(sensor_p)
+	messageQueues.append(sensorControlQueue)
 	
 	###########################################################
 	#
@@ -177,9 +178,9 @@ if __name__ == '__main__':
 			i = 0
 		# Get latest data  
 		# If the receive queue has any data back...
-		if serialReceiveQueue.empty() == False:
+		if sensorReceiveQueue.empty() == False:
 			logger.debug("Got some ECU data")
-			d = serialReceiveQueue.get()
+			d = sensorReceiveQueue.get()
 			# d0 = message_type
 			# d1 = sensorId
 			# d2 = sensor value
@@ -214,10 +215,10 @@ if __name__ == '__main__':
 		time.sleep(settings.MAIN_SLEEP_TIME)
     
 	# Wait for the workers to finish
-	serialTransmitQueue.close()
-	serialTransmitQueue.join_thread()
-	serialReceiveQueue.close()
-	serialReceiveQueue.join_thread()
+	sensorTransmitQueue.close()
+	sensorTransmitQueue.join_thread()
+	sensorReceiveQueue.close()
+	sensorReceiveQueue.join_thread()
 	
 	for q in messageQueues:
 		q.close()

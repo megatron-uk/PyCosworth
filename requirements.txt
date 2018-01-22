@@ -8,6 +8,9 @@
 #
 ######################################################
 
+# Setuptools is a minimum
+setuptools
+
 # Needed for any LCD/serial/terminal interface displays as well as ECU interface cable
 pyserial
 

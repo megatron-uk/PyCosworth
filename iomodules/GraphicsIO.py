@@ -37,12 +37,10 @@ from PIL import ImageOps
 from PIL import ImageDraw
 from PIL import ImageFont
 
-# SDL and OLED initialisation utils
-from iomodules.SDLInit import sdlInit
-from iomodules.OLEDInit import oledInit
-
-# Helper methods
-from iomodules.GraphicsUtils import *
+# SDL and OLED initialisation utils and helpers
+from iomodules.graphics.SDLInit import sdlInit
+from iomodules.graphics.OLEDInit import oledInit
+from iomodules.graphics.GraphicsUtils import *
 
 # Settings file
 from libs import settings
