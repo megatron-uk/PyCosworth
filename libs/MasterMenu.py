@@ -39,6 +39,7 @@ from libs import settings
 
 # Menu settings
 from libs import menusettings
+from libs.MenuFunctions import *
 
 # Control data
 from libs.ControlData import ControlData
@@ -156,19 +157,19 @@ class MasterMenu():
 								'itemName'	: 'Fullscreen',
 								'itemType'	: 'item',
 								'itemText'	: 'Select as fullscreen sensor',
-								'itemSelect': 'sensorSelectFull',
+								'itemSelect': sensorSelectFull,
 							},
 							{
 								'itemName'	: 'Left',
 								'itemType'	: 'item',
 								'itemText'	: 'Select as left sensor',
-								'itemSelect': 'sensorSelectLeft',
+								'itemSelect': sensorSelectLeft,
 							},
 							{
 								'itemName'	: 'Right',
 								'itemType'	: 'item',
 								'itemText'	: 'Select as right sensor',
-								'itemSelect': 'sensorSelectRight',
+								'itemSelect': sensorSelectRight,
 							},
 						]
 					}
@@ -179,7 +180,7 @@ class MasterMenu():
 				else:
 					logger.warn("Unable to find sensor data definition for %s" % sensorId)
 		
-		# Refresh the submenu bitmap, if we added any new sensors
+		# Refresh the bitmaps, if we added any new sensors
 		if refreshBitmaps:
 			# Remove submenu bitmap
 			key = "submenuBitmap|menuIndex:" + str(self.menuIndex) + ",subMenuIndex:" + str(self.subMenuIndex) + ",finalMenuIndex:" +str(self.finalMenuIndex)
@@ -817,6 +818,10 @@ class MasterMenu():
 			if self.selectedItem is not None:
 				logger.info("Run an item")
 				# run item
+				
+				#selectedItemData = something
+				#selectedItemData.itemSelect(windowSettings, controlQueue, ecuData)
+				
 				# disable menu
 				logger.info("Running item %s" % str(self.selectedItem))
 				self.menuShow = False

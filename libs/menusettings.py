@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+
+from libs.MenuFunctions import *
+
 MASTER_MENU = [
 	{
 		'itemName'	: 'sensor',
@@ -20,19 +24,19 @@ MASTER_MENU = [
 				'itemName'	: 'Status',
 				'itemType'	: 'item',
 				'itemText'	: 'Options relating to datalogging',
-				'itemSelect': 'showLoggingState',
+				'itemSelect': showLoggingState,
 			},
 			{
 				'itemName'	: 'Start Log',
 				'itemType'	: 'item',
 				'itemText'	: 'Start datalogging',
-				'itemSelect': 'startLogging',
+				'itemSelect': startLogging,
 			},
 			{
 				'itemName'	: 'Stop Log',
 				'itemType'	: 'item',
 				'itemText'	: 'Stop datalogging',
-				'itemSelect': 'stopLogging',
+				'itemSelect': stopLogging,
 			},
 			{
 				'itemName'	: 'Comms Config',
@@ -43,19 +47,19 @@ MASTER_MENU = [
 						'itemName'	: 'Start/Stop demo',
 						'itemType'	: 'item',
 						'itemText'	: 'Toggle demo mode',
-						'itemSelect': 'toggleDemo',
+						'itemSelect': toggleDemo,
 					},
 					{
 						'itemName'	: 'Reset comms',
 						'itemType'	: 'item',
 						'itemText'	: 'Restart ECU comms',
-						'itemSelect': 'restartSerialIO',
+						'itemSelect': restartSensorIO,
 					},
 					{
 						'itemName'	: 'Comms status',
 						'itemType'	: 'item',
 						'itemText'	: 'Show ECU comms status',
-						'itemSelect': 'showECUComms',
+						'itemSelect': showSensorComms,
 					},
 				]
 			},
@@ -71,25 +75,25 @@ MASTER_MENU = [
 				'itemName'	: 'All Sensors',
 				'itemType'	: 'item',
 				'itemText'	: 'Show status of all sensors on-screen',
-				'itemSelect': 'showSensorText',
+				'itemSelect': showSensorText,
 			},
 			{
 				'itemName'	: 'System Info',
 				'itemType'	: 'item',
 				'itemText'	: 'Show system status and performance informace',
-				'itemSelect': 'showSysInfo',
+				'itemSelect': showSysInfo,
 			},
 			{
 				'itemName'	: 'Restart',
 				'itemType'	: 'item',
 				'itemText'	: 'Restart the software',
-				'itemSelect': 'showRestartConfirmation',
+				'itemSelect': showRestartConfirmation,
 			},
 			{
 				'itemName'	: 'Shutdown',
 				'itemType'	: 'item',
 				'itemText'	: 'Exit the software and shut down',
-				'itemSelect': 'showShutdownConfirmation',
+				'itemSelect': showShutdownConfirmation,
 			},
 		]
 	}
