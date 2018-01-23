@@ -293,7 +293,7 @@ def GraphicsIO(ecudata, controlQueue):
 		logger.warn("Graphics frame limiter disabled - frames will be rendered as fast as possible")
 		logger.warn("This may result in uneven performance!")
 
-	master = MasterMenu(windowSettings = settings.GFX_MASTER_WINDOW, use_sdl = USE_SDL_GRAPHICS, use_oled = USE_OLED_GRAPHICS_MASTER)
+	master = MasterMenu(windowSettings = settings.GFX_MASTER_WINDOW, ecudata = ecudata, use_sdl = USE_SDL_GRAPHICS, use_oled = USE_OLED_GRAPHICS_MASTER)
 
 	logger.info("Entering main graphics loop now...")
 	if settings.INFO:
@@ -398,7 +398,7 @@ def GraphicsIO(ecudata, controlQueue):
 		# Update each OLED or SDL gfx sub-window in turn
 		#
 		##############################################################
-		
+				
 		for w in gfx_window_keys:
 			
 			windowSettings = settings.GFX_WINDOWS[w]
@@ -416,7 +416,9 @@ def GraphicsIO(ecudata, controlQueue):
 				# Add latest sensor value to list of previous values
 				# As the list is a fixed size, this also pushes the oldest
 				# value off the back of the list.
-				local_sensors[currentSensorId]['previousValues'].append(int(ecudata.data[currentSensorId]))
+				local_sensors[currentSensorId]['previousValues'].append(ecudata.getData(currentSensorId))
+		
+				#print(ecudata.getData(currentSensorId))
 		
 				# Waveform gauge
 				if currentMode == settings.GFX_MODE_WAVEFORM:

@@ -50,8 +50,11 @@ logger = newlog(__name__)
 class MasterMenu():
 	""" A class which encapsulates the main master window """
 	
-	def __init__(self, windowSettings = None, use_sdl = False, use_oled = False):
+	def __init__(self, windowSettings = None, ecudata = None, use_sdl = False, use_oled = False):
 		""" Instaniate the class """
+		
+		# Ecu/sensor data class
+		self.ecudata = ecudata
 		
 		# Flags to indicate OLED and/or SDL are in use
 		self.use_sdl = use_sdl
@@ -119,11 +122,76 @@ class MasterMenu():
 		self.slideIn = False
 		self.slideOut = False
 		
+		# Add all current sensors to the Sensor menu
+		self.sensor_keys = []
+		self.addSensors()
+		
 		######################################################################################
 		#
 		# Class methods
 		#
 		######################################################################################
+		
+	def addSensors(self):
+		""" Construct the sensor sub-menu with the current active sensors """
+		
+		refreshBitmaps = False
+		
+		for sensor_menu in self.menu[0]['items']:
+			self.sensor_keys.append(sensor_menu['itemName'])
+				
+		sensor_ids = settings.SENSOR_IDS
+		sensor_ids.sort()
+		for sensorId in sensor_ids:
+			if sensorId not in self.sensor_keys:
+				sensorData = self.ecudata.getSensorData(sensorId)
+				if sensorData:
+					logger.info("Adding new sensor to menu %s" % sensorId)
+					sensor_submenu = {
+						'itemName'	: sensorId,
+						'itemType'	: 'menu',
+						'itemText'	: sensorData['description'],
+						'items'		: [
+							{
+								'itemName'	: 'Fullscreen',
+								'itemType'	: 'item',
+								'itemText'	: 'Select as fullscreen sensor',
+								'itemSelect': 'sensorSelectFull',
+							},
+							{
+								'itemName'	: 'Left',
+								'itemType'	: 'item',
+								'itemText'	: 'Select as left sensor',
+								'itemSelect': 'sensorSelectLeft',
+							},
+							{
+								'itemName'	: 'Right',
+								'itemType'	: 'item',
+								'itemText'	: 'Select as right sensor',
+								'itemSelect': 'sensorSelectRight',
+							},
+						]
+					}
+					
+					# The sensor menu is always element 0 of the main menu
+					self.menu[0]['items'].append(sensor_submenu)
+					refreshBitmaps = True
+				else:
+					logger.warn("Unable to find sensor data definition for %s" % sensorId)
+		
+		# Refresh the submenu bitmap, if we added any new sensors
+		if refreshBitmaps:
+			# Remove submenu bitmap
+			key = "submenuBitmap|menuIndex:" + str(self.menuIndex) + ",subMenuIndex:" + str(self.subMenuIndex) + ",finalMenuIndex:" +str(self.finalMenuIndex)
+			if key in self.bitmapCache.keys():
+				del self.bitmapCache[key]
+				logger.info("Refreshed sensor submenu bitmap")
+				
+			# Remove full screen bitmap
+			key = "menu|menuIndex:" + str(self.menuIndex) + ",subMenuIndex:" + str(self.subMenuIndex) + ",finalMenuIndex:" + str(self.finalMenuIndex)
+			if key in self.frameCache.keys():
+				del self.frameCache[key]
+				logger.info("Refreshed fullscreen frame bitmap")
 		
 	def preloadFonts(self):
 		
@@ -146,6 +214,8 @@ class MasterMenu():
 	def processControlData(self, controlData):
 		""" Respond to button presses and other control data. """
 		
+		self.addSensors()
+		
 		if self.finalMenuIndex is not None:
 			# 3rd level menus
 		
@@ -166,13 +236,13 @@ class MasterMenu():
 			if controlData.button == settings.BUTTON_SELECT:
 				if self.finalMenuIndex > -1:
 					# Is this a menu or item?
-					logger.info(self.menu[self.menuIndex]['items'][self.subMenuIndex]['items'][self.finalMenuIndex])
+					#logger.info(self.menu[self.menuIndex]['items'][self.subMenuIndex]['items'][self.finalMenuIndex])
 					subitems = copy.copy(self.menu[self.menuIndex]['items'])
 					subitems.reverse()
 					finalitems = copy.copy(subitems[self.subMenuIndex]['items'])
 					finalitems.reverse()
-					logger.info(finalitems[self.finalMenuIndex])
 					if finalitems[self.finalMenuIndex]['itemType'] == 'item':
+						logger.info("Selected a final menu item to launch: %s/%s/%s %s" % (self.menuIndex, self.subMenuIndex, self.finalMenuIndex, finalitems[self.finalMenuIndex]))
 						self.selectedItem = (self.menuIndex, self.subMenuIndex, self.finalMenuIndex)
 					# if item, then mark it as an item selected
 					# otherwise open final menu

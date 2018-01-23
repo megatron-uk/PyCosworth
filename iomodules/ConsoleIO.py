@@ -33,29 +33,24 @@ def ConsoleIO(ecudata, controlQueue):
 	Seriously, all we are doing here is printing out the 
 	sensor values :) """
 	
+	sleep_time = 5
+	
 	while True:
 		logger.debug("Waking")
 		
 		print("*========================================*")
-		print("| PyCosworth Digital Dashboard :)        |")
+		print("| PyCosworth Digital Dashboard :every %ss|" % sleep_time)
 		print("|----------------------------------------|")
-		print("| RPM: %4srpm |  Boost: %4smbar        |" % (ecudata.data['RPM'], ecudata.data['MAP']))
-		print("| ECT: %4s°c  |  TPS:    %3s%%           |" % (ecudata.data['ECT'], ecudata.data['TPS']))
-		print("| ACT: %4s°c  |  CO:     %3s            |" % (ecudata.data['ACT'], ecudata.data['CO']))
-		print("| 12v: %4sv   |                         |" % (ecudata.data['BAT']))
-		print("*----------------------------------------*")
-		
-		errors = ecudata.get_errors()
-		print("| Errors: %s errors recorded              |" % len(errors))
-		if len(errors) > 0:
-			for e in errors:
-				print("| Error: %10s             |" % e)
+		for sensorId in settings.SENSOR_IDS:
+			sensorData = ecudata.getSensorData(sensorId = sensorId)
+			sampleData = ecudata.getData(sensorId = sensorId, allData = True)
+			
+			if (sampleData is not None) and (sensorData is not None):
+				print("| %12s: %5.1f %s	[%.4fms]" % (sensorData['classId'], sampleData[0], sensorData['sensorUnit'], sampleData[1]))
 		
 		print("*----------------------------------------*")
-		print("| Sample Count:   %6s                 |" % (ecudata.get_counter()))
-		print("| Last Sample : %4fms               |" % (ecudata.get_timer()))
+		print("| Sample Count:   %6s                 |" % (ecudata.getCounter()))
 		print("*========================================*")
-
-		time.sleep(2)
-		#print("\033[H\033[J")
+		
+		time.sleep(sleep_time)
 		

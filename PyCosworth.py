@@ -85,20 +85,20 @@ if __name__ == '__main__':
 	dataManager = multiprocessing.Manager()
 	ecuMatrixLCDDict = dataManager.dict(settings.MATRIX_CONFIG)
 	ecuDataDict = dataManager.dict()
-	ecuPrevDataDict = dataManager.dict()
+	ecuSensorDict = dataManager.dict()
 	ecuCounter = multiprocessing.Value('d', 0)
 	ecuSampleTime = multiprocessing.Value('d', 0.0)
 	ecuErrors = multiprocessing.Array('i', range(settings.MAX_ERRORS))
 	
 	# Create a new ecudata class using the shared data structures from above
 	ecuData = EcuData(ecuDataDict = ecuDataDict, 
-		ecuPrevDataDict = ecuPrevDataDict,
+		ecuSensorDict = ecuSensorDict,
 		ecuCounter = ecuCounter, 
 		ecuErrors = ecuErrors, 
 		ecuSampleTime = ecuSampleTime, 
 		ecuMatrixLCDDict = ecuMatrixLCDDict)
-	for sensor in settings.SENSORS:
-		ecuData.set_sensor(sensor = sensor)
+	#for sensor in settings.SENSORS:
+	#	ecuData.setSensorData(sensor = sensor)
 			
 	# A list of all worker processes
 	workers = []
@@ -126,7 +126,7 @@ if __name__ == '__main__':
 		console_p = multiprocessing.Process(target=consoleWorker, args=(ecuData, consoleControlQueue,))
 		console_p.start()
 		workers.append(console_p)
-		messageQueues.append(matrixControlQueue)
+		messageQueues.append(consoleControlQueue)
 	
 	# Start the Matrix LCD process
 	if settings.USE_MATRIX:
@@ -178,29 +178,32 @@ if __name__ == '__main__':
 			i = 0
 		# Get latest data  
 		# If the receive queue has any data back...
-		if sensorReceiveQueue.empty() == False:
-			logger.debug("Got some ECU data")
-			d = sensorReceiveQueue.get()
-			# d0 = message_type
-			# d1 = sensorId
-			# d2 = sensor value
-			# d3 = sample count
-			# d4 = time taken for last data collection cycle
+		#if sensorReceiveQueue.empty() == False:
+		
+		try:
+			d = sensorReceiveQueue.get(block = True, timeout = 0.02)
+			logger.debug("Got some sensor data")
+			sensorDataType = d[0] # d0 = message_type
+			sensorData = d[1] # d1 = sensorData dict
+			loopCount = d[2] # d2 = sensor loop count
+			timerData = d[3] # d4 = time taken for last data collection cycle
 			
 			# Check for type of the data
-			if d[0] == settings.TYPE_ERROR:
+			if sensorDataType == settings.TYPE_ERROR:
 				# We do special things for error messages
-				logger.warn("ECU error message received")
-			elif d[0] == settings.TYPE_DATA:
-				# but for anything else we record it as a sensor value
-				ecuData.data_previous[d[1]] = ecuData.data[d[1]]
-				ecuData.data[d[1]] = d[2]
+				logger.warn("Error message received")
+				ecuData.addError(d[2])
+			elif sensorDataType == settings.TYPE_DATA:
+				# But for anything else we record it as a sensor value
+				ecuData.setSensorData(sensorData['sensor'])
+				ecuData.setData(sensorData['sensor']['sensorId'], sensorData['value'], timerData, loopCount)
 			else:
-				logger.warn("Unknown message type from SerialIO process")
+				logger.warn("Unknown message type from SensorIO process")
 			
 			# Always update the sample counter
-			ecuData.counter.value = d[3]
-			ecuData.timer.value = d[4]
+			#ecuData.counter.value = d[3]
+		except:
+			pass
 		
 		# Check for any GPIO button message
 		if gpioActionQueue.empty() == False:
@@ -212,7 +215,6 @@ if __name__ == '__main__':
 				q.put(gpioMessage)
 		
 		i += 1
-		time.sleep(settings.MAIN_SLEEP_TIME)
     
 	# Wait for the workers to finish
 	sensorTransmitQueue.close()

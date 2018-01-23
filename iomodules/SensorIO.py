@@ -39,7 +39,7 @@ def SensorIO(transmitQueue, receiveQueue, controlQueue):
 	""" Serial IO """
 		
 	proc_name = multiprocessing.current_process().name
-	myButtonId = settings.BUTTON_DEST_SERIALIO
+	myButtonId = settings.BUTTON_DEST_SENSORIO
 		
 	# Initialise connection
 	logger.info("Initialising Sensor IO")
@@ -71,6 +71,21 @@ def SensorIO(transmitQueue, receiveQueue, controlQueue):
 	# signalled to exit
 	#
 	####################################################
+	logger.info("Sensor retrieval starting")
+	
+	for sensor in settings.SENSORS:
+		sensorId = sensor['sensorId']
+		sensorData = False			
+		if sensorId in cosworth_sensors:
+			sensorData = cosworth.sensor(sensorId, force = True)
+			timerData = cosworth.performance(sensorId)
+		if SENSOR_DEMO:
+			if (sensorData is False) and (sensorId in demo_sensors):
+				sensorData = demo.sensor(sensorId, force = True)
+				timerData = demo.performance(sensorId)
+		if sensorData:
+			receiveQueue.put((settings.TYPE_DATA, sensorData, 0, 0))
+			
 	while True:
 		
 		####################################################
@@ -87,11 +102,15 @@ def SensorIO(transmitQueue, receiveQueue, controlQueue):
 				# short press - turn on/off demo mode
 				
 				# Toggle demo mode
-				if (cdata.button) and (cdata.duration == settings.BUTTON_SHORT):
+				if (cdata.button == settings.BUTTON_TOGGLE_DEMO):
 					if SENSOR_DEMO:
+						logger.info("Disable demo mode")
+						SENSOR_DEMO = False
 						demo = False
 						demo_sensors = []
-					else:
+					elif SENSOR_DEMO is False:
+						logger.info("Enable demo mode")
+						SENSOR_DEMO = True
 						demo = DemoSensors()
 						demo_sensors = demo.available()
 		
@@ -104,22 +123,23 @@ def SensorIO(transmitQueue, receiveQueue, controlQueue):
 		for sensor in settings.SENSORS:
 			
 			sensorId = sensor['sensorId']
-			valueData = False
+			sensorData = False
 			
 			if sensorId in cosworth_sensors:
-				valueData = cosworth.sensor(sensorId)
-				sampleData = cosworth.performance(sensorId)
+				sensorData = cosworth.sensor(sensorId)
+				timerData = cosworth.performance(sensorId)
 				
-			if (valueData is False) and (sensorId in demo_sensors):
-				valueData = demo.sensor(sensorId)
-				sampleData = demo.performance(sensorId)
+			if SENSOR_DEMO:
+				if (sensorData is False) and (sensorId in demo_sensors):
+					sensorData = demo.sensor(sensorId)
+					timerData = demo.performance(sensorId)
 			
-			if valueData:
-				receiveQueue.put((settings.TYPE_DATA, sensor['sensorId'], valueData['value'], counter, sampleData['last']))
-			else:
-				logger.warn("No sensor modules available that match that sensor %s" % sensorId)
+			if sensorData:
+				receiveQueue.put((settings.TYPE_DATA, sensorData, counter, timerData['last']))
+				logger.debug("Received %s: value:%s counter:%s" % (sensorData['sensor']['sensorId'], sensorData['value'], counter))
 		
 		# Sleep at the end of each round so that we don't
 		# consume too many processor cycles. May need to experiment
 		# with this value for different platforms.
-		time.sleep(settings.SERIAL_SLEEP_TIME)
+		time.sleep(settings.SENSOR_SLEEP_TIME)
+		counter += 1

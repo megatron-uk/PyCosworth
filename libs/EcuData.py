@@ -33,24 +33,23 @@ class EcuData():
 	
 	def __init__(self, 
 		ecuDataDict = None,
-		ecuPrevDataDict = None,
+		ecuSensorDict = None,
 		ecuCounter = None, 
 		ecuErrors = None, 
 		ecuSampleTime = None, 
 		ecuMatrixLCDDict = None):
 		""" Initialise the class with the shared data manager dictionary """
+		
 		self.data = ecuDataDict
-		self.data_previous = ecuPrevDataDict
+		self.sensor = ecuSensorDict
 		self.errors = ecuErrors
 		self.counter = ecuCounter
 		self.timer = ecuSampleTime
 		
 		# Initialise sensor values structure
 		for sensor in settings.SENSORS:
-			self.data[sensor['sensorId']] = 0
-		
-		for sensor in settings.SENSORS:
-			self.data_previous[sensor['sensorId']] = 0
+			# value, sample time, counter
+			self.data[sensor['sensorId']] = (0,0,0)
 		
 		# Store error codes as they occur
 		self.errors_ = []
@@ -59,21 +58,48 @@ class EcuData():
 		# different things...
 		self.matrix_config = ecuMatrixLCDDict
 	
-		self.sensor = {}
+	def setError(self, errortext = None):
+		
+		self.errors_.append(errortext)
 	
-	def set_sensor(self, sensor = None):
-		sensorId = sensor['sensorId']
-		self.sensor[sensorId] = sensor
+	def setData(self, sensorId = None, value = 0, sampletime = 0, counter = 0):
+		""" Set the latest value for a sensor """
+		
+		self.counter.value = counter
+		if sensorId in self.data.keys():
+			self.data[sensorId] = (value, sampletime, counter)
+			
 	
-	def get_timer(self):
-		""" Return the time taken to process the last set of ECU values, in ms. """
-		t = self.timer.value * 1000
-		return t
+	def getData(self, sensorId = None, allData = False):
+		
+		if sensorId in self.data.keys():
+			if len(self.data[sensorId]) > 0:
+				logger.debug("Queried %s: value:%s sampletime:%.4f counter:%s [allData:%s]" % (sensorId, self.data[sensorId][0], self.data[sensorId][1], self.data[sensorId][2], allData))
+				if allData:
+					return self.data[sensorId]
+				else:
+					v = self.data[sensorId][0]
+					return v
 	
-	def get_counter(self):
+	def getSensorData(self, sensorId = None):
+		
+		if sensorId in self.sensor.keys():
+			return self.sensor[sensorId]
+		else:
+			return None
+	
+	def setSensorData(self, sensorData = None):
+		
+		if sensorData['sensorId'] not in self.sensor.keys():
+			logger.info("New sensor type added: %s" % sensorData['classId'])
+			self.sensor[sensorData['sensorId']] = sensorData
+		else:
+			return None
+	
+	def getCounter(self):
 		""" Return current sample counter """
-		c = int(self.counter.value)
-		return c
+		
+		return self.counter.value
 	
 	def get_errors(self):
 		""" Return a list of any logged errors """

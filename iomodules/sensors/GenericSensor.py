@@ -80,7 +80,10 @@ class GenericSensor():
 	def value(self):
 		""" Return current value """
 		
-		return self.history_raw_values[-1]
+		if len(self.history_raw_values)>0:
+			return self.history_raw_values[-1]
+		else:
+			return 0
 	
 	def history(self):
 		
@@ -89,8 +92,10 @@ class GenericSensor():
 	def performance(self):
 		""" Return performance of sample times """
 		
-		time_min = min(self.history_get_times) * 1000
-		time_max = max(self.history_get_times) * 1000
-		time_avg = (sum(self.history_get_times) / len(self.history_get_times))  * 1000
-		
-		return { 'last' : (self.history_get_times[-1]  * 1000), 'min' : time_min, 'max' : time_max, 'average' : time_avg}
+		if len(self.history_raw_values)>0:
+			time_min = min(self.history_get_times) * 1000
+			time_max = max(self.history_get_times) * 1000
+			time_avg = (sum(self.history_get_times) / len(self.history_get_times))  * 1000
+			return { 'last' : (self.history_get_times[-1]  * 1000), 'min' : time_min, 'max' : time_max, 'average' : time_avg}
+		else:
+			return { 'last' : 0, 'min' : 0, 'max' : 0, 'average' : 0}

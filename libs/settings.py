@@ -23,10 +23,6 @@
 #
 ##############################################################
 
-
-# The amount of time, in seconds, that the SensorIO process sleeps between each loop
-SERIAL_SLEEP_TIME = 0.001
-
 # Total amount of time the main process sleeps until trying to load data from the
 # receiving queue
 MAIN_SLEEP_TIME = 0.02
@@ -45,14 +41,17 @@ TYPE_DATA = "DATA_MSG"
 ##############################################################
 
 # Selct the various worker modules
-USE_MATRIX = True		# Output to a Matrix Orbital compatible character mode LCD
-USE_CONSOLE = False		# Output to a standard terminal / command prompt
-USE_BUTTONS = True		# Run a process which monitors Raspberry Pi GPIO buttons for button presses
-USE_GRAPHICS = True		# Output to OLED modules or on-screen graphics
-USE_OLED_GRAPHICS = True # Try to output to an OLED module
-USE_SDL_GRAPHICS = True  # Try to output to on-screen windows
-USE_COSWORTH = True # Try to connect to a Cosworth L8/P8 ECU
-USE_SENSOR_DEMO = True # Enable demo data mode from the SensorIO module instead of real data
+USE_MATRIX = True			# Output to a Matrix Orbital compatible character mode LCD
+USE_CONSOLE = False			# Output to a standard terminal / command prompt
+USE_BUTTONS = True			# Run a process which monitors Raspberry Pi GPIO buttons for button presses
+USE_GRAPHICS = True			# Output to OLED modules or on-screen graphics
+USE_OLED_GRAPHICS = True 	# Try to output to an OLED module
+USE_SDL_GRAPHICS = True  	# Try to output to on-screen windows
+
+# Sensor modules
+USE_GEAR_INDICATOR = True	# Try to read gear indicator position via GPIO 
+USE_COSWORTH = True 		# Try to connect to a Cosworth L8/P8 ECU
+USE_SENSOR_DEMO = False 	# Enable demo data mode from the SensorIO module instead of real data
 
 # Should INFO category messages be shown
 INFO = True
@@ -85,15 +84,15 @@ DEBUG = False
 # This needs to be simplified to remove min/max, unit, refresh etc. as it is all now defined per sensor module backend (see iomodules/sensors/Cosworth.py, demo.py etc.)
 SENSORS = [
 	{ 	'sensorId'	: 'RPM',	'sensorUnit'	: 'rpm',	'refresh'	: 0.1,	'defaultValue'	: 7250,	'minValue' : 0,	'maxValue'	: 7500, 	'warnValue' : 6000, 	},
-	{	'sensorId' 	: 'ECT',	'sensorUnit'	: 'c',		'refresh'	: 0.5,	'defaultValue'	: 90,		'minValue' : 0,	'maxValue'	: 150,	'warnValue' : 110, 	},
-	{	'sensorId'	: 'IAT',	'sensorUnit'	: 'c',		'refresh'	: 0.5,	'defaultValue'	: 32,		'minValue' : 0,	'maxValue'	: 60,		'warnValue' : 50,		},
+	{	'sensorId' 	: 'ECT',	'sensorUnit'	: 'c',		'refresh'	: 0.5,	'defaultValue'	: 90,	'minValue' : 0,	'maxValue'	: 150,	'warnValue' : 110, 	},
+	{	'sensorId'	: 'IAT',	'sensorUnit'	: 'c',		'refresh'	: 0.5,	'defaultValue'	: 32,	'minValue' : 0,	'maxValue'	: 60,		'warnValue' : 50,		},
 	{	'sensorId' 	: 'MAP',	'sensorUnit'	: 'mbar',	'refresh'	: 0.2,	'defaultValue'	: 2850,	'minValue' : -350,	'maxValue'	: 3000,	'warnValue' : 2500,	},
-	{	'sensorId' 	: 'TPS',	'sensorUnit'	: 'deg.',	'refresh'	: 0.1,	'defaultValue'	: 66,		'minValue' : -0.3,	'maxValue'	: 90,		'warnValue' : 100,		},
-	#{	'sensorId' 	: 'CO',	'sensorUnit'	: '%',	'refresh'	: 0.5,	'defaultValue'	: 5,		'minValue' : 0,	'maxValue'	: 50,		'warnValue' : 100,		},
-	{	'sensorId' 	: 'BAT',	'sensorUnit'	: 'v',		'refresh'	: 0.5,	'defaultValue'	: 12,		'minValue' : 0,	'maxValue'	: 14,		'warnValue' : 15,		},
-	{	'sensorId' 	: 'INJDUR','sensorUnit'	: 'ms',	'refresh'	: 0.1,	'defaultValue'	: 2.2,	'minValue' : 0,	'maxValue'	: 5,		'warnValue' : 20,		},
-	{	'sensorId' 	: 'AMAL',	'sensorUnit'	: '%',	'refresh'	: 0.2,	'defaultValue'	: 100,	'minValue' : 0,	'maxValue'	: 100,	'warnValue' : 110,		},
-	{	'sensorId' 	: 'IGNADV','sensorUnit'	: 'deg',	'refresh'	: 0.2,	'defaultValue'	: 16.5,	'minValue' : 0,	'maxValue'	: 40,		'warnValue' : 36,		},
+	{	'sensorId' 	: 'TPS',	'sensorUnit'	: 'deg.',	'refresh'	: 0.1,	'defaultValue'	: 66,	'minValue' : -0.3,	'maxValue'	: 90,		'warnValue' : 100,		},
+	{	'sensorId' 	: 'CO',		'sensorUnit'	: '%',		'refresh'	: 0.5,	'defaultValue'	: 5,	'minValue' : 0,	'maxValue'	: 50,		'warnValue' : 100,		},
+	{	'sensorId' 	: 'BAT',	'sensorUnit'	: 'v',		'refresh'	: 0.5,	'defaultValue'	: 12,	'minValue' : 0,	'maxValue'	: 14,		'warnValue' : 15,		},
+	{	'sensorId' 	: 'INJDUR',	'sensorUnit'	: 'ms',		'refresh'	: 0.1,	'defaultValue'	: 2.2,	'minValue' : 0,	'maxValue'	: 5,		'warnValue' : 20,		},
+	{	'sensorId' 	: 'AMAL',	'sensorUnit'	: '%',		'refresh'	: 0.2,	'defaultValue'	: 100,	'minValue' : 0,	'maxValue'	: 100,	'warnValue' : 110,		},
+	{	'sensorId' 	: 'IGNADV',	'sensorUnit'	: 'deg',	'refresh'	: 0.2,	'defaultValue'	: 16.5,	'minValue' : 0,	'maxValue'	: 40,		'warnValue' : 36,		},
 ]
 # A list of all sensor id's
 SENSOR_IDS = []
@@ -102,7 +101,10 @@ for s in SENSORS:
 	
 # How many previous sensor samples, for each sensor, to keep in memory
 SENSOR_MAX_HISTORY = 256
-	
+
+# The amount of time, in seconds, that the SensorIO process sleeps between each loop
+SENSOR_SLEEP_TIME = 0.01
+
 ##########################################################
 #
 # Cosworth ECU settings
@@ -260,6 +262,7 @@ BUTTON_UP = "\x1b[A" # Up
 BUTTON_DOWN = "\x1b[B" # Down
 BUTTON_SELECT = " " # Space/select
 BUTTON_CANCEL = "x" # Cancel/escape
+BUTTON_TOGGLE_DEMO = "d" # Start/stop demo mode
 
 # Button message types
 MESSAGE_TYPE_PRESS = 0x01 # message is a button press
@@ -274,7 +277,7 @@ BUTTON_LONG = 0x13 # long press
 # Set destination types
 BUTTON_DEST_ALL = 0x00 # send to all workers
 BUTTON_DEST_MAIN = 0x01 # send to main PyCosworth process
-BUTTON_DEST_SERIALIO = 0x02 # send to serial process
+BUTTON_DEST_SENSORIO = 0x02 # send to serial process
 BUTTON_DEST_CONSOLEIO = 0x03 # send to console process
 BUTTON_DEST_MATRIXIO = 0x04 # send to matrix lcd process
 BUTTON_DEST_GRAPHICSIO = 0x05 # send to SDL/OLED graphics process
@@ -283,12 +286,13 @@ BUTTON_DEST_DATALOGGER = 0x06 # send to datalogger process
 # Mapping of buttons to modules
 # i.e. button 1 and 2 to GraphicsIO, button 3 to datalogger, etc
 BUTTON_MAP = {
-	BUTTON_LEFT 	: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Left
-	BUTTON_RIGHT 	: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Right
-	BUTTON_UP 		: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Up
-	BUTTON_DOWN 	: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Down
-	BUTTON_SELECT 	: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Select
-	BUTTON_CANCEL	: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Cancel
+	BUTTON_LEFT 		: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Left
+	BUTTON_RIGHT 		: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Right
+	BUTTON_UP 			: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Up
+	BUTTON_DOWN 		: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Down
+	BUTTON_SELECT 		: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Select
+	BUTTON_CANCEL		: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Cancel
+	BUTTON_TOGGLE_DEMO	: { 'dest' : BUTTON_DEST_SENSORIO }, # Toggle demo start/stop
 }
 
 #######################################################
