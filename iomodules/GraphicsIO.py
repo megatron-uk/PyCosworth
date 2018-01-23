@@ -55,7 +55,7 @@ logger = newlog(__name__)
 
 ###########################################################################################
 
-def GraphicsIO(ecudata, controlQueue):
+def GraphicsIO(ecudata, controlQueue, actionQueue):
 	""" GraphicsIO - output sensor data to graphics options: OLED screens or SDL windows on your desktop """
 	
 	# Our process name
@@ -293,7 +293,17 @@ def GraphicsIO(ecudata, controlQueue):
 		logger.warn("Graphics frame limiter disabled - frames will be rendered as fast as possible")
 		logger.warn("This may result in uneven performance!")
 
-	master = MasterMenu(windowSettings = settings.GFX_MASTER_WINDOW, ecudata = ecudata, use_sdl = USE_SDL_GRAPHICS, use_oled = USE_OLED_GRAPHICS_MASTER)
+	# Spin up the master window control menu 
+	subWindows = {}
+	for w in gfx_window_keys:
+		subWindows[w] = settings.GFX_WINDOWS[w]
+	master = MasterMenu(windowSettings = settings.GFX_MASTER_WINDOW,
+		subWindowSettings = subWindows,
+		actionQueue = actionQueue,
+		ecudata = ecudata, 
+		use_sdl = USE_SDL_GRAPHICS, 
+		use_oled = USE_OLED_GRAPHICS_MASTER
+		)
 
 	logger.info("Entering main graphics loop now...")
 	if settings.INFO:

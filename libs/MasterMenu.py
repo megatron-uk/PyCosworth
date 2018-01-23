@@ -51,8 +51,21 @@ logger = newlog(__name__)
 class MasterMenu():
 	""" A class which encapsulates the main master window """
 	
-	def __init__(self, windowSettings = None, ecudata = None, use_sdl = False, use_oled = False):
+	def __init__(self, 
+		windowSettings = None,
+		subWindowSettings = [],
+		actionQueue = None,
+		ecudata = None, 
+		use_sdl = False, 
+		use_oled = False
+		):
 		""" Instaniate the class """
+		
+		# A queue to pass messages back up the main process
+		self.actionQueue = actionQueue
+		
+		# A list of any sub windows
+		self.subWindowSettings = subWindowSettings
 		
 		# Ecu/sensor data class
 		self.ecudata = ecudata
@@ -122,10 +135,17 @@ class MasterMenu():
 		
 		self.slideIn = False
 		self.slideOut = False
+		self.slideOutIn = False
 		
 		# Add all current sensors to the Sensor menu
 		self.sensor_keys = []
 		self.addSensors()
+		
+		# The custom function and its associated data which run
+		# run every time the mastermenu class has 'buildimage' called
+		# and we are *not* in a menu.
+		self.customFunction = None
+		self.customData = None
 		
 		######################################################################################
 		#
@@ -179,6 +199,16 @@ class MasterMenu():
 					refreshBitmaps = True
 				else:
 					logger.warn("Unable to find sensor data definition for %s" % sensorId)
+		
+		# No sensors found
+		if len(self.menu[0]['items']) == 0:
+			no_sensor_entry = {
+				'itemName'	: 'No sensors!',
+				'itemType'	: 'item',
+				'itemText'	: 'No sensors have been detected. Have you configured the right sensor modules in the settings.py file?',
+				'itemSelect': doNothing
+			}
+			self.menu[0]['items'].append(no_sensor_entry)
 		
 		# Refresh the bitmaps, if we added any new sensors
 		if refreshBitmaps:
@@ -244,7 +274,11 @@ class MasterMenu():
 					finalitems.reverse()
 					if finalitems[self.finalMenuIndex]['itemType'] == 'item':
 						logger.info("Selected a final menu item to launch: %s/%s/%s %s" % (self.menuIndex, self.subMenuIndex, self.finalMenuIndex, finalitems[self.finalMenuIndex]))
-						self.selectedItem = (self.menuIndex, self.subMenuIndex, self.finalMenuIndex)
+						self.customFunction = finalitems[self.finalMenuIndex]['itemSelect']
+						self.buildCustomData()
+						self.resetMenus()
+						self.slideOut = True
+						return
 					# if item, then mark it as an item selected
 					# otherwise open final menu
 					self.finalMenuIndex = -1
@@ -271,12 +305,17 @@ class MasterMenu():
 			if controlData.button == settings.BUTTON_SELECT:
 				if self.subMenuIndex > -1:
 					# Is this a menu or item?
-					logger.info(self.menu[self.menuIndex]['items'][self.subMenuIndex])
+					#logger.info(self.menu[self.menuIndex]['items'][self.subMenuIndex])
 					subitems = copy.copy(self.menu[self.menuIndex]['items'])
 					subitems.reverse()
-					logger.info(subitems[self.subMenuIndex])
+					#logger.info(subitems[self.subMenuIndex])
 					if subitems[self.subMenuIndex]['itemType'] == 'item':
-						self.selectedItem = (self.menuIndex, self.subMenuIndex, None)
+						logger.info("Selected a submenu item to launch: %s/%s/%s %s" % (self.menuIndex, self.subMenuIndex, self.finalMenuIndex, subitems[self.subMenuIndex]))
+						self.customFunction = subitems[self.subMenuIndex]['itemSelect']
+						self.buildCustomData()
+						self.resetMenus()
+						self.slideOut = True
+						return
 					# if item, then mark it as an item selected
 					# otherwise open final menu
 					self.finalMenuIndex = -1
@@ -313,30 +352,90 @@ class MasterMenu():
 				self.menuShow = -1
 				self.slideOut = True
 				
-		else:
-			# Nothing selected, or a visualistion showing
+		elif self.customFunction is not None:
+			# Pass any control data to the current custom function
+			self.customFunction(menuClass = self, controlData = controlData)
 			
+		else:
+			# Nothing selected, bring up the menu
 			if controlData.button == settings.BUTTON_SELECT:
 				# Enable menu selection - make base menu appear
 				self.menuIndex = -1
 				self.menuShow = True
 				self.slideIn = True
+				# Store the last running function
+				self.resetCustomFunction()
 			
 			elif controlData.button == settings.BUTTON_CANCEL:
 				# cancel menu selection - make it dissappear
 				self.menuIndex = None
 				self.menuShow = True
 				self.slideOut = True
-				
+				# Return to the last running function
+				self.returnCustomFunction() 
 		
-		logger.info("menuIndex:%s subMenuIndex:%s finalMenuIndex:%s menuShow:%s slideIn:%s slideOut:%s" % (self.menuIndex, self.subMenuIndex, self.finalMenuIndex, self.menuShow, self.slideIn, self.slideOut))
+		#logger.info("menuIndex:%s subMenuIndex:%s finalMenuIndex:%s menuShow:%s slideIn:%s slideOut:%s" % (self.menuIndex, self.subMenuIndex, self.finalMenuIndex, self.menuShow, self.slideIn, self.slideOut))
+	
+	def buildCustomData(self):
+		""" Record the state of the menu variables at the time the custom function was called 
+		as many of the custom functions will want to know which menu item was selected to call
+		them - i.e. which sensor to use. """
 		
+		# Record the state of the menu variables at the time the custom function was called
+		self.customData = {
+			'selectedItem' : (self.menuIndex, self.subMenuIndex, self.finalMenuIndex),	
+		}
+	
+	def resetMenus(self, showMenu = False):
+		""" Reset menu structure back to default """
+		
+		if showMenu:
+			self.menuIndex = -1
+			self.menuShow = True
+			self.slideOutIn = True
+		else:
+			self.menuIndex = None
+			self.menuShow = None	
+		
+		self.selectedItem = None
+		self.subMenuIndex = None
+		self.finalMenuIndex = None
+		
+	
+	def resetCustomFunction(self):
+		""" Disable any current custom function """
+		
+		# Make a copy of the current custom function, in case
+		# we return to it
+		self.previousCustomFunction = copy.copy(self.customFunction)
+		self.previousCustomData = copy.copy(self.customData)
+		
+		# Reset the custom function so that it does not execute
+		# the next time processControlData
+		self.customFunction = None
+		self.customData = None
+	
+	def returnCustomFunction(self):
+		""" Return to the last custom function """
+		
+		self.customFunction = copy.copy(self.previousCustomFunction)
+		self.customData = copy.copy(self.previousCustomData)
+	
 	def buildImage(self):
 		""" Called """
 		
 		if self.menuShow:
 			
-			if self.slideIn:
+			if self.slideOutIn:
+				# Slide out the previous frame and then slide in the menu
+				self.slideBitmapVertical(
+					bitmap = self.image.copy(), 
+					x_start = 0, 
+					y_start = 0, 
+					y_end = (self.windowSettings['y_size']), 
+					direction = "down", 
+					steps = 20,
+					sleep = 0.025)
 				# Slide in the base menu
 				bitmap = self.createBaseMenuBitmap()
 				self.slideBitmapVertical(
@@ -346,7 +445,19 @@ class MasterMenu():
 					y_end = (self.windowSettings['y_size'] - bitmap.size[1]), 
 					direction = "up", 
 					steps = 10,
-					sleep = 0.05)
+					sleep = 0.025)
+				self.slideOutIn = False
+			elif self.slideIn:
+				# Slide in the base menu
+				bitmap = self.createBaseMenuBitmap()
+				self.slideBitmapVertical(
+					bitmap = bitmap, 
+					x_start = 0, 
+					y_start = self.windowSettings['y_size'], 
+					y_end = (self.windowSettings['y_size'] - bitmap.size[1]), 
+					direction = "up", 
+					steps = 10,
+					sleep = 0.025)
 				self.slideIn = False
 			elif self.slideOut:
 				# Slide out the entire screen
@@ -357,23 +468,33 @@ class MasterMenu():
 					y_end = (self.windowSettings['y_size']), 
 					direction = "down", 
 					steps = 20,
-					sleep = 0.05)
+					sleep = 0.025)
 				self.slideOut = False
 				self.menuShow = False
 			else:
 				# Display a normal menu screen from the selected menu options
 				self.buildMenu()
 		else:
+			if self.slideOut:
+				# Slide out the entire screen
+				self.slideBitmapVertical(
+					bitmap = self.image.copy(), 
+					x_start = 0, 
+					y_start = 0, 
+					y_end = (self.windowSettings['y_size']), 
+					direction = "down", 
+					steps = 20,
+					sleep = 0.025)
+				self.slideOut = False
+				self.menuShow = False
 			# Did the last run through the menu set a target to run?
-			#if self.target:
-			#	self.runTarget()
+			if self.customFunction:
+				logger.debug("Running current custom function")
+				self.customFunction(menuClass = self)
+			else:
+				blank = blankImage(self.windowSettings)
+				self.image = blank['image']
 				
-			# Free running, update any data shown on-screen
-			
-			blank = blankImage(self.windowSettings)
-			self.image = blank['image']
-			# Blank screen for the moment
-			# Render selected item/visualisation
 		self.update()
 
 	def createBaseMenuBitmap(self):
@@ -396,8 +517,6 @@ class MasterMenu():
 				index += 1
 			self.bitmapCache[key] = copy.copy(image)
 			logger.info("Base menu bitmap assembled")
-			if settings.INFO:
-				image.save(settings.GFX_CACHE_DIR + key + ".bmp")
 		return self.bitmapCache[key].copy()
 
 	def createSubMenuBitmap(self):
@@ -509,12 +628,7 @@ class MasterMenu():
 					bitmap = Image.open(settings.GFX_MASTER_BITMAPS['arrow']['down'])
 					image.paste(bitmap, (settings.GFX_MASTER_ARROW_1_XPOS, settings.GFX_DOWN_ARROW_YPOS))
 			
-			# Draw bar to right of menu
-			#logger.debug("Drawing submenu bar line x:%s,y:%s - x:%s,y:%s" % (settings.GFX_MASTER_LINE_1_XPOS, 0, settings.GFX_MASTER_LINE_1_XPOS, settings.GFX_MASTER_SUBMENU_SIZE[1]))
-			#draw.line([(settings.GFX_MASTER_LINE_1_XPOS - 1, 0), (settings.GFX_MASTER_LINE_1_XPOS - 1, settings.GFX_MASTER_SUBMENU_SIZE[1])], width = 1, fill = "white")
 			self.bitmapCache[key] = copy.copy(image)
-			if settings.INFO:
-				image.save(settings.GFX_CACHE_DIR + key + ".bmp")
 		return self.bitmapCache[key].copy()
 
 	def createFinalMenuBitmap(self):
@@ -636,8 +750,6 @@ class MasterMenu():
 			#logger.debug("Drawing submenu bar line x:%s,y:%s - x:%s,y:%s" % (settings.GFX_MASTER_LINE_1_XPOS, 0, settings.GFX_MASTER_LINE_1_XPOS, settings.GFX_MASTER_SUBMENU_SIZE[1]))
 			#draw.line([(settings.GFX_MASTER_LINE_1_XPOS - 1, 0), (settings.GFX_MASTER_LINE_1_XPOS - 1, settings.GFX_MASTER_SUBMENU_SIZE[1])], width = 1, fill = "white")
 			self.bitmapCache[key] = copy.copy(image)
-			if settings.INFO:
-				image.save(settings.GFX_CACHE_DIR + key + ".bmp")
 		return self.bitmapCache[key].copy()
 
 	def slideBitmapVertical(self, bitmap = None, x_start = 0, y_start = 0, y_end = 0, steps = 0, direction = "up", sleep = 0.1):
@@ -704,8 +816,6 @@ class MasterMenu():
 			for line in wrap_text:
 				draw.text((x,y), line, font = self.helpTextFont, fill = "white")
 				y += self.helpTextFontSize[1]
-			if settings.INFO:
-				helptextBitmap.save(settings.GFX_CACHE_DIR + key + ".bmp")
 			self.bitmapCache[key] = copy.copy(helptextBitmap)
 		return self.bitmapCache[key].copy()
 		
@@ -793,10 +903,10 @@ class MasterMenu():
 				items = copy.copy(self.menu[self.menuIndex]['items'])
 				items.reverse()
 			
-				#if items[self.subMenuIndex]['itemType'] == 'menu':
-				finalMenuBitmap = self.createFinalMenuBitmap()
-				logger.info("Pasting final menu image [%sx%sx%s] at x:%s,y:%s" % (finalMenuBitmap.size[0], finalMenuBitmap.size[1], finalMenuBitmap.mode, settings.GFX_MASTER_LINE_1_XPOS + 1, 0))
-				self.image.paste(finalMenuBitmap, (settings.GFX_MASTER_LINE_1_XPOS + 1, 0))
+				if items[self.subMenuIndex]['itemType'] == 'menu':
+					finalMenuBitmap = self.createFinalMenuBitmap()
+					logger.info("Pasting final menu image [%sx%sx%s] at x:%s,y:%s" % (finalMenuBitmap.size[0], finalMenuBitmap.size[1], finalMenuBitmap.mode, settings.GFX_MASTER_LINE_1_XPOS + 1, 0))
+					self.image.paste(finalMenuBitmap, (settings.GFX_MASTER_LINE_1_XPOS + 1, 0))
 			
 				###########################################
 				# This section only shows if we have highlighted 
@@ -811,24 +921,6 @@ class MasterMenu():
 					helpBitmap = self.wrappedHelpWindowText(text = finalitems[self.finalMenuIndex]['itemText'], windowLevel = "final")
 					logger.info("Pasting helptext image [%sx%sx%s] at x:%s,y:%s" % (helpBitmap.size[0], helpBitmap.size[1], helpBitmap.mode, settings.GFX_MASTER_LINE_2_XPOS + 1, 0))
 					self.image.paste(helpBitmap, (settings.GFX_MASTER_LINE_2_XPOS + 2, 0))
-			
-			####################################
-			# Run a selected item
-			####################################
-			if self.selectedItem is not None:
-				logger.info("Run an item")
-				# run item
-				
-				#selectedItemData = something
-				#selectedItemData.itemSelect(windowSettings, controlQueue, ecuData)
-				
-				# disable menu
-				logger.info("Running item %s" % str(self.selectedItem))
-				self.menuShow = False
-				self.menuIndex = None
-				self.subMenuIndex = None
-				self.finalMenuIndex = None
-				self.selectedItem = None
 				
 			self.frameCache[key] = copy.copy(self.image)		
 	
@@ -858,16 +950,8 @@ class MasterMenu():
 			lines[max_lines-1] = lines[max_lines-1][:-1] + "..."
 		return lines
 	
-	def unfoldMenu(self):
-		""" Display a menu, unfolded, on the main window """
-		pass
-	
-	def showSensor(self):
-		""" Show a sensor in the main window """
-		pass
-	
 	def update(self):
-		""" Redraw the screen """
+		""" Redraw the screen with the current bitmap stored in self.image """
 		
 		if self.use_sdl:
 			updateSDLWindow(self.image, self.windowSettings)

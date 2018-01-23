@@ -12,13 +12,13 @@ MASTER_MENU = [
 	{
 		'itemName'	: 'config',
 		'itemType'	: 'menu',
-		'itemText'	: 'Configure how sensor data is displayed on all connected devices. Choose visualisation modes and set cycle times.',
+		'itemText'	: 'Configure how sensor data is displayed on all connected devices. Choose visualisation modes for all displays.',
 		'items'		: []
 	},
 	{
 		'itemName'	: 'data',
 		'itemType'	: 'menu',
-		'itemText'	: 'Access data logging functions.',
+		'itemText'	: 'Access data logging functions, check ECU communication status or enable demo mode to simulate sensor data.',
 		'items'		: [
 			{
 				'itemName'	: 'Status',
@@ -41,7 +41,7 @@ MASTER_MENU = [
 			{
 				'itemName'	: 'Comms Config',
 				'itemType'	: 'menu',
-				'itemText'	: 'Configure serial comms and data',
+				'itemText'	: 'Configure or check serial comms. Start or stop demo mode to emulate actual sensor data.',
 				'items'		: [
 					{
 						'itemName'	: 'Start/Stop demo',
@@ -68,7 +68,7 @@ MASTER_MENU = [
 	{
 		'itemName'	: 'diag',
 		'itemType'	: 'menu',
-		'itemText'	: 'Run diagnostics to check system functionality. View system information and performance data. Restart the PyCosworth application.',
+		'itemText'	: 'Run diagnostics to check system functionality. View system information and performance data. Restart or shutdown the PyCosworth application.',
 		'itemSelect': 'unfoldMenu',
 		'items'		: [
 			{

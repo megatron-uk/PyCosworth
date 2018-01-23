@@ -55,9 +55,9 @@ def matrixLCDWorker(ecudata, controlQueue):
 	""" Output sensor data to a Matrix Orbital text mode LCD """
 	MatrixIO(ecudata, controlQueue)
 
-def graphicsWorker(ecudata, controlQueue):
+def graphicsWorker(ecudata, controlQueue, actionQueue):
 	""" Output sensor data to a Matrix Orbital text mode LCD """
-	GraphicsIO(ecudata, controlQueue)
+	GraphicsIO(ecudata, controlQueue, actionQueue)
 
 def gpioButtonWorker(actionQueue, stdin):
 	""" Output sensor data to a Matrix Orbital text mode LCD """
@@ -152,8 +152,9 @@ if __name__ == '__main__':
 	if settings.USE_GRAPHICS:
 		# The OLED/SDL worker has a controle queue that it listens for incoming
 		# control messages on.
-		graphicsControlQueue = multiprocessing.Queue()
-		matrix_p = multiprocessing.Process(target=graphicsWorker, args=(ecuData, graphicsControlQueue,))
+		graphicsControlQueue = multiprocessing.Queue() # Takes messages
+		masterActionQueue = multiprocessing.Queue() # Passes messages back up
+		matrix_p = multiprocessing.Process(target=graphicsWorker, args=(ecuData, graphicsControlQueue, masterActionQueue))
 		matrix_p.start()
 		workers.append(matrix_p)
 		messageQueues.append(graphicsControlQueue)
@@ -200,8 +201,6 @@ if __name__ == '__main__':
 			else:
 				logger.warn("Unknown message type from SensorIO process")
 			
-			# Always update the sample counter
-			#ecuData.counter.value = d[3]
 		except:
 			pass
 		
@@ -210,9 +209,17 @@ if __name__ == '__main__':
 			logger.debug("Message in the control queue")
 			gpioMessage = gpioActionQueue.get()
 			# Distribute the messages to all processes
-			# so that each process can decide what to do with it
+			# so that each process (apart from gpio) can decide what to do with it
 			for q in messageQueues:
 				q.put(gpioMessage)
+		
+		# Message passed back up from the master display graphics class
+		if masterActionQueue.empty() == False:
+			logger.debug("Message from master display")
+			masterMessage = masterActionQueue.get()
+			# Put it in all queues (apart from the graphics one)
+			for q in messageQueues:
+				q.put(masterMessage)
 		
 		i += 1
     
@@ -221,6 +228,8 @@ if __name__ == '__main__':
 	sensorTransmitQueue.join_thread()
 	sensorReceiveQueue.close()
 	sensorReceiveQueue.join_thread()
+	masterActionQueue.close()
+	masterActionQueue.join_thread()
 	
 	for q in messageQueues:
 		q.close()
