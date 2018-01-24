@@ -105,8 +105,8 @@ def blankImage(windowSettings):
 	# Image is 1bit black and white
 	d = {
 		'image'		: Image.new('1', (windowSettings['x_size'], windowSettings['y_size'])),
-		'font'		: ImageFont.truetype(settings.GFX_ASSETS_DIR + settings.GFX_FONT_BIG, 16),
-		'font_small': ImageFont.truetype(settings.GFX_ASSETS_DIR + settings.GFX_FONT, 8),
+		'font'		: ImageFont.truetype(settings.GFX_FONTS['sans']['plain']['font'], 16),
+		'font_small': ImageFont.truetype(settings.GFX_FONTS['sans']['plain']['font'], 8),
 	}
 	return d
 
@@ -262,8 +262,8 @@ def gaugeLEDSegments(ecudata, sensor, font, windowSettings):
 		# Image is 1bit black and white
 		image = Image.new('1', (windowSettings['x_size'], windowSettings['y_size']))
 		draw = ImageDraw.Draw(image)
-		font = ImageFont.truetype(settings.GFX_ASSETS_DIR + settings.GFX_FONT_BIG, 16)
-		font_small = ImageFont.truetype(settings.GFX_ASSETS_DIR + settings.GFX_FONT, 8)
+		font = ImageFont.truetype(settings.GFX_FONTS['sans']['plain']['font'], 16)
+		font_small = ImageFont.truetype(settings.GFX_FONTS['sans']['plain']['font'], 8)
 		x = 1
 		
 		# Add sensor name to top left
@@ -313,8 +313,8 @@ def gaugeLine(ecudata, sensor, font, windowSettings):
 		# Image is 1bit black and white
 		image = Image.new('1', (windowSettings['x_size'], windowSettings['y_size']))
 		draw = ImageDraw.Draw(image)
-		font = ImageFont.truetype(settings.GFX_ASSETS_DIR + settings.GFX_FONT_BIG, 16)
-		font_small = ImageFont.truetype(settings.GFX_ASSETS_DIR + settings.GFX_FONT, 8)
+		font = ImageFont.truetype(settings.GFX_FONTS['sans']['plain']['font'], 16)
+		font_small = ImageFont.truetype(settings.GFX_FONTS['sans']['plain']['font'], 8)
 
 		# Add sensor name to top left
 		draw.text((0, 0), sensor['sensorId'], fill="white", font = font)
@@ -360,8 +360,8 @@ def gaugeClock(ecudata, sensor, font, windowSettings):
 		# Image is 1bit black and white
 		image = Image.new('1', (windowSettings['x_size'], windowSettings['y_size']))
 		draw = ImageDraw.Draw(image)
-		font = ImageFont.truetype(settings.GFX_ASSETS_DIR + settings.GFX_FONT_BIG, 16)
-		font_small = ImageFont.truetype(settings.GFX_ASSETS_DIR + settings.GFX_FONT, 8)
+		font = ImageFont.truetype(settings.GFX_FONTS['sans']['plain']['font'], 16)
+		font_small = ImageFont.truetype(settings.GFX_FONTS['sans']['plain']['font'], 8)
 
 		# Draw the arc and outline of the gauge
 		draw.chord([(0, 8), (windowSettings['x_size'], windowSettings['y_size'] * 2)], 180, 360, outline = "white", fill = 0)
@@ -409,7 +409,7 @@ def buildImageAssets(use_oled_master = False, use_sdl_master = False):
 
 	# Load a font
 	try:
-		font = ImageFont.truetype(settings.GFX_ASSETS_DIR + settings.GFX_FONT, 10)	
+		font = ImageFont.truetype(settings.GFX_FONTS['sans']['plain']['font'], 10)	
 	except:
 		font = ImageFont.load_default()
 
@@ -494,7 +494,7 @@ def highlightSelectedSensor(use_oled = False, use_sdl = False, windowSettings = 
 	
 	i = Image.new('1', (windowSettings['x_size'], windowSettings['y_res']))
 	draw = ImageDraw.Draw(i)
-	font = ImageFont.truetype(settings.GFX_ASSETS_DIR + settings.GFX_FONT_BIG, 16)
+	font = ImageFont.truetype(settings.GFX_FONTS['sans']['plain']['font'], 16)
 
 	sensorString = "%s" % sensor['sensorId']
 	messageString = "Selected"
@@ -522,7 +522,7 @@ def highlightSelectedWindow(use_oled = False, use_sdl = False, windowSettings = 
 	
 	i = Image.new('1', (windowSettings['x_size'], windowSettings['y_size']))
 	draw = ImageDraw.Draw(i)
-	font = ImageFont.truetype(settings.GFX_ASSETS_DIR + settings.GFX_FONT_BIG, 16)
+	font = ImageFont.truetype(settings.GFX_FONTS['sans']['plain']['font'], 16)
 	
 	messageString1 = "Gauge"
 	messageString2 = "Selected"

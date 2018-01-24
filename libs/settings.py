@@ -471,15 +471,23 @@ GFX_UP_ARROW_YPOS = 0
 GFX_DOWN_ARROW_YPOS = 30
 
 # All of the fonts used in the graphics routines
+#
+# Fonts available from: https://www.dafont.com/
 GFX_FONTS = {
 	'sans' 	: { 
-		'plain' 	: { 'font' : GFX_ASSETS_DIR + 'pixelmix.ttf' },
-		'italic' 	: { 'font' : GFX_ASSETS_DIR + 'DejaVuSansCondensed-Oblique.ttf' },
-		'bold' 		: { 'font' : GFX_ASSETS_DIR + 'DejaVuSansCondensed-Bold.ttf' },
-		'bolditalic': { 'font' : GFX_ASSETS_DIR + 'DejaVuSansCondensed-BoldOblique.ttf' },
+		'plain' 	: { 'font' : GFX_ASSETS_DIR + 'fonts/DejaVuSansCondensed.ttf' },
+		'italic' 	: { 'font' : GFX_ASSETS_DIR + 'fonts/DejaVuSansCondensed-Oblique.ttf' },
+		'bold' 		: { 'font' : GFX_ASSETS_DIR + 'fonts/DejaVuSansCondensed-Bold.ttf' },
+		'bolditalic': { 'font' : GFX_ASSETS_DIR + 'fonts/DejaVuSansCondensed-BoldOblique.ttf' },
+	},
+	'pixel'	: {
+		'plain' 	: { 'font' : GFX_ASSETS_DIR + 'fonts/pixelmix.ttf' },
+	},
+	'lcd'	: {
+		'plain' 	: { 'font' : GFX_ASSETS_DIR + 'fonts/CFLCD-Regular.ttf' },
 	},
 }
 
 # Size of font for each menu
 GFX_MASTER_SUBMENU_FONTSIZE = 11
-GFX_MASTER_HELP_FONTSIZE = 8
+GFX_MASTER_HELP_FONTSIZE = 10

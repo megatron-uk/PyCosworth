@@ -81,6 +81,10 @@ class EcuData():
 					v = self.data[sensorId][0]
 					return v
 	
+	def getSensorIds(self):
+		
+		return list(self.sensor.keys())
+	
 	def getSensorData(self, sensorId = None):
 		
 		if sensorId in self.sensor.keys():

@@ -209,25 +209,31 @@ class MasterMenu():
 				'itemSelect': doNothing
 			}
 			self.menu[0]['items'].append(no_sensor_entry)
+		elif len(self.menu[0]['items']) > 1:
+			# Remove 'No sensors' menu entry
+			idx = 0
+			if len(self.menu[0]['items']) > 0:
+				for item in self.menu[0]['items']:
+					if item['itemName'] == 'No sensors!':
+						del self.menu[0]['items'][idx]
+				idx += 1
 		
 		# Refresh the bitmaps, if we added any new sensors
 		if refreshBitmaps:
-			# Remove submenu bitmap
-			key = "submenuBitmap|menuIndex:" + str(self.menuIndex) + ",subMenuIndex:" + str(self.subMenuIndex) + ",finalMenuIndex:" +str(self.finalMenuIndex)
-			if key in self.bitmapCache.keys():
-				del self.bitmapCache[key]
-				logger.info("Refreshed sensor submenu bitmap")
+			# Remove submenu bitmaps
+			keys = list(self.bitmapCache.keys())
+			for k in keys:
+				del self.bitmapCache[k]
 				
 			# Remove full screen bitmap
-			key = "menu|menuIndex:" + str(self.menuIndex) + ",subMenuIndex:" + str(self.subMenuIndex) + ",finalMenuIndex:" + str(self.finalMenuIndex)
-			if key in self.frameCache.keys():
-				del self.frameCache[key]
-				logger.info("Refreshed fullscreen frame bitmap")
+			keys = list(self.frameCache.keys())
+			for k in keys:
+				del self.frameCache[k]
 		
 	def preloadFonts(self):
 		
 		# A font for the 2nd level menu
-		self.getFont(style = "bold", size = settings.GFX_MASTER_SUBMENU_FONTSIZE)
+		self.getFont(name = "sans", style = "bold", size = settings.GFX_MASTER_SUBMENU_FONTSIZE)
 		
 	def getFont(self, name = "sans", style = "plain", size = 8):
 		""" Load a font from disk, at a specified size """
