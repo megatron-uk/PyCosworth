@@ -91,12 +91,13 @@ def GraphicsIO(ecudata, controlQueue, actionQueue):
 		################################################
 		# Set up sub-windows to emulate the small OLED screens
 		################################################
-		USE_SDL_GRAPHICS = True
+		#USE_SDL_GRAPHICS = True
 		for k in settings.GFX_WINDOWS.keys():
 			windowSettings = settings.GFX_WINDOWS[k]
 			result = sdlInit(windowSettings, settings.GFX_OLED_SIZE[0], settings.GFX_OLED_SIZE[1])
 			if result:
 				settings.GFX_WINDOWS[k] = result
+				USE_SDL_GRAPHICS = True
 			else:
 				USE_SDL_GRAPHICS = False
 	

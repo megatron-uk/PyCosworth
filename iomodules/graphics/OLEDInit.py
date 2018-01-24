@@ -24,6 +24,7 @@ import traceback
 # OLED libraries
 from luma.core.interface.serial import i2c, spi
 from luma.oled.device import ssd1306 as luma_ssd1306
+from luma.oled.device import ssd1322 as luma_ssd1322
 from luma.oled.device import ssd1325 as luma_ssd1325
 from luma.oled.device import ssd1331 as luma_ssd1331
 from luma.oled.device import sh1106 as luma_sh1106
@@ -39,12 +40,15 @@ logger = newlog(__file__)
 
 def oledInit(windowSettings, x_res, y_res):
 	try:
-		logger.info("Attempting to connect to I2C device for OLED screen [%s]" % windowSettings['windowName'])
+		logger.info("Attempting to connect to I2C/SPI device for OLED screen [%s]" % windowSettings['windowName'])
 		windowSettings['x_size'] = x_res
 		windowSettings['y_size'] = y_res
 		if windowSettings['oledType'] == 'sh1106':
 			serial = i2c(port=1, address=windowSettings['i2cAddress'])
 			windowSettings['luma_driver'] = luma_sh1106(serial)
+		elif windowSettings['oledType'] == 'ssd1322':
+			serial = spi(port = 0, device = 0)
+			windowSettings['luma_driver'] = luma_ssd1322(serial_interface = serial, mode = "1")
 		else:
 			logger.warn("OLED type %s is not yet supported" % windowSettings['oledType'])
 			return False
