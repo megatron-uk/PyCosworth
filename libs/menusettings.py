@@ -44,7 +44,7 @@ MASTER_MENU = [
 				'itemText'	: 'Configure or check serial comms. Start or stop demo mode to emulate actual sensor data.',
 				'items'		: [
 					{
-						'itemName'	: 'Start/Stop demo',
+						'itemName'	: 'Toggle demo',
 						'itemType'	: 'item',
 						'itemText'	: 'Toggle demo mode',
 						'itemSelect': toggleDemo,

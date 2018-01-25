@@ -36,6 +36,7 @@ from iomodules.ConsoleIO import ConsoleIO
 from iomodules.MatrixIO import MatrixIO
 from iomodules.GPIOButtonIO import GPIOButtonIO
 from iomodules.GraphicsIO import GraphicsIO
+from iomodules.DataLoggerIO import DataLoggerIO
 
 # Start a new logger
 from libs.newlog import newlog
@@ -63,6 +64,9 @@ def gpioButtonWorker(actionQueue, stdin):
 	""" Output sensor data to a Matrix Orbital text mode LCD """
 	GPIOButtonIO(actionQueue, stdin)
 
+def dataLoggerWorker(ecudata, controlQueue):
+	""" Records incoming sensor data to disk """
+	DataLoggerIO(ecudata, controlQueue)
 
 #####################################################
 #
@@ -158,7 +162,17 @@ if __name__ == '__main__':
 		matrix_p.start()
 		workers.append(matrix_p)
 		messageQueues.append(graphicsControlQueue)
-		
+	
+	# Start the data logger process
+	if settings.USE_DATALOGGER:
+		# The logger worker has a controle queue that it listens for incoming
+		# control messages on.
+		loggerControlQueue = multiprocessing.Queue()
+		logger_p = multiprocessing.Process(target=dataLoggerWorker, args=(ecuData, loggerControlQueue,))
+		logger_p.start()
+		workers.append(logger_p)
+		messageQueues.append(loggerControlQueue)
+	
     # e.g.
     #
     # if settings.MY_WORKER:
@@ -182,7 +196,7 @@ if __name__ == '__main__':
 		#if sensorReceiveQueue.empty() == False:
 		
 		try:
-			d = sensorReceiveQueue.get(block = True, timeout = 0.02)
+			d = sensorReceiveQueue.get(block = True, timeout = 0.01)
 			logger.debug("Got some sensor data")
 			sensorDataType = d[0] # d0 = message_type
 			sensorData = d[1] # d1 = sensorData dict
@@ -201,7 +215,7 @@ if __name__ == '__main__':
 			else:
 				logger.warn("Unknown message type from SensorIO process")
 			
-		except:
+		except Exception as e:
 			pass
 		
 		# Check for any GPIO button message

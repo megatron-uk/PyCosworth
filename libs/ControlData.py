@@ -45,6 +45,17 @@ class ControlData():
 		self.setButton()
 		self.setDuration()
 		self.setDestination()
+		self.data = None
+		
+	def setPayload(self, data = None):
+		if data:
+			self.data = data
+			
+	def getPayload(self):
+		if self.data:
+			return self.data
+		else:
+			return None
 		
 	def setButton(self, button = None):
 		""" Set the button that was pressed """

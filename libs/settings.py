@@ -41,11 +41,12 @@ TYPE_DATA = "DATA_MSG"
 ##############################################################
 
 # Selct the various worker modules
-USE_MATRIX = True			# Output to a Matrix Orbital compatible character mode LCD
+USE_MATRIX = False			# Output to a Matrix Orbital compatible character mode LCD
 USE_CONSOLE = False			# Output to a standard terminal / command prompt
 USE_BUTTONS = True			# Run a process which monitors Raspberry Pi GPIO buttons for button presses
 USE_GRAPHICS = True			# Output to OLED modules or on-screen graphics
-USE_OLED_GRAPHICS = True 	# Try to output to an OLED module
+USE_DATALOGGER = True		# Run the datalogger module to record ecudata to disk
+USE_OLED_GRAPHICS = False 	# Try to output to an OLED module
 USE_SDL_GRAPHICS = True  	# Try to output to on-screen windows
 
 # Sensor modules
@@ -263,6 +264,8 @@ BUTTON_DOWN = "\x1b[B" # Down
 BUTTON_SELECT = " " # Space/select
 BUTTON_CANCEL = "x" # Cancel/escape
 BUTTON_TOGGLE_DEMO = "d" # Start/stop demo mode
+BUTTON_LOGGING_RUNNING = "L" # Logging is running
+BUTTON_LOGGING_STOPPED = "l" # Logging is stopped
 
 # Button message types
 MESSAGE_TYPE_PRESS = 0x01 # message is a button press
@@ -493,3 +496,16 @@ GFX_FONTS = {
 # Size of font for each menu
 GFX_MASTER_SUBMENU_FONTSIZE = 11
 GFX_MASTER_HELP_FONTSIZE = 10
+
+#######################################################
+#
+# Logging module config
+#
+#######################################################
+
+# Broadcast logging status every 'X' seconds
+LOGGING_HEARTBEAT_TIME = 3
+
+# How often to sleep between loops, should be no more than the sensor module
+# otherwise we may miss datapoints
+LOGGING_SLEEP = 0.02
