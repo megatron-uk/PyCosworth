@@ -155,7 +155,34 @@ def showSensorText(menuClass = None, controlData = None):
 	if 'refreshTime' not in menuClass.customData.keys():
 		menuClass.customData['refreshTime'] = 0.3
 		menuClass.customData['timer'] = timeit.default_timer()
-
+		menuClass.customData['page'] = 1
+		menuClass.customData['sensorColumns'] = 2
+		if menuClass.customData['sensorColumns'] > 1:
+			menuClass.customData['sensorColumnOffsets'] = int(menuClass.windowSettings['x_size'] / menuClass.customData['sensorColumns'])
+		else:
+			menuClass.customData['sensorColumnOffsets'] = 0
+		
+	font_big = menuClass.getFont(name = "pixel", style="plain", size=16)
+	font_small = menuClass.getFont(name = "sans", size=12)
+	title = "Sensors"
+	
+	# How many sensors can we fit on a page?
+	sensorIds = menuClass.ecudata.getSensorIds()
+	sensorIds.sort()
+	if len(sensorIds) > 0:
+		title_size = font_big.getsize(title)
+		sensor_size = font_small.getsize("Example")
+		available_y_size = menuClass.windowSettings['y_size'] - (title_size[1] + 1)
+		menuClass.customData['sensorsPerPage'] = int((available_y_size / (sensor_size[1] + 1)) * menuClass.customData['sensorColumns'])
+		pages, remaining = divmod(len(sensorIds), menuClass.customData['sensorsPerPage'])
+		real_pages = int(pages + int(bool(remaining)))
+		menuClass.customData['pages'] = real_pages
+		menuClass.customData['sensorPerColumn'] = int(menuClass.customData['sensorsPerPage'] / menuClass.customData['sensorColumns'])
+	else:
+		menuClass.customData['sensorsPerPage'] = 0
+		menuClass.customData['sensorPerColumn'] = 0
+		menuClass.customData['pages'] = 1
+		
 	# We accept control data
 	if controlData:
 		# If we get a select or cancel button, exit the custom function
@@ -163,29 +190,61 @@ def showSensorText(menuClass = None, controlData = None):
 			menuClass.resetCustomFunction()
 			menuClass.resetMenus(showMenu = True)
 			return True
+			
+		# Turn to next page
+		if controlData.button == settings.BUTTON_RIGHT:
+			if menuClass.customData['page'] < menuClass.customData['pages']:
+				menuClass.customData['page'] += 1
+				return True
+				
+		# Turn to previous page
+		if controlData.button == settings.BUTTON_LEFT:
+			if menuClass.customData['page'] > 1:
+				menuClass.customData['page'] -= 1
+				return True
 
 	else:
 		if (timeit.default_timer() - menuClass.customData['timer']) >= menuClass.customData['refreshTime']:
-			
+						
 			i = Image.new('1', (menuClass.windowSettings['x_size'], menuClass.windowSettings['y_size']))
-			d = ImageDraw.Draw(i)
-			font_big = menuClass.getFont(name = "pixel", style="plain", size=16)
-			font_small = menuClass.getFont(name = "pixel", size=8)
+			d = ImageDraw.Draw(i)			
+			d.text((0,0), title, font = font_big, fill = "white")
 			
-			t = "Sensors"
-			d.text((0,0), t, font = font_big, fill = "white")
-			
-			sensorIds = menuClass.ecudata.getSensorIds()
 			if len(sensorIds) == 0:
 				t = "No sensors found"
 				d.text((0, 36), t, font = font_big, fill = "white")
 			else:
-				sensorData = menuClass.ecudata.getSensorData(sensorId = 'RPM')
-				sampleData = menuClass.ecudata.getData(sensorId = 'RPM', allData = True)
-				if (sensorData is not None) and (sampleData is not None):
-					t = "%s: %4.0f%s" % ('RPM', sampleData[0], sensorData['sensorUnit'])
-					d.text((0, 18), t, font = font_small, fill = "white")
+				# which sensors
+				sensor_start = (menuClass.customData['page'] - 1) * menuClass.customData['sensorsPerPage']
+				sensor_end = sensor_start + menuClass.customData['sensorsPerPage']
+				prev_col = 0
+				idx = 0
+				inner_idx = 0
+				for sensorId in sensorIds[sensor_start:sensor_end]:
+					# Column
+					col = int(idx / menuClass.customData['sensorPerColumn'])
 					
+					# Reset y pos if we moved to the next column
+					if prev_col != col:
+						inner_idx = 0
+						prev_col = col
+					x_pos = col * menuClass.customData['sensorColumnOffsets']
+					y_pos = (title_size[1] + 1 ) + ((sensor_size[1] + 1) * inner_idx)
+				
+					sensorData = menuClass.ecudata.getSensorData(sensorId = sensorId)
+					sampleData = menuClass.ecudata.getData(sensorId = sensorId, allData = True)
+					if (sensorData is not None) and (sampleData is not None):
+						t = "%s: %4.0f%s" % (sensorId, sampleData[0], sensorData['sensorUnit'])
+						d.text((x_pos, y_pos), t, font = font_small, fill = "white")
+					else:
+						t = "%s: No Data" % sensorId
+						d.text((x_pos, y_pos), t, font = font_small, fill = "white")
+					idx += 1
+					inner_idx += 1
+				
+			# Page number
+			t = "%s/%s" % (menuClass.customData['page'], menuClass.customData['pages'])
+			d.text((menuClass.windowSettings['x_size'] - 30, 48), t, font = font_big, fill = "white")
 			menuClass.image = copy.copy(i)
 			menuClass.customData['timer'] = timeit.default_timer()
 		return True
