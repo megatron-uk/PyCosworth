@@ -468,7 +468,7 @@ def GraphicsIO(ecudata, controlQueue, actionQueue):
 				logger.debug("Update latency this loop: %6.4fms [%s of %s screens]" % (((t2 - t1) * 1000), fired_windows, len(gfx_window_keys)))
 			t = t2 - t0
 			if t >= settings.GFX_FRAME_COUNT_TIME:
-				logger.info("Image update speed approximately: %sfps [%s frames / %6.3fs]" % (fired_windows / settings.GFX_FRAME_COUNT_TIME, fired_windows, t))
+				logger.debug("Image update speed approximately: %sfps [%s frames / %6.3fs]" % (fired_windows / settings.GFX_FRAME_COUNT_TIME, fired_windows, t))
 				fps = 0
 				fired_windows = 0
 				t0 = timeit.default_timer()

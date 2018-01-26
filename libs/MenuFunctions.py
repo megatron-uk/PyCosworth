@@ -127,10 +127,64 @@ def showLoggingState(menuClass = None, controlData = None):
 	pass
 
 def startLogging(menuClass = None, controlData = None):
-	pass
+	
+	# We accept control data
+	if controlData:
+		# If we get a select or cancel button, exit the custom function
+		if controlData.button in [ settings.BUTTON_SELECT, settings.BUTTON_CANCEL ]:
+			menuClass.resetCustomFunction()
+			menuClass.resetMenus(showMenu = True)
+			return True
+	
+	font_big = menuClass.getFont(name = "pixel", style="header", size=16)
+	font_small = menuClass.getFont(name = "pixel", style="plain", size=8)
+	i = Image.new('1', (menuClass.windowSettings['x_size'], menuClass.windowSettings['y_size']))
+	d = ImageDraw.Draw(i)
+	
+	title = "Data Logging"
+	d.text((0,0), title, font = font_big, fill = "white")
+	
+	text = "Datalogger is now starting"
+	d.text((0,30), text, font = font_small, fill = "white")
+	
+	text = "Press Select or Cancel to return to menu"
+	d.text((0,40), text, font = font_small, fill = "white")
+	menuClass.image = copy.copy(i)
+	
+	cdata = ControlData()
+	cdata.setButton(settings.BUTTON_LOGGING_RUNNING)
+	menuClass.actionQueue.put(cdata)
+	return True
 
 def stopLogging(menuClass = None, controlData = None):
-	pass
+	
+	# We accept control data
+	if controlData:
+		# If we get a select or cancel button, exit the custom function
+		if controlData.button in [ settings.BUTTON_SELECT, settings.BUTTON_CANCEL ]:
+			menuClass.resetCustomFunction()
+			menuClass.resetMenus(showMenu = True)
+			return True
+	
+	font_big = menuClass.getFont(name = "pixel", style="header", size=16)
+	font_small = menuClass.getFont(name = "pixel", style="plain", size=8)
+	i = Image.new('1', (menuClass.windowSettings['x_size'], menuClass.windowSettings['y_size']))
+	d = ImageDraw.Draw(i)
+	
+	title = "Data Logging"
+	d.text((0,0), title, font = font_big, fill = "white")
+	
+	text = "Datalogger is stopping"
+	d.text((0,30), text, font = font_small, fill = "white")
+	
+	text = "Press Select or Cancel to return to menu"
+	d.text((0,40), text, font = font_small, fill = "white")
+	menuClass.image = copy.copy(i)
+	
+	cdata = ControlData()
+	cdata.setButton(settings.BUTTON_LOGGING_STOPPED)
+	menuClass.actionQueue.put(cdata)
+	return True
 
 def toggleDemo(menuClass = None, controlData = None):
 	""" Toggle demo mode on/off and then remove ourselves from 
@@ -162,8 +216,9 @@ def showSensorText(menuClass = None, controlData = None):
 		else:
 			menuClass.customData['sensorColumnOffsets'] = 0
 		
-	font_big = menuClass.getFont(name = "pixel", style="plain", size=16)
-	font_small = menuClass.getFont(name = "sans", size=12)
+	#font_small = menuClass.getFont(name = "sans", size=12)
+	font_big = menuClass.getFont(name = "pixel", style="header", size=16)
+	font_small = menuClass.getFont(name = "pixel", style="plain", size=8)
 	title = "Sensors"
 	
 	# How many sensors can we fit on a page?
@@ -207,7 +262,7 @@ def showSensorText(menuClass = None, controlData = None):
 		if (timeit.default_timer() - menuClass.customData['timer']) >= menuClass.customData['refreshTime']:
 						
 			i = Image.new('1', (menuClass.windowSettings['x_size'], menuClass.windowSettings['y_size']))
-			d = ImageDraw.Draw(i)			
+			d = ImageDraw.Draw(i)
 			d.text((0,0), title, font = font_big, fill = "white")
 			
 			if len(sensorIds) == 0:
@@ -229,8 +284,9 @@ def showSensorText(menuClass = None, controlData = None):
 						inner_idx = 0
 						prev_col = col
 					x_pos = col * menuClass.customData['sensorColumnOffsets']
-					y_pos = (title_size[1] + 1 ) + ((sensor_size[1] + 1) * inner_idx)
+					y_pos = (title_size[1]) + (sensor_size[1] * inner_idx)
 				
+					print(x_pos, y_pos)
 					sensorData = menuClass.ecudata.getSensorData(sensorId = sensorId)
 					sampleData = menuClass.ecudata.getData(sensorId = sensorId, allData = True)
 					if (sensorData is not None) and (sampleData is not None):

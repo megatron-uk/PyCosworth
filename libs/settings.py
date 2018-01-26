@@ -296,6 +296,8 @@ BUTTON_MAP = {
 	BUTTON_SELECT 		: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Select
 	BUTTON_CANCEL		: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Cancel
 	BUTTON_TOGGLE_DEMO	: { 'dest' : BUTTON_DEST_SENSORIO }, # Toggle demo start/stop
+	BUTTON_LOGGING_RUNNING	: { 'dest' : BUTTON_DEST_DATALOGGER }, # Toggle demo start/stop
+	BUTTON_LOGGING_STOPPED	: { 'dest' : BUTTON_DEST_DATALOGGER }, # Toggle demo start/stop
 }
 
 #######################################################
@@ -486,7 +488,10 @@ GFX_FONTS = {
 		'bolditalic': { 'font' : GFX_ASSETS_DIR + 'fonts/DejaVuSansCondensed-BoldOblique.ttf' },
 	},
 	'pixel'	: {
-		'plain' 	: { 'font' : GFX_ASSETS_DIR + 'fonts/pixelmix.ttf' },
+		'plain' 	: { 'font' : GFX_ASSETS_DIR + 'fonts/pixelmix_8px.ttf' },
+		#'plain' 	: { 'font' : GFX_ASSETS_DIR + 'fonts/Minecraftia-Regular_8px.ttf' },
+		'large' 	: { 'font' : GFX_ASSETS_DIR + 'fonts/Minecraft_16px.ttf' },
+		'header' 	: { 'font' : GFX_ASSETS_DIR + 'fonts/neoletters_16px.ttf' },
 	},
 	'lcd'	: {
 		'plain' 	: { 'font' : GFX_ASSETS_DIR + 'fonts/CFLCD-Regular.ttf' },
@@ -504,7 +509,7 @@ GFX_MASTER_HELP_FONTSIZE = 10
 #######################################################
 
 # Broadcast logging status every 'X' seconds
-LOGGING_HEARTBEAT_TIME = 3
+LOGGING_HEARTBEAT_TIMER = 3
 
 # How often to sleep between loops, should be no more than the sensor module
 # otherwise we may miss datapoints

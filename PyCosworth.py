@@ -189,7 +189,7 @@ if __name__ == '__main__':
 	while True:
 		
 		if i == 10000:
-			logger.info("Still running [main process]")
+			logger.debug("Still running [main process]")
 			i = 0
 		# Get latest data  
 		# If the receive queue has any data back...

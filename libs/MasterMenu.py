@@ -125,7 +125,7 @@ class MasterMenu():
 		
 		#######################################################################################
 		# Record how many lines we have for help text in the submenu or final menu area
-		self.helpTextFont = self.getFont(size = settings.GFX_MASTER_HELP_FONTSIZE)
+		self.helpTextFont = self.getFont(name = "pixel", style = "plain", size = 8)
 		self.helpTextFontSize = self.helpTextFont.getsize("TestItem")
 		self.helpTextLines = int(self.availableLines / self.helpTextFontSize[1])
 		logger.info("[%s] lines of help text available at size %s" % (self.helpTextLines, settings.GFX_MASTER_HELP_FONTSIZE))
@@ -532,7 +532,7 @@ class MasterMenu():
 		if key in self.bitmapCache.keys():
 			logger.info("Cache result found for sub menu bitmap key %s" % key)
 		else:
-			submenuFont = self.getFont(style = "bold", size = settings.GFX_MASTER_SUBMENU_FONTSIZE)
+			submenuFont = self.getFont(name = "sans", style = "bold", size = settings.GFX_MASTER_SUBMENU_FONTSIZE)
 			image = Image.new('1', (settings.GFX_MASTER_SUBMENU_SIZE[0], settings.GFX_MASTER_SUBMENU_SIZE[1]))
 			draw = ImageDraw.Draw(image)
 			# Can we show the full list of items
@@ -645,7 +645,7 @@ class MasterMenu():
 			logger.info("Cache result found for final menu bitmap key %s" % key)
 		else:
 			logger.info("Creating new final menu bitmap for key %s" % key)
-			submenuFont = self.getFont(style = "bold", size = settings.GFX_MASTER_SUBMENU_FONTSIZE)
+			submenuFont = self.getFont(name = "sans", style = "bold", size = settings.GFX_MASTER_SUBMENU_FONTSIZE)
 			image = Image.new('1', (settings.GFX_MASTER_SUBMENU_SIZE[0], settings.GFX_MASTER_SUBMENU_SIZE[1]))
 			draw = ImageDraw.Draw(image)
 			# Can we show the full list of items

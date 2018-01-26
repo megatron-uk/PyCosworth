@@ -62,6 +62,7 @@ def DataLoggerIO(ecudata, controlQueue):
 				if cdata.button == settings.BUTTON_LOGGING_RUNNING:
 					if logging != True:
 						# start
+						logger.info("Start logging")
 						stats = {}
 						logging = True
 						# send message to say started
@@ -70,6 +71,7 @@ def DataLoggerIO(ecudata, controlQueue):
 				if cdata.button == settings.BUTTON_LOGGING_STOPPED:
 					if logging != False:
 						# stop
+						logger.info("Stop logging")
 						logging = False
 						# send message to say stopped
 		
