@@ -30,12 +30,12 @@ import timeit
 # Uncomment the sensor module that you want to test:
 
 # Cossie ECU
-#driver = CosworthSensors(ecuType = settings.COSWORTH_ECU_TYPE)
-#test_sensor = "TPS"
+driver = CosworthSensors(ecuType = "L8 Pectel")
+test_sensor = "RPM"
 
 # Gear indicator
-driver = GearIndicatorSensors()
-test_sensor = "GEAR"
+#driver = GearIndicatorSensors()
+#test_sensor = "GEAR"
 
 # Demo sensors
 #driver = DemoSensors()
@@ -53,7 +53,7 @@ if driver.__is_connected__():
 	for sensorId in sensors:
 		data = driver.sensor(sensorId, force = True)
 		perf = driver.performance(sensorId)
-		print("Sensor: [%6s] Value: [%10s] Sample Speed: [%4.3fms] Description: [%s]" % (sensorId, data['value'], perf['last'], data['sensor']['description']))
+		print("Sensor: [%6s] Value: [%5.3f] Sample Speed: [%4.3fms] Description: [%s]" % (sensorId, data['value'], perf['last'], data['sensor']['description']))
 		time.sleep(0.1)
 
 	print("Check the above values!")

@@ -125,6 +125,7 @@ class CosworthSensors():
 			
 		logger.info("Starting Cosworth ECU sensor module")
 			
+		print(ecuType, pressureType)
 		#self.pressureType = "psi"
 		#self.pressureType = "mmHg"
 		self.pressureType = "mbar"
@@ -192,15 +193,17 @@ class CosworthSensors():
 			get_start_time = timeit.default_timer()
 
 			if len(sensorData['controlCodes']) == 1:
-				self.serial.write(bytes[sensorData['controlCodes'][0]])
-				raw_value = self.serial.read(1)
+				#print([sensorData['controlCodes'][0]])
+				self.serial.write(bytes([sensorData['controlCodes'][0]]))
+				raw_value = self.serial.read(1)[0]
 				
 			elif len(sensorData['controlCodes']) == 2:
-				self.serial.write(bytes[sensorData['controlCodes'][0]])
+				[sensorData['controlCodes'][0]]
+				self.serial.write(bytes([sensorData['controlCodes'][0]]))
 				raw_value_1 = self.serial.read(1)
-				self.serial.write(bytes[sensorData['controlCodes'][1]])
+				self.serial.write(bytes([sensorData['controlCodes'][1]]))
 				raw_value_2 = self.serial.read(1)
-				raw_value = (raw_value_1 << 8) + raw_value_2
+				raw_value = (raw_value_1[0] << 8) + raw_value_2[0]
 				
 			else:
 				logger.error("Unsupported number of control codes for sensor %s" % sensorData['sensorId'])
@@ -215,7 +218,10 @@ class CosworthSensors():
 		""" Translate a raw value from a Cosworth sensor into a real-world number """
 		
 		if sensorId == 'RPM':
-			value = int(30000000 / rawValue)
+			if rawValue == 0:
+				value = 0
+			else:
+				value = int(30000000 / rawValue)
 		elif sensorId == 'INJDUR':
 			value = int((rawValue * 4) / 1000)
 		elif sensorId == 'MAP':
@@ -239,7 +245,7 @@ class CosworthSensors():
 		elif sensorId == "BAT":
 			value = rawValue * 0.0628
 		else:
-			logger.warn("No translation found for sensor %s" % sensorId)
+			logger.debug("No translation found for sensor %s" % sensorId)
 			return rawValue
 			
 		return value
@@ -249,14 +255,16 @@ class CosworthSensors():
 		
 		for sensorId in self.all_sensors.keys():
 			# Is this sensor valid for the current ECU?
-			if self.ecuType  in self.all_sensors[sensorId]['supportedECU']:
-				# Add a new instance of a generic sensor
-				newSensor = GenericSensor(sensorData = self.all_sensors[sensorId], getter = self.__get__)
-				# Set the refresh timer
-				newSensor.refreshTimer(self.all_sensors[sensorId]['refresh'])
-				# Start timer
-				newSensor.resetTimer()
-				self.sensors[sensorId] = newSensor
+			#if self.ecuType  in self.all_sensors[sensorId]['supportedECU']:
+			# Add a new instance of a generic sensor
+			newSensor = GenericSensor(sensorData = self.all_sensors[sensorId], getter = self.__get__)
+			# Set the refresh timer
+			newSensor.refreshTimer(self.all_sensors[sensorId]['refresh'])
+			# Start timer
+			newSensor.resetTimer()
+			self.sensors[sensorId] = newSensor
+			#else:
+				#print("unsupported ecu")
 				
 	
 	def __is_connected__(self):
@@ -277,6 +285,7 @@ class CosworthSensors():
 				dsrdtr=0, 
 				timeout=self.comms_timeout
 			)
+			print(self.serial)
 			logger.info("Serial interface up")
 			self.connected = True
 		except Exception as e:

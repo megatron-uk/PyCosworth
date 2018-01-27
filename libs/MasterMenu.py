@@ -198,7 +198,7 @@ class MasterMenu():
 					self.menu[0]['items'].append(sensor_submenu)
 					refreshBitmaps = True
 				else:
-					logger.warn("Unable to find sensor data definition for %s" % sensorId)
+					logger.debug("Unable to find sensor data definition for %s" % sensorId)
 		
 		# No sensors found
 		if len(self.menu[0]['items']) == 0:
@@ -279,7 +279,7 @@ class MasterMenu():
 					finalitems = copy.copy(subitems[self.subMenuIndex]['items'])
 					finalitems.reverse()
 					if finalitems[self.finalMenuIndex]['itemType'] == 'item':
-						logger.info("Selected a final menu item to launch: %s/%s/%s %s" % (self.menuIndex, self.subMenuIndex, self.finalMenuIndex, finalitems[self.finalMenuIndex]))
+						logger.debug("Selected a final menu item to launch: %s/%s/%s %s" % (self.menuIndex, self.subMenuIndex, self.finalMenuIndex, finalitems[self.finalMenuIndex]))
 						self.customFunction = finalitems[self.finalMenuIndex]['itemSelect']
 						self.buildCustomData()
 						self.resetMenus()
@@ -316,7 +316,7 @@ class MasterMenu():
 					subitems.reverse()
 					#logger.info(subitems[self.subMenuIndex])
 					if subitems[self.subMenuIndex]['itemType'] == 'item':
-						logger.info("Selected a submenu item to launch: %s/%s/%s %s" % (self.menuIndex, self.subMenuIndex, self.finalMenuIndex, subitems[self.subMenuIndex]))
+						logger.debug("Selected a submenu item to launch: %s/%s/%s %s" % (self.menuIndex, self.subMenuIndex, self.finalMenuIndex, subitems[self.subMenuIndex]))
 						self.customFunction = subitems[self.subMenuIndex]['itemSelect']
 						self.buildCustomData()
 						self.resetMenus()

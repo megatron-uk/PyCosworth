@@ -325,7 +325,7 @@ def GraphicsIO(ecudata, controlQueue, actionQueue):
 		if controlQueue.empty() == False:
 			cdata = controlQueue.get()
 			if cdata.isMine(myButtonId):
-				logger.info("Got a control message")
+				logger.debug("Got a control message")
 				cdata.show()
 				
 				master.processControlData(cdata)

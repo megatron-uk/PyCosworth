@@ -64,9 +64,9 @@ def gpioButtonWorker(actionQueue, stdin):
 	""" Output sensor data to a Matrix Orbital text mode LCD """
 	GPIOButtonIO(actionQueue, stdin)
 
-def dataLoggerWorker(ecudata, controlQueue):
+def dataLoggerWorker(ecudata, controlQueue, actionQueue):
 	""" Records incoming sensor data to disk """
-	DataLoggerIO(ecudata, controlQueue)
+	DataLoggerIO(ecudata, controlQueue, actionQueue)
 
 #####################################################
 #
@@ -84,6 +84,7 @@ if __name__ == '__main__':
 	# Send and receive queues to pass data to/from the sensorIO worker
 	sensorTransmitQueue = multiprocessing.Queue()
 	sensorReceiveQueue = multiprocessing.Queue()
+	
 	
 	# A new ecu data structure
 	dataManager = multiprocessing.Manager()
@@ -109,13 +110,15 @@ if __name__ == '__main__':
 
 	# A list of all control queues
 	messageQueues = []
-
+	datalogger_listeners = []
+	
 	# Start the Sensor IO process
 	sensorControlQueue = multiprocessing.Queue()
 	sensor_p = multiprocessing.Process(target=sensorWorker, args=(sensorTransmitQueue, sensorReceiveQueue, sensorControlQueue))
 	sensor_p.start()
 	workers.append(sensor_p)
 	messageQueues.append(sensorControlQueue)
+	datalogger_listeners.append(sensorControlQueue)
 	
 	###########################################################
 	#
@@ -126,31 +129,34 @@ if __name__ == '__main__':
 	if settings.USE_CONSOLE:
 		# The Console worker has a control queue that it listens for incoming control
 		# messages on.
-		consoleControlQueue = multiprocessing.Queue()
+		consoleControlQueue = multiprocessing.Queue() # takes messages
 		console_p = multiprocessing.Process(target=consoleWorker, args=(ecuData, consoleControlQueue,))
 		console_p.start()
 		workers.append(console_p)
 		messageQueues.append(consoleControlQueue)
+		datalogger_listeners.append(consoleControlQueue)
 	
 	# Start the Matrix LCD process
 	if settings.USE_MATRIX:
 		# The MatrixLCD worker has a controle queue that it listens for incoming
 		# control messages on.
-		matrixControlQueue = multiprocessing.Queue()
+		matrixControlQueue = multiprocessing.Queue() # takes messages
 		matrix_p = multiprocessing.Process(target=matrixLCDWorker, args=(ecuData, matrixControlQueue,))
 		matrix_p.start()
 		workers.append(matrix_p)
 		messageQueues.append(matrixControlQueue)
+		datalogger_listeners.append(matrixControlQueue)
     
     # Start the process to capture Raspberry Pi GPIO button presses
 	if settings.USE_BUTTONS:
 		# The GPIO/Button worker has an action queue that it PUTS message onto,
 		# but it DOESNT need to access the ecuData data structure.
-		gpioActionQueue = multiprocessing.Queue()
+		gpioActionQueue = multiprocessing.Queue() # passes messages and button presses back up
 		my_stdin = sys.stdin.fileno()
 		gpio_button_p = multiprocessing.Process(target=gpioButtonWorker, args=(gpioActionQueue, my_stdin))
 		gpio_button_p.start()
 		workers.append(gpio_button_p)
+		
       
      # Start the OLED/SDL graphics process
 	if settings.USE_GRAPHICS:
@@ -162,18 +168,20 @@ if __name__ == '__main__':
 		matrix_p.start()
 		workers.append(matrix_p)
 		messageQueues.append(graphicsControlQueue)
+		datalogger_listeners.append(graphicsControlQueue)
 	
 	# Start the data logger process
 	if settings.USE_DATALOGGER:
 		# The logger worker has a controle queue that it listens for incoming
 		# control messages on.
-		loggerControlQueue = multiprocessing.Queue()
-		logger_p = multiprocessing.Process(target=dataLoggerWorker, args=(ecuData, loggerControlQueue,))
+		loggerControlQueue = multiprocessing.Queue() # takes messages
+		loggerActionQueue = multiprocessing.Queue() # passes messages back up
+		logger_p = multiprocessing.Process(target=dataLoggerWorker, args=(ecuData, loggerControlQueue, loggerActionQueue))
 		logger_p.start()
 		workers.append(logger_p)
 		messageQueues.append(loggerControlQueue)
-	
-    # e.g.
+
+	# e.g.
     #
     # if settings.MY_WORKER:
     # 	# Add any more display processes here
@@ -182,7 +190,6 @@ if __name__ == '__main__':
     # 	myworker_p.start()
     # 	workers.append(myworker_p)
     #	messageQueues.append(myControlQueue)
-    ############################################################
     
 	# Start gathering data
 	i = 0
@@ -210,6 +217,7 @@ if __name__ == '__main__':
 				ecuData.addError(d[2])
 			elif sensorDataType == settings.TYPE_DATA:
 				# But for anything else we record it as a sensor value
+				ecuData.setCounter(loopCount)
 				ecuData.setSensorData(sensorData['sensor'])
 				ecuData.setData(sensorData['sensor']['sensorId'], sensorData['value'], timerData, loopCount)
 			else:
@@ -235,6 +243,14 @@ if __name__ == '__main__':
 			for q in messageQueues:
 				q.put(masterMessage)
 		
+		# Message passed back up from the data logger class
+		if loggerActionQueue.empty() == False:
+			logger.debug("Message from data logger")
+			loggerMessage = loggerActionQueue.get()
+			# Put it in all queues (apart from the graphics one)
+			for q in datalogger_listeners:
+				q.put(loggerMessage)
+		
 		i += 1
     
 	# Wait for the workers to finish
@@ -244,6 +260,8 @@ if __name__ == '__main__':
 	sensorReceiveQueue.join_thread()
 	masterActionQueue.close()
 	masterActionQueue.join_thread()
+	loggerActionQueue.close()
+	loggerActionQueue.join_thread()
 	
 	for q in messageQueues:
 		q.close()

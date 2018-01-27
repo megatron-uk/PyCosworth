@@ -124,9 +124,72 @@ def sensorSelectRight(menuClass = None, controlData = None):
 	pass
 
 def showLoggingState(menuClass = None, controlData = None):
-	pass
+	
+	if 'loggerData' not in menuClass.customData.keys():
+		menuClass.customData['loggerData'] = {}
+		menuClass.customData['lastUpdate'] = time.time()
+	
+	if controlData:
+		# If we get a select or cancel button, exit the custom function
+		if controlData.button in [ settings.BUTTON_SELECT, settings.BUTTON_CANCEL ]:
+			menuClass.resetCustomFunction()
+			menuClass.resetMenus(showMenu = True)
+			return True
+			
+	font_big = menuClass.getFont(name = "pixel", style="header", size=16)
+	font_small = menuClass.getFont(name = "pixel", style="plain", size=8)
+	i = Image.new('1', (menuClass.windowSettings['x_size'], menuClass.windowSettings['y_size']))
+	d = ImageDraw.Draw(i)
+	
+	# if we got a datalogger status message, update our locally held data
+	if controlData:
+		if controlData.button == settings.BUTTON_LOGGING_STATUS:
+			menuClass.customData['lastUpdate'] = time.time()
+			menuClass.customData['loggerData'] = controlData.getPayload()
+			print(menuClass.customData['loggerData'])
+
+	# Render a screen
+	
+	title = "Data Logging"
+	d.text((0,0), title, font = font_big, fill = "white")
+	
+	logdir = os.getcwd() + "/" + settings.LOGGING_DIR
+	disk_use = psutil.disk_usage(logdir)
+	avail_mbytes = int(disk_use.free / 1024 / 1024)
+	t5 = "Available space: %s MBytes" % avail_mbytes
+	log_keys = menuClass.customData['loggerData'].keys()
+	if 'status' in log_keys:
+		if menuClass.customData['loggerData']['status'] == True:
+			t1 = "Current status: Recording"
+		else:
+			t1 = "Current status: Not running"
+	else:
+		t1 = "Current status: N/A"
+		
+	if 'sampleCount' in log_keys:
+		t2 = "Sample points: %s" % menuClass.customData['loggerData']['sampleCount']
+	else:
+		t2 = "Sample points: N/A"
+		
+	if 'logfile' in log_keys:
+		t3 = "File name: %s" % menuClass.customData['loggerData']['logfile']
+		t4 = "File size: 1"
+	else:
+		t3 = "File name: N/A"
+		t4 = "File size: 0"
+		
+	d.text((0,20), t1, font = font_small, fill = "white")
+	d.text((0,28), t2, font = font_small, fill = "white")
+	d.text((0,36), t3, font = font_small, fill = "white")
+	d.text((0,44), t4, font = font_small, fill = "white")
+	d.text((0,52), t5, font = font_small, fill = "white")
+	menuClass.image = copy.copy(i)
+	return True
 
 def startLogging(menuClass = None, controlData = None):
+	
+	if 'messageStatus' not in menuClass.customData.keys():
+		menuClass.customData['messageStatus'] = "unsent"
 	
 	# We accept control data
 	if controlData:
@@ -151,12 +214,17 @@ def startLogging(menuClass = None, controlData = None):
 	d.text((0,40), text, font = font_small, fill = "white")
 	menuClass.image = copy.copy(i)
 	
-	cdata = ControlData()
-	cdata.setButton(settings.BUTTON_LOGGING_RUNNING)
-	menuClass.actionQueue.put(cdata)
+	if menuClass.customData['messageStatus'] != "sent":
+		cdata = ControlData()
+		cdata.setButton(settings.BUTTON_LOGGING_RUNNING)	
+		menuClass.actionQueue.put(cdata)
+		menuClass.customData['messageStatus'] = "sent"
 	return True
 
 def stopLogging(menuClass = None, controlData = None):
+	
+	if 'messageStatus' not in menuClass.customData.keys():
+		menuClass.customData['messageStatus'] = "unsent"
 	
 	# We accept control data
 	if controlData:
@@ -181,9 +249,11 @@ def stopLogging(menuClass = None, controlData = None):
 	d.text((0,40), text, font = font_small, fill = "white")
 	menuClass.image = copy.copy(i)
 	
-	cdata = ControlData()
-	cdata.setButton(settings.BUTTON_LOGGING_STOPPED)
-	menuClass.actionQueue.put(cdata)
+	if menuClass.customData['messageStatus'] != "sent":
+		cdata = ControlData()
+		cdata.setButton(settings.BUTTON_LOGGING_STOPPED)
+		menuClass.actionQueue.put(cdata)
+		menuClass.customData['messageStatus'] = "sent"
 	return True
 
 def toggleDemo(menuClass = None, controlData = None):

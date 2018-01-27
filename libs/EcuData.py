@@ -100,6 +100,11 @@ class EcuData():
 		else:
 			return None
 	
+	def setCounter(self, counter):
+		""" Set counter """
+		
+		self.counter.value = counter
+	
 	def getCounter(self):
 		""" Return current sample counter """
 		

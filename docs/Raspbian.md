@@ -1,4 +1,6 @@
-# Raspberry Pi - Raspbian Packages
+# Raspberry Pi
+
+## Raspbian Packages
 
 In addition to the Python packages listed in [requirements.txt](requirements.txt), Most Raspbian (in fact, most *Linux*) systems will also need the following system packages and libraries installing:
 
@@ -28,3 +30,35 @@ sudo apt-get install python-smbus python-dev python-pip python-sdl2 i2c-tools li
 ```
 
 On other Linux distributions the package names may differ *slightly*.
+
+## Faster Startup
+
+A Raspberry Pi 3 with a standard installation of Raspbian can take well over 10 seconds from power on to fully booted. This isn't ideal for a device in a car, so I've written up a list of changes I've made that results in a consistent boot time of 5 to 5.5 seconds.
+
+**Disable unecessary services**
+
+```
+systemctl mask alsa-restore
+systemctl mask triggerhappy
+systemctl mask bluetooth
+systemctl mask avahi
+```
+*TBC*
+
+**Turn off graphics**
+
+```
+# Disable X11
+# Reduce GPU ram allocation
+```
+
+*TBC*
+
+## Activate I2C and SPI device interfaces
+
+The various display devices that this project can use interface with the Pi using either I2C or SPI bus - they are all presented on the Pi GPIO pins.
+
+*TBC*
+```
+raspi-config
+```

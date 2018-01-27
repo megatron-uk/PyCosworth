@@ -266,6 +266,7 @@ BUTTON_CANCEL = "x" # Cancel/escape
 BUTTON_TOGGLE_DEMO = "d" # Start/stop demo mode
 BUTTON_LOGGING_RUNNING = "L" # Logging is running
 BUTTON_LOGGING_STOPPED = "l" # Logging is stopped
+BUTTON_LOGGING_STATUS = "S" # Logging status/heartbeat response
 
 # Button message types
 MESSAGE_TYPE_PRESS = 0x01 # message is a button press
@@ -513,4 +514,9 @@ LOGGING_HEARTBEAT_TIMER = 3
 
 # How often to sleep between loops, should be no more than the sensor module
 # otherwise we may miss datapoints
-LOGGING_SLEEP = 0.02
+LOGGING_ACTIVE_SLEEP = 0.02 # How long to sleep while recording
+LOGGING_SLEEP = 2 # How long to sleep while recording inactive
+
+LOGGING_DIR = "logs"
+LOGGING_FILE_PREFIX = "pycosworth_"
+LOGGINF_FILE_SUFFIX = ".csv"

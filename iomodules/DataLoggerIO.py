@@ -31,22 +31,30 @@ from libs import settings
 from libs.newlog import newlog
 logger = newlog(__name__)
 
-def DataLoggerIO(ecudata, controlQueue):
+def DataLoggerIO(ecudata, controlQueue, actionQueue):
 	""" Logs ecu data to disk """
 	
-	sleep_time = 5
+	myButtonId = settings.BUTTON_DEST_DATALOGGER
 	
 	logger.info("DataLoggerIO process now running")
 	
 	logging = False
 	heartbeat_timer = timeit.default_timer()
-	stats = {}
+	stats = {
+		'status' 	: False,
+		'logfile'	: "",
+		'sampleCount' : 0,
+	}
+	sensorIds = []
 	while True:
 		logger.debug("Waking")
 		
+		if logging:
+			stats['sampleCount'] = ecudata.getCounter()
 		# Get all sensor ids
 		# get current sample counter
 		# write line where all sensors == current sample counter
+		# construct a line of text, each sensor value seperated by ","
 		
 		# check for free disk space
 		# check if reaching a set limit of time/space
@@ -65,7 +73,11 @@ def DataLoggerIO(ecudata, controlQueue):
 						logger.info("Start logging")
 						stats = {}
 						logging = True
+						sensorIds = ecudata.getSensorIds()
+						sensorIds.sort()
 						# send message to say started
+						# find name of next logfile
+						# open logfile
 			
 				# Stop logging
 				if cdata.button == settings.BUTTON_LOGGING_STOPPED:
@@ -74,17 +86,22 @@ def DataLoggerIO(ecudata, controlQueue):
 						logger.info("Stop logging")
 						logging = False
 						# send message to say stopped
+						# close logfile
+						
 		
 		# Send heartbeat message indicating logging status
 		if (timeit.default_timer() - heartbeat_timer) >= settings.LOGGING_HEARTBEAT_TIMER:
 			logger.debug("Sending heartbeat - logging:%s" % logging)
 			cdata = ControlData()
-			if logging:
-				cdata.button = settings.BUTTON_LOGGING_RUNNING
-			else:
-				cdata.button = settings.BUTTON_LOGGING_STOPPED
+			cdata.button = settings.BUTTON_LOGGING_STATUS
 			cdata.destination = settings.BUTTON_DEST_ALL
+			stats['status'] = logging
 			cdata.setPayload(data = stats)
-			#actionQueue.put(cdata)
-		time.sleep(settings.LOGGING_SLEEP)
-		
+			actionQueue.put(cdata)
+			# Reset timer
+			heartbeat_timer = timeit.default_timer()
+			
+		if logging:
+			time.sleep(settings.LOGGING_ACTIVE_SLEEP)
+		else:
+			time.sleep(settings.LOGGING_SLEEP)

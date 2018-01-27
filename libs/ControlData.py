@@ -97,5 +97,6 @@ class ControlData():
 		logger.debug("self.duration 	= [%s]" % self.duration)
 		logger.debug("self.destination	= [%s]" % self.destination)
 		logger.debug("self.created		= [%s]" % self.created)
+		logger.debug("self.data			: %s" % self.data)
 		logger.debug("")
 		

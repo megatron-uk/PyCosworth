@@ -47,7 +47,6 @@ def SensorIO(transmitQueue, receiveQueue, controlQueue):
 	# Now we begin a continuous sample loop
 	counter = 0
 	
-	
 	# Load any additional sensor types here
 	if settings.USE_COSWORTH:
 		cosworth = CosworthSensors(ecuType = settings.COSWORTH_ECU_TYPE, pressureType = "mbar")
@@ -96,7 +95,7 @@ def SensorIO(transmitQueue, receiveQueue, controlQueue):
 		if controlQueue.empty() == False:
 			cdata = controlQueue.get()
 			if cdata.isMine(myButtonId):
-				logger.info("Got a control message")
+				logger.debug("Got a control message")
 				cdata.show()
 				# We only do one thing:
 				# short press - turn on/off demo mode
