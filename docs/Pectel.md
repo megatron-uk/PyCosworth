@@ -18,7 +18,17 @@ The following serial configuration is needed when talking to a Pectel serial dat
 
 *Note: The baud rate is very low, this means that the amount of data we can transfer in a given space of time is going to be limited. With stop bits and flow control taken in to consideration, we're probably looking at something in the order of 1.2 - 1.5kbits/second.* 
 
-*Depending on how often you want to sample data, that's really not a lot at all.*
+Performance testing has revealed that the [Python code](../iomodules/sensors/Cosworth.py) I have written to query the ECU sensor data can retrieve a single sensor value in approximately 25-27ms.
+
+Most sensors are single 8bit values, and the above timing applies to them, however RPM and injector duration, amongst a few others, are 16bit values, and require two writes and two reads - almost doubling the time to around 45ms.
+
+Extrapolating these numbers out, we see that we can get around 60-62 single byte samples per second, which isn't a lot, but probably enough to get a reasonable update speed in any digital dashboard code.
+
+Moving to 2-byte sensors, the figure halves (approximately 30 updates a second). 
+
+So we'll have to be careful when configuring the software so that we only efresh those sensors we want a quick update speed on, leaving those that are slower-chaning (temperature, for example), or pre-set (mixture screw) with a much longer interval between reads.
+
+When configuring which sensors you use in the software, remember that you can only get, at most, 60 updates a second, and configure your refresh timers appropriately.
 
 ## Available Sensors
 
@@ -38,6 +48,7 @@ The type and number of sensors varies depending on which car and which ECU is be
 | Injector duration a | 0x87 | Upper byte of a 16bit value |
 | Injector duration b | 0x88 | Lower byte of a 16bit value |
 | Battery voltage | 0x89 | Current battery / supply circuit voltage |
+| CO mixture trim pot | 0x8a | Fuel mixture trim screw position |
 | Status code 1 | 0x8b | Error status codes |
 | Status code 2 | 0x8c | Error status codes |
 | Boost control valve | 0x90 | Duty cycle of Amal valve |
@@ -77,7 +88,7 @@ ser = serial.Serial(port = '/dev/ttyUSB0', baudrate=1952, bytesize=8, parity='N'
 ser.write(bytes([0x89]))
 
 # The ECU responds with a single data byte
-data = ser.read()
+data = ser.read(1)[0]
 
 # Transform the returned data into a real world number
 # The transform for voltage is returned data / 0.0628
@@ -93,13 +104,13 @@ Most sensors report data as a single byte, for those sensors that return a 16bit
 ser.write(bytes([0x80]))
 
 # The ECU responds with a single data byte
-rpm_upper = ser.read()
+rpm_upper = ser.read(1)[0]
 
 # Write the byte code for the lower RPM byte
 ser.write(bytes([0x81]))
 
 # The ECU responds with a single data byte
-rpm_lower = ser.read()
+rpm_lower = ser.read(1)[0]
 
 # Shift the upper byte by 8 and add the lower byte
 rpm_data = (rpm_upper << 8) + rpm_lower
@@ -131,3 +142,15 @@ Injection timing angle, 720 - (DATUM * 90) / 4 = Degrees
 
 All transforms where DATUM == data byte returned
 ```
+
+Not all of the FIAT transform formulae are correct - TPS, battery and injector duration appear to be, but the others are not working correctly at this time.
+
+*TO DO: Work out exactly what the transform calculations are for the remaining values.*
+
+## Status and Error Codes
+
+*TO DO: We don't have any information on how to decode status code values (from the control codes 0x8b and 0x8c) at this time.*
+
+## Missing Information
+
+Lambda sensor information - is it available? Can we check for open/closed loop mode?

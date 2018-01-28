@@ -70,7 +70,7 @@ class CosworthSensors():
 			# Has the refresh timer expired
 			raw_v = self.sensors[sensorId].get(force = force)
 			v = self.__translate__(sensorId, raw_v)
-			return {  'sensor' : self.sensors[sensorId].data(), 'value' : v }
+			return {  'sensor' : self.sensors[sensorId].data(), 'value' : v, 'rawValue' : raw_v}
 		else:
 			# Not a valid sensor
 			logger.warn("Unsupported sensor type: %s" % sensorId)
@@ -156,6 +156,7 @@ class CosworthSensors():
 			'INJDUR'		: { 'classId' : 'Cosworth.INJDUR', 	'sensorId' : 'INJDUR',	'sensorUnit' : 'ms',			'refresh' : 0.1,	'controlCodes' : [0x87, 0x88],	'supportedECU' : ['L8 Pectel', 'P8'], 	'description' : 'Injector pulse width duration in milliseconds' },
 			'BAT'		: { 'classId' : 'Cosworth.BAT', 		'sensorId' : 'BAT',		'sensorUnit' : 'v',			'refresh' : 0.5,	'controlCodes' : [0x89],		'supportedECU' : ['L8 Pectel', 'P8'], 	'description' : 'Battery or supply circuit voltage' },
 			'AMAL'		: { 'classId' : 'Cosworth.AMAL', 		'sensorId' : 'AMAL',	'sensorUnit' : '% duty',		'refresh' : 0.2,	'controlCodes' : [0x90],		'supportedECU' : ['L8 Pectel', 'P8'], 	'description' : 'Duty cycle of boost control valve' },
+			'CO'		: { 'classId' : 'Cosworth.CO',			'sensorId' : 'CO',		'sensorUnit' : '% trim',	'refresh' : 1,		'controlCodes' : [0x8a],		'supportedECU' : ['L8 Pectel', 'P8'], 	'description' : 'Base fuel delivery trim pot.'},
 		}
 		
 		# Available sensors for this ecu type
@@ -200,10 +201,10 @@ class CosworthSensors():
 			elif len(sensorData['controlCodes']) == 2:
 				[sensorData['controlCodes'][0]]
 				self.serial.write(bytes([sensorData['controlCodes'][0]]))
-				raw_value_1 = self.serial.read(1)
+				raw_value_1 = self.serial.read(1)[0]
 				self.serial.write(bytes([sensorData['controlCodes'][1]]))
-				raw_value_2 = self.serial.read(1)
-				raw_value = (raw_value_1[0] << 8) + raw_value_2[0]
+				raw_value_2 = self.serial.read(1)[0]
+				raw_value = (raw_value_1 << 8) + raw_value_2
 				
 			else:
 				logger.error("Unsupported number of control codes for sensor %s" % sensorData['sensorId'])

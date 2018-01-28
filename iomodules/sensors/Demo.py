@@ -69,7 +69,7 @@ class DemoSensors():
 		if sensorId in self.sensors.keys():
 			# Has the refresh timer expired
 			v = self.sensors[sensorId].get(force = force)
-			return {  'sensor' : self.sensors[sensorId].data(), 'value' : v }
+			return {  'sensor' : self.sensors[sensorId].data(), 'value' : v, 'rawValue' : v}
 		else:
 			# Not a valid sensor
 			logger.warn("Unsupported sensor type: %s" % sensorId)
