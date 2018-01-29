@@ -125,10 +125,12 @@ class CosworthSensors():
 			
 		logger.info("Starting Cosworth ECU sensor module")
 			
-		print(ecuType, pressureType)
-		#self.pressureType = "psi"
-		#self.pressureType = "mmHg"
-		self.pressureType = "mbar"
+		logger.info("ECU type configured as [%s]" % ecuType)
+		logger.info("Pressure values reported in [%s]" % pressureType)
+		
+		# List of supported pressure measurement types
+		self.supportedPressureType = ["mmhg", "mbar", "psi"]
+		self.pressureType = False
 			
 		# List of supported and selected ecu
 		self.supportedECU = ["L8 Pectel", "P8"]
@@ -147,42 +149,129 @@ class CosworthSensors():
 		
 		# Sensor types
 		self.all_sensors = {
-			'RPM' 		: { 'classId' : 'Cosworth.RPM', 		'sensorId' : 'RPM', 		'sensorUnit' : 'rpm', 		'refresh' : 0.1, 	'controlCodes' : [0x80, 0x81], 	'supportedECU' : ['L8 Pectel', 'P8'],	'description' : 'Engine speed' },
-			'MAP' 		: { 'classId' : 'Cosworth.MAP', 		'sensorId' : 'MAP',	 	'sensorUnit' : 'mbar', 		'refresh' : 0.2, 	'controlCodes' : [0x82], 		'supportedECU' : ['L8 Pectel', 'P8'],	'description' : 'Inlet manifold pressure in milibars' },
-			'IAT'			: { 'classId' : 'Cosworth.IAT', 		'sensorId' : 'IAT',		'sensorUnit' : 'deg C.',		'refresh' : 0.5,	'controlCodes' : [0x83],		'supportedECU' : ['L8 Pectel', 'P8'], 	'description' : 'Inlet manifold air temperature in degrees Celsius' },
-			'ECT'		: { 'classId' : 'Cosworth.ECT', 		'sensorId' : 'ECT',		'sensorUnit' : 'deg C.',		'refresh' : 0.5,	'controlCodes' : [0x84],		'supportedECU' : ['L8 Pectel', 'P8'], 	'description' : 'Engine coolant temperature in degrees Celsius' },
-			'TPS'		: { 'classId' : 'Cosworth.TPS', 		'sensorId' : 'TPS',		'sensorUnit' : 'deg',		'refresh' : 0.1,	'controlCodes' : [0x85],		'supportedECU' : ['L8 Pectel', 'P8'], 	'description' : 'Open angle of throttle plate in degrees ' },
-			'IGNADV'		: { 'classId' : 'Cosworth.IGNADV', 	'sensorId' : 'IGNADV',	'sensorUnit' : 'deg BTDC',	'refresh' : 0.2,	'controlCodes' : [0x86],		'supportedECU' : ['L8 Pectel', 'P8'], 	'description' : 'Ignition timing in degrees before top dead centre' },
-			'INJDUR'		: { 'classId' : 'Cosworth.INJDUR', 	'sensorId' : 'INJDUR',	'sensorUnit' : 'ms',			'refresh' : 0.1,	'controlCodes' : [0x87, 0x88],	'supportedECU' : ['L8 Pectel', 'P8'], 	'description' : 'Injector pulse width duration in milliseconds' },
-			'BAT'		: { 'classId' : 'Cosworth.BAT', 		'sensorId' : 'BAT',		'sensorUnit' : 'v',			'refresh' : 0.5,	'controlCodes' : [0x89],		'supportedECU' : ['L8 Pectel', 'P8'], 	'description' : 'Battery or supply circuit voltage' },
-			'AMAL'		: { 'classId' : 'Cosworth.AMAL', 		'sensorId' : 'AMAL',	'sensorUnit' : '% duty',		'refresh' : 0.2,	'controlCodes' : [0x90],		'supportedECU' : ['L8 Pectel', 'P8'], 	'description' : 'Duty cycle of boost control valve' },
-			'CO'		: { 'classId' : 'Cosworth.CO',			'sensorId' : 'CO',		'sensorUnit' : '% trim',	'refresh' : 1,		'controlCodes' : [0x8a],		'supportedECU' : ['L8 Pectel', 'P8'], 	'description' : 'Base fuel delivery trim pot.'},
+			'RPM': { 
+				'classId' : 'Cosworth.RPM',
+				'sensorId' : 'RPM',
+				'sensorUnit' : 'rpm',
+				'refresh' : 0.1,
+				'controlCodes' : [0x80, 0x81],
+				'supportedECU' : ['L8 Pectel', 'P8'],
+				'description' : 'Engine speed from crank sensor'
+			},
+			'MAP' : { 
+				'classId' : 'Cosworth.MAP',
+				'sensorId' : 'MAP',	
+				'sensorUnit' : 'mbar',
+				'refresh' : 0.2,
+				'controlCodes' : [0x82],
+				'supportedECU' : ['L8 Pectel', 'P8'],
+				'description' : 'Inlet manifold pressure in millibars' 
+			},
+			'IAT': { 
+				'classId' : 'Cosworth.IAT',
+				'sensorId' : 'IAT',
+				'sensorUnit' : 'deg C.',
+				'refresh' : 0.5,
+				'controlCodes' : [0x83],
+				'supportedECU' : ['L8 Pectel', 'P8'],
+				'description' : 'Inlet manifold air temperature in degrees Celsius' 
+			},
+			'ECT': { 
+				'classId' : 'Cosworth.ECT',
+				'sensorId' : 'ECT',
+				'sensorUnit' : 'deg C.',
+				'refresh' : 0.5,
+				'controlCodes' : [0x84],
+				'supportedECU' : ['L8 Pectel', 'P8'],
+				'description' : 'Engine coolant temperature in degrees Celsius' 
+			},
+			'TPS': { 
+				'classId' : 'Cosworth.TPS',
+				'sensorId' : 'TPS',
+				'sensorUnit' : 'deg',
+				'refresh' : 0.1,
+				'controlCodes' : [0x85],
+				'supportedECU' : ['L8 Pectel', 'P8'], 
+				'description' : 'Throttle body opening in degrees' 
+			},
+			'IGNADV': { 
+				'classId' : 'Cosworth.IGNADV', 
+				'sensorId' : 'IGNADV',
+				'sensorUnit' : 'deg BTDC',
+				'refresh' : 0.2,
+				'controlCodes' : [0x86],
+				'supportedECU' : ['L8 Pectel', 'P8'],
+				'description' : 'Ignition timing, degrees before top dead centre' 
+			},
+			'INJDUR': { 
+				'classId' : 'Cosworth.INJDUR', 
+				'sensorId' : 'INJDUR',
+				'sensorUnit' : 'ms',
+				'refresh' : 0.1,
+				'controlCodes' : [0x87, 0x88],
+				'supportedECU' : ['L8 Pectel', 'P8'],
+				'description' : 'Injector pulse width duration, milliseconds' 
+			},
+			'BAT': { 
+				'classId' : 'Cosworth.BAT',
+				'sensorId' : 'BAT',
+				'sensorUnit' : 'v',
+				'refresh' : 0.5,
+				'controlCodes' : [0x89],
+				'supportedECU' : ['L8 Pectel', 'P8'],
+				'description' : 'Battery or supply circuit voltage' 
+			},
+			'AMAL': { 
+				'classId' : 'Cosworth.AMAL', 
+				'sensorId' : 'AMAL',
+				'sensorUnit' : '% duty',
+				'refresh' : 0.2,
+				'controlCodes' : [0x90],
+				'supportedECU' : ['L8 Pectel', 'P8'],
+				'description' : 'Boost control valve duty cycle' 
+			},
+			'CO': { 
+				'classId' : 'Cosworth.CO',
+				'sensorId' : 'CO',
+				'sensorUnit' : '% trim',
+				'refresh' : 1,
+				'controlCodes' : [0x8a],
+				'supportedECU' : ['L8 Pectel', 'P8'],
+				'description' : 'Base fuel delivery trim pot'
+			},
 		}
 		
 		# Available sensors for this ecu type
 		self.sensors = {}
-		
-		#
 		self.connected = False
 		
 		if ecuType not in self.supportedECU:
-			logger.fatal("Attempted initalisation of an unsupported ECU type %s" % ecuType)
+			logger.fatal("Attempted initalisation of an unsupported ECU type [%s]" % ecuType)
 			logger.fatal("Supported types are:")
 			for ecu in self.supportedECU:
 				logger.fatal("'%s'" % ecu)	
 			logger.fatal("Either set the correct ECU type in the settings file, or pass it manually to this class")
 			self.connected = False
-		else:
-			if ecuType:
-				self.ecu = ecuType
-			if pressureType:
-				self.pressureType = pressureType
-			logger.info("Bringing up serial interface")
-			self.__connectECU__()
-			if self.serial is False:
-				return None
-			else:
-				self.__setSensors__()
+			return None
+			
+		if pressureType not in self.supportedPressureType:
+			logger.fatal("Invalid pressure type paramter [%s]" % pressureType)
+			logger.fatal("Supported types are:")
+			for ptype in self.supportedPressureType:
+				logger.fatal("'%s'" % ptype)
+			logger.fatal("Either set the correct pressure type in the settings file, or pass it manually to this class")
+			self.connected = False
+			return None
+		
+		self.ecuType = ecuType
+		self.pressureType = pressureType
+		self.all_sensors['MAP']['sensorUnit'] = self.pressureType
+		
+		# Open a connection
+		self.__setSensors__()
+		self.__connectECU__()
+		if self.serial is False:
+			return None
 
 	def __get__(self, sensorData):
 		""" Get a single sensor value.
@@ -222,50 +311,82 @@ class CosworthSensors():
 			if rawValue == 0:
 				value = 0
 			else:
-				value = int(30000000 / rawValue)
+				# FIAT value
+				#value = int(30000000 / rawValue)
+				# Pectel/Ford value
+				value = int(1875000 / rawValue)
 		elif sensorId == 'INJDUR':
-			value = int((rawValue * 4) / 1000)
+			if rawValue == 0:
+				value = 0
+			else:
+				# This is the FIAT calculation
+				value = int((rawValue * 4) / 1000)
 		elif sensorId == 'MAP':
 			if self.pressureType == "mmHg":
 				# mmHg
+				# This is the FIAT calculation
 				value = rawValue * 6.4161 + 45.63
 			elif self.pressureType == "mbar":
 				# millibar
-				value = (rawValue * 6.4161 + 45.63) *  0.75006156130264
+				# Transpose the FIAT calculation into mbar
+				value = (rawValue * 6.4161 + 45.63) * 0.75006156130264
 			elif self.pressureType == "psi":
 				# PSI
+				# Transpose the FIAT calculation into pounds per square inch
 				value = (rawValue * 6.4161 + 45.63) * 51.714924102396
 			else:
-				logger.warn("Unsupported pressure type %s" % self.pressureType)
-				return rawValue
+				logger.warn("Unsupported pressure type [%s]" % self.pressureType)
+				value = 0
 		elif sensorId == "TPS":
-			if rawValue < 0x30:
+			if rawValue == 0:
+				value = 0
+			elif rawValue < 0x30:
+				# This is the FIAT calculation
 				value = (rawValue * 0.1848) - 1.41
-			if rawValue >= 0x30:
+			elif rawValue >= 0x30:
+				# This is the FIAT calculation
 				value = (rawValue * 0.7058) - 90
 		elif sensorId == "BAT":
-			value = rawValue * 0.0628
+			if rawValue == 0:
+				value = 0
+			else:
+				# This is the FIAT calculation
+				value = rawValue * 0.0628
+		elif sensorId == "IGNADV":
+			if rawValue == 0:
+				value = 0
+			else:
+				# This is the FIAT calculation
+				value = rawValue / 4
+		elif sensorId in ['IAT', 'ECT']:
+			value = rawValue
 		else:
-			logger.debug("No translation found for sensor %s" % sensorId)
-			return rawValue
+			logger.warn("No translation found for sensor [%s]" % sensorId)
+			value = 0
 			
 		return value
 
 	def __setSensors__(self):
 		""" Set up the list of sensors we can use, based on the selected ECU type """
 		
-		for sensorId in self.all_sensors.keys():
+		sensorIds = list(self.all_sensors.keys())
+		sensorIds.sort()
+		for sensorId in sensorIds:
 			# Is this sensor valid for the current ECU?
-			#if self.ecuType  in self.all_sensors[sensorId]['supportedECU']:
-			# Add a new instance of a generic sensor
-			newSensor = GenericSensor(sensorData = self.all_sensors[sensorId], getter = self.__get__)
-			# Set the refresh timer
-			newSensor.refreshTimer(self.all_sensors[sensorId]['refresh'])
-			# Start timer
-			newSensor.resetTimer()
-			self.sensors[sensorId] = newSensor
-			#else:
-				#print("unsupported ecu")
+			# Some ECU variants have a different subset of sensors that they
+			# support, for example, the P8 supports full information from
+			# lambda sensors, whereas the L8 does not.
+			if self.ecuType  in self.all_sensors[sensorId]['supportedECU']:
+				logger.debug("Adding sensor [%s]" % self.all_sensors[sensorId]['classId'])
+				# Add a new instance of a generic sensor
+				newSensor = GenericSensor(sensorData = self.all_sensors[sensorId], getter = self.__get__)
+				# Set the refresh timer
+				newSensor.refreshTimer(self.all_sensors[sensorId]['refresh'])
+				# Start timer
+				newSensor.resetTimer()
+				self.sensors[sensorId] = newSensor
+			else:
+				logger.warn("Sensor type [%s] is unsupported for ecu [%s]" % (self.all_sensors[sensorId]['classId'], self.ecuType))
 				
 	
 	def __is_connected__(self):
@@ -275,6 +396,7 @@ class CosworthSensors():
 	def __connectECU__(self):
 		""" Connect to the ECU """
 		try:
+			logger.info("Bringing up serial interface [%s baud=%s,databits=%s,parity=%s,stopbits=%s]" % (self.comms['device'], self.comms['baud'], self.comms['bits'], self.comms['parity'], self.comms['stopbits']))
 			self.serial = serial.Serial(
 				port = self.comms['device'],
 				baudrate=self.comms['baud'], 
@@ -293,6 +415,10 @@ class CosworthSensors():
 			self.serial = False
 			logger.fatal("Unable to open requested serial port for Cosworth ECU module")
 			logger.fatal("%s" % e)
+			logger.fatal("")
+			logger.fatal("Is the USB to serial adaptor plugged in?")
+			logger.fatal("Is the device name correct?")
+			logger.fatal("Is the ECU powered on?")
 	
 	def __disconnectECU__(self):
 		""" Disconnect from ECU """

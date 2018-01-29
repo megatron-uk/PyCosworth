@@ -163,8 +163,11 @@ class DemoSensors():
 	def __setSensors__(self):
 		""" Set up the list of sensors we can use """
 		
-		for sensorId in self.all_sensors.keys():
+		sensorIds = list(self.all_sensors.keys())
+		sensorIds.sort()
+		for sensorId in sensorIds:
 			# Generate the sequence of demo data
+			logger.debug("Adding sensor [%s]" % self.all_sensors[sensorId]['classId'])
 			demo_step_size = (self.all_sensors[sensorId]['maxValue'] * 1.0) / self.demo_steps
 			d_value = self.all_sensors[sensorId]['minValue']
 			for d in range(0, self.demo_steps):

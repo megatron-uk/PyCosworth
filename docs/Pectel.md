@@ -51,6 +51,9 @@ The type and number of sensors varies depending on which car and which ECU is be
 | CO mixture trim pot | 0x8a | Fuel mixture trim screw position |
 | Status code 1 | 0x8b | Error status codes |
 | Status code 2 | 0x8c | Error status codes |
+| ? | 0x8d | ? |
+| ? | 0x8e | ? |
+| ? | 0x8f | ? |
 | Boost control valve | 0x90 | Duty cycle of Amal valve |
 
 *Note: There are other codes available, as well as a few diagnostic routines. I have not yet documented or tested these.*
