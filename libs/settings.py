@@ -245,7 +245,7 @@ DEMO_STEPS = 64
 #######################################################
 
 # How long to sleep between button scans
-GPIO_SLEEP_TIME = 0.1
+GPIO_SLEEP_TIME = 0.2
 
 # Length of time each press takes (min time, max time)
 BUTTON_TIME_SHORT 	= (0, 	0.3)
@@ -253,48 +253,50 @@ BUTTON_TIME_MEDIUM 	= (0.5, 1.0)
 BUTTON_TIME_LONG 	= (2.0, 5.0)
 
 # Button definitions
-BUTTON_LEFT = "\x1b[D" # Left cursor
-BUTTON_RIGHT = "\x1b[C" # Right cursor
-BUTTON_UP = "\x1b[A" # Up
-BUTTON_DOWN = "\x1b[B" # Down
-BUTTON_SELECT = " " # Space/select
-BUTTON_CANCEL = "x" # Cancel/escape
-BUTTON_TOGGLE_DEMO = "d" # Start/stop demo mode
-BUTTON_LOGGING_RUNNING = "L" # Logging is running
-BUTTON_LOGGING_STOPPED = "l" # Logging is stopped
-BUTTON_LOGGING_STATUS = "S" # Logging status/heartbeat response
+BUTTON_LEFT 				= "\x1b[D" # Left cursor
+BUTTON_RIGHT 				= "\x1b[C" # Right cursor
+BUTTON_UP 					= "\x1b[A" # Up
+BUTTON_DOWN 				= "\x1b[B" # Down
+BUTTON_SELECT 				= " " # Space/select
+BUTTON_CANCEL 				= "x" # Cancel/escape
+BUTTON_TOGGLE_DEMO 			= "d" # Start/stop demo mode
+BUTTON_LOGGING_RUNNING 		= "L" # Logging is running
+BUTTON_LOGGING_STOPPED 		= "l" # Logging is stopped
+BUTTON_LOGGING_STATUS 		= "S" # Logging status/heartbeat response
+BUTTON_RESET_COSWORTH_ECU 	= "R" # Reset Cosworth ECU serial comms
 
 # Button message types
-MESSAGE_TYPE_PRESS = 0x01 # message is a button press
-MESSAGE_TYPE_PAUSE = 0xFE # message is to pause logging/display
-MESSAGE_TYPE_EXIT = 0xFF # message is to shut down
+MESSAGE_TYPE_PRESS 	= 0x01 # message is a button press
+MESSAGE_TYPE_PAUSE 	= 0xFE # message is to pause logging/display
+MESSAGE_TYPE_EXIT 	= 0xFF # message is to shut down
 
 # Button durations
-BUTTON_SHORT = 0x11 # short duration press
-BUTTON_MEDIUM = 0x12 # medium duration press
-BUTTON_LONG = 0x13 # long press
+BUTTON_SHORT 	= 0x11 # short duration press
+BUTTON_MEDIUM 	= 0x12 # medium duration press
+BUTTON_LONG 	= 0x13 # long press
 
 # Set destination types
-BUTTON_DEST_ALL = 0x00 # send to all workers
-BUTTON_DEST_MAIN = 0x01 # send to main PyCosworth process
-BUTTON_DEST_SENSORIO = 0x02 # send to serial process
-BUTTON_DEST_CONSOLEIO = 0x03 # send to console process
-BUTTON_DEST_MATRIXIO = 0x04 # send to matrix lcd process
-BUTTON_DEST_GRAPHICSIO = 0x05 # send to SDL/OLED graphics process
-BUTTON_DEST_DATALOGGER = 0x06 # send to datalogger process
+BUTTON_DEST_ALL 		= 0x00 # send to all workers
+BUTTON_DEST_MAIN 		= 0x01 # send to main PyCosworth process
+BUTTON_DEST_SENSORIO 	= 0x02 # send to serial process
+BUTTON_DEST_CONSOLEIO 	= 0x03 # send to console process
+BUTTON_DEST_MATRIXIO 	= 0x04 # send to matrix lcd process
+BUTTON_DEST_GRAPHICSIO 	= 0x05 # send to SDL/OLED graphics process
+BUTTON_DEST_DATALOGGER 	= 0x06 # send to datalogger process
 
 # Mapping of buttons to modules
 # i.e. button 1 and 2 to GraphicsIO, button 3 to datalogger, etc
 BUTTON_MAP = {
-	BUTTON_LEFT 		: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Left
-	BUTTON_RIGHT 		: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Right
-	BUTTON_UP 			: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Up
-	BUTTON_DOWN 		: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Down
-	BUTTON_SELECT 		: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Select
-	BUTTON_CANCEL		: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Cancel
-	BUTTON_TOGGLE_DEMO	: { 'dest' : BUTTON_DEST_SENSORIO }, # Toggle demo start/stop
-	BUTTON_LOGGING_RUNNING	: { 'dest' : BUTTON_DEST_DATALOGGER }, # Toggle demo start/stop
-	BUTTON_LOGGING_STOPPED	: { 'dest' : BUTTON_DEST_DATALOGGER }, # Toggle demo start/stop
+	BUTTON_LEFT 				: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Left
+	BUTTON_RIGHT 				: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Right
+	BUTTON_UP 					: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Up
+	BUTTON_DOWN 				: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Down
+	BUTTON_SELECT 				: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Select
+	BUTTON_CANCEL				: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Cancel
+	BUTTON_TOGGLE_DEMO			: { 'dest' : BUTTON_DEST_SENSORIO }, # Toggle demo start/stop
+	BUTTON_RESET_COSWORTH_ECU	: { 'dest' : BUTTON_DEST_SENSORIO }, # Toggle demo start/stop
+	BUTTON_LOGGING_RUNNING		: { 'dest' : BUTTON_DEST_DATALOGGER }, # Toggle demo start/stop
+	BUTTON_LOGGING_STOPPED		: { 'dest' : BUTTON_DEST_DATALOGGER }, # Toggle demo start/stop
 }
 
 #######################################################
@@ -379,25 +381,25 @@ GFX_MODE_LINE = "MODE_LINE"
 # in each window (where we have more than one OLED screen connected
 # to our Raspberry Pi).
 GFX_WINDOWS = {
-	#"primary": {
-	#	'windowName'		: 'primary',
-	#	'oledType'			: 'sh1106',
-	#	'i2cAddress'		: 0x3C,
-	#	'spiAddress'		: None,
-	#	'setting'			: GFX_SETTING_FIXED,
-	#	'mode'				: [GFX_MODE_CLOCK, GFX_MODE_WAVEFORM, GFX_MODE_LINE, GFX_MODE_SEGMENTS, ],
-	#	'currentModeIdx'	: 0,
-	#	'currentMode'		: None,
-	#	'sensorIds'			: ['RPM', 'TPS'],
-	#	'currentSensorIdx'	: 0,
-	#	'screen_cycleTime'	: 5,
-	#	'value_refreshTime'	: 0.05,
-	#	'screen_refreshTime': 0.05,
-	#	'sdlWindow'			: None,
-	#	'sdl_framebuffer'	: None,
-	#	'luma_framebuffer'	: None,
-	#	'luma_driver'		: None,
-	#},
+	"primary": {
+		'windowName'		: 'primary',
+		'oledType'			: 'sh1106',
+		'i2cAddress'		: 0x3C,
+		'spiAddress'		: None,
+		'setting'			: GFX_SETTING_FIXED,
+		'mode'				: [GFX_MODE_CLOCK, GFX_MODE_WAVEFORM, GFX_MODE_LINE, GFX_MODE_SEGMENTS, ],
+		'currentModeIdx'	: 0,
+		'currentMode'		: None,
+		'sensorIds'			: ['RPM', 'TPS'],
+		'currentSensorIdx'	: 0,
+		'screen_cycleTime'	: 5,
+		'value_refreshTime'	: 0.1,
+		'screen_refreshTime': 0.1,
+		'sdlWindow'			: None,
+		'sdl_framebuffer'	: None,
+		'luma_framebuffer'	: None,
+		'luma_driver'		: None,
+	},
 	#'secondary': {
 	#	'windowName'		: 'secondary',
 	#	'oledType'			: 'sh1106',

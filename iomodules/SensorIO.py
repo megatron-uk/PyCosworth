@@ -112,6 +112,12 @@ def SensorIO(transmitQueue, receiveQueue, controlQueue):
 						SENSOR_DEMO = True
 						demo = DemoSensors()
 						demo_sensors = demo.available()
+						
+				# Reset Cosworth ecu comms
+				if (settings.USE_COSWORTH) and (cdata.button == settings.BUTTON_RESET_COSWORTH_ECU):
+					logger.info("Resetting Cosworth ECU serial connection")
+					cosworth.__reconnectECU__()
+					cosworth_sensors = cosworth.available()
 		
 		####################################################
 		#
