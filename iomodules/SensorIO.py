@@ -86,7 +86,7 @@ def SensorIO(transmitQueue, receiveQueue, controlQueue):
 			receiveQueue.put((settings.TYPE_DATA, sensorData, 0, 0))
 			
 	while True:
-		
+		data_added = False
 		####################################################
 		#
 		# Listen for control messages
@@ -147,9 +147,12 @@ def SensorIO(transmitQueue, receiveQueue, controlQueue):
 				if sensorData['value'] is not None:
 					logger.debug("Received %s: value:%s counter:%s" % (sensorData['sensor']['sensorId'], sensorData['value'], counter))
 					receiveQueue.put((settings.TYPE_DATA, sensorData, counter, timerData['last']))
+					data_added = True
 				
 		# Sleep at the end of each round so that we don't
 		# consume too many processor cycles. May need to experiment
 		# with this value for different platforms.
 		time.sleep(settings.SENSOR_SLEEP_TIME)
-		counter += 1
+		
+		if data_added:
+			counter += 1

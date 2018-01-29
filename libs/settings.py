@@ -100,7 +100,7 @@ for s in SENSORS:
 SENSOR_MAX_HISTORY = 256
 
 # The amount of time, in seconds, that the SensorIO process sleeps between each loop
-SENSOR_SLEEP_TIME = 0.01
+SENSOR_SLEEP_TIME = 0.05
 
 ##########################################################
 #
@@ -506,12 +506,12 @@ GFX_MASTER_HELP_FONTSIZE = 10
 #######################################################
 
 # Broadcast logging status every 'X' seconds
-LOGGING_HEARTBEAT_TIMER = 3
+LOGGING_HEARTBEAT_TIMER = 1
 
 # How often to sleep between loops, should be no more than the sensor module
 # otherwise we may miss datapoints
 LOGGING_ACTIVE_SLEEP = 0.02 # How long to sleep while recording
-LOGGING_SLEEP = 2 # How long to sleep while recording inactive
+LOGGING_SLEEP = 1 # How long to sleep while recording inactive
 
 LOGGING_DIR = "logs"
 LOGGING_FILE_PREFIX = "pycosworth_"

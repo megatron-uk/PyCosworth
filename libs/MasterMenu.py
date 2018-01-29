@@ -111,24 +111,24 @@ class MasterMenu():
 		# the bottom menu
 		first_menu_item = self.menu[0]['itemName']
 		self.availableLines = self.windowSettings['y_size'] - settings.GFX_MASTER_BASE_MENU_SIZE[1]
-		logger.info("[%s] lines of pixels above bottom menu" % self.availableLines)
+		logger.debug("[%s] lines of pixels above bottom menu" % self.availableLines)
 		
 		# How many complete lines of items can we show above the 1st level menu
 		self.submenuFont = self.getFont(size = settings.GFX_MASTER_SUBMENU_FONTSIZE)
 		self.submenuFontSize = self.submenuFont.getsize("TestItem")
 		self.menuItemsShown = int(self.availableLines / self.submenuFontSize[1])
-		logger.info("[%s] lines of text available at size %s" % (self.menuItemsShown, settings.GFX_MASTER_SUBMENU_FONTSIZE))
+		logger.debug("[%s] lines of text available at size %s" % (self.menuItemsShown, settings.GFX_MASTER_SUBMENU_FONTSIZE))
 		
 		# How many free pixels are left over?
 		self.menuFreeLines = self.availableLines - (self.menuItemsShown * self.submenuFontSize[1])
-		logger.info("[%s] lines of pixels left" % self.menuFreeLines)
+		logger.debug("[%s] lines of pixels left" % self.menuFreeLines)
 		
 		#######################################################################################
 		# Record how many lines we have for help text in the submenu or final menu area
 		self.helpTextFont = self.getFont(name = "pixel", style = "plain", size = 8)
 		self.helpTextFontSize = self.helpTextFont.getsize("TestItem")
 		self.helpTextLines = int(self.availableLines / self.helpTextFontSize[1])
-		logger.info("[%s] lines of help text available at size %s" % (self.helpTextLines, settings.GFX_MASTER_HELP_FONTSIZE))
+		logger.debug("[%s] lines of help text available at size %s" % (self.helpTextLines, settings.GFX_MASTER_HELP_FONTSIZE))
 		
 		# Offset any submenu items this many pixels from the LHS.
 		self.leftOffset = 1
@@ -508,7 +508,7 @@ class MasterMenu():
 		
 		key = "basemenuBitmap|menuIndex:" + str(self.menuIndex)
 		if key in self.bitmapCache.keys():
-			logger.info("Cache result found for base menu bitmap")
+			logger.debug("Cache result found for base menu bitmap")
 		else:
 			x_pos = 0
 			index = 0
@@ -522,7 +522,7 @@ class MasterMenu():
 				x_pos += settings.GFX_MASTER_BITMAPS[menuItem['itemName']]['size'][0]
 				index += 1
 			self.bitmapCache[key] = copy.copy(image)
-			logger.info("Base menu bitmap assembled")
+			logger.debug("Base menu bitmap assembled")
 		return self.bitmapCache[key].copy()
 
 	def createSubMenuBitmap(self):
@@ -530,14 +530,14 @@ class MasterMenu():
 		
 		key = "submenuBitmap|menuIndex:" + str(self.menuIndex) + ",subMenuIndex:" + str(self.subMenuIndex) + ",finalMenuIndex:" +str(self.finalMenuIndex)
 		if key in self.bitmapCache.keys():
-			logger.info("Cache result found for sub menu bitmap key %s" % key)
+			logger.debug("Cache result found for sub menu bitmap key %s" % key)
 		else:
 			submenuFont = self.getFont(name = "sans", style = "bold", size = settings.GFX_MASTER_SUBMENU_FONTSIZE)
 			image = Image.new('1', (settings.GFX_MASTER_SUBMENU_SIZE[0], settings.GFX_MASTER_SUBMENU_SIZE[1]))
 			draw = ImageDraw.Draw(image)
 			# Can we show the full list of items
 			if self.menuItemsShown >= len(self.menu[self.menuIndex]['items']):
-				logger.info("Building submenu bitmap [name:%s id:%s] has %s items - we can show them all (max:%s)" % (self.menu[self.menuIndex]['itemName'], self.menuIndex, len(self.menu[self.menuIndex]['items']), self.menuItemsShown))
+				logger.debug("Building submenu bitmap [name:%s id:%s] has %s items - we can show them all (max:%s)" % (self.menu[self.menuIndex]['itemName'], self.menuIndex, len(self.menu[self.menuIndex]['items']), self.menuItemsShown))
 				x_pos = 0
 				y_pos = settings.GFX_MASTER_BASE_MENU_SIZE[1] + settings.GFX_MASTER_SUBMENU_FONTSIZE
 				index = 0
@@ -571,7 +571,7 @@ class MasterMenu():
 					y_pos -= settings.GFX_MASTER_SUBMENU_FONTSIZE
 					index += 1
 			else:
-				logger.info("Building submenu bitmap [name:%s id:%s] has %s items - too many to show at once (max:%s)" % (self.menu[self.menuIndex]['itemName'], self.menuIndex, len(self.menu[self.menuIndex]['items']), self.menuItemsShown))
+				logger.debug("Building submenu bitmap [name:%s id:%s] has %s items - too many to show at once (max:%s)" % (self.menu[self.menuIndex]['itemName'], self.menuIndex, len(self.menu[self.menuIndex]['items']), self.menuItemsShown))
 				x_pos = 0
 				y_pos = settings.GFX_MASTER_BASE_MENU_SIZE[1] + settings.GFX_MASTER_SUBMENU_FONTSIZE
 				
@@ -791,30 +791,30 @@ class MasterMenu():
 		""" Display text, wrapped over several lines, for a given menu level """
 				
 		if windowLevel == "main":
-			logger.info("Assembling help text for main menu")
+			logger.debug("Assembling help text for main menu")
 			x_size = self.windowSettings['x_size'] - 2
 			x_pos = 1
 			key = "helptextBitmap|windowLevel:" + windowLevel + ",menuIndex:" + str(self.menuIndex)
 		elif windowLevel == "sub":
-			logger.info("Assembling help text for submenu")
+			logger.debug("Assembling help text for submenu")
 			x_size = self.windowSettings['x_size'] - settings.GFX_MASTER_SUBMENU_SIZE[0]
 			x_pos = settings.GFX_MASTER_SUBMENU_SIZE[0]
 			key = "helptextBitmap|windowLevel:" + windowLevel + ",menuIndex:" + str(self.menuIndex) + ",subMenuIndex:" + str(self.subMenuIndex) 
 		elif windowLevel == "final":
-			logger.info("Assembling help text for a final menu item")
+			logger.debug("Assembling help text for a final menu item")
 			x_size = self.windowSettings['x_size'] - (2 * settings.GFX_MASTER_SUBMENU_SIZE[0])
 			x_pos = (2 * settings.GFX_MASTER_SUBMENU_SIZE[0])
 			key = "helptextBitmap|windowLevel:" + windowLevel + ",menuIndex:" + str(self.menuIndex) + ",subMenuIndex:" + str(self.subMenuIndex) + ",finalMenuIndex:" + str(self.finalMenuIndex)
 		
 		if key in self.bitmapCache.keys():
-			logger.info("Cache result found for helptext bitmap key %s" % key)
+			logger.debug("Cache result found for helptext bitmap key %s" % key)
 		else:
 			logger.info("Generating new helptext bitmap key %s" % key)
 			y_pos = 0
 			y_size = self.windowSettings['y_size'] - settings.GFX_MASTER_BASE_MENU_SIZE[1]
 			
 			wrap_text = self.wrapText(text = text, font = self.helpTextFont, max_width = x_size, max_lines = self.helpTextLines)
-			logger.info("Help text will be on %s lines" % len(wrap_text))
+			logger.debug("Help text will be on %s lines" % len(wrap_text))
 			helptextBitmap = Image.new('1', (x_size, y_size))
 			draw = ImageDraw.Draw(helptextBitmap)
 			x = 0
@@ -854,7 +854,7 @@ class MasterMenu():
 				# Always show the bottom menu
 				logger.info("Show the main menu")
 				menuBitmap = self.createBaseMenuBitmap()
-				logger.info("Pasting menu image [%sx%sx%s] at x:%s,y:%s" % (menuBitmap.size[0], menuBitmap.size[1], menuBitmap.mode, 0, self.windowSettings['y_size'] - menuBitmap.size[1]))
+				logger.debug("Pasting menu image [%sx%sx%s] at x:%s,y:%s" % (menuBitmap.size[0], menuBitmap.size[1], menuBitmap.mode, 0, self.windowSettings['y_size'] - menuBitmap.size[1]))
 				self.image.paste(menuBitmap, (0, self.windowSettings['y_size'] - menuBitmap.size[1]))
 					
 				###########################################
@@ -866,7 +866,7 @@ class MasterMenu():
 				if (self.menuIndex > -1) and (self.subMenuIndex is None) and (self.finalMenuIndex is None):
 					# Show a description of the main menu item we've got highlighted
 					helpBitmap = self.wrappedHelpWindowText(text = self.menu[self.menuIndex]['itemText'], windowLevel = "main")
-					logger.info("Pasting helptext image [%sx%sx%s] at x:%s,y:%s" % (helpBitmap.size[0], helpBitmap.size[1], helpBitmap.mode, 0, 0))
+					logger.debug("Pasting helptext image [%sx%sx%s] at x:%s,y:%s" % (helpBitmap.size[0], helpBitmap.size[1], helpBitmap.mode, 0, 0))
 					self.image.paste(helpBitmap, (self.leftOffset, 0))
 				else:
 					# No main menu item is highlighted yet
@@ -880,7 +880,7 @@ class MasterMenu():
 				logger.info("Show a submenu")
 				# A sub-menu is selected, so build and show that sub-menu list
 				subMenuBitmap = self.createSubMenuBitmap()
-				logger.info("Pasting submenu image [%sx%sx%s] at x:%s,y:%s" % (subMenuBitmap.size[0], subMenuBitmap.size[1], subMenuBitmap.mode, 0, 0))
+				logger.debug("Pasting submenu image [%sx%sx%s] at x:%s,y:%s" % (subMenuBitmap.size[0], subMenuBitmap.size[1], subMenuBitmap.mode, 0, 0))
 				self.image.paste(subMenuBitmap, (0, 0))
 					
 				###########################################
@@ -893,7 +893,7 @@ class MasterMenu():
 					items = copy.copy(self.menu[self.menuIndex]['items'])
 					items.reverse()
 					helpBitmap = self.wrappedHelpWindowText(text = items[self.subMenuIndex]['itemText'], windowLevel = "sub")
-					logger.info("Pasting helptext image [%sx%sx%s] at x:%s,y:%s" % (helpBitmap.size[0], helpBitmap.size[1], helpBitmap.mode, settings.GFX_MASTER_LINE_1_XPOS + 1, 0))
+					logger.debug("Pasting helptext image [%sx%sx%s] at x:%s,y:%s" % (helpBitmap.size[0], helpBitmap.size[1], helpBitmap.mode, settings.GFX_MASTER_LINE_1_XPOS + 1, 0))
 					self.image.paste(helpBitmap, (settings.GFX_MASTER_LINE_1_XPOS + 1, 0))
 					
 			####################################
@@ -911,7 +911,7 @@ class MasterMenu():
 			
 				if items[self.subMenuIndex]['itemType'] == 'menu':
 					finalMenuBitmap = self.createFinalMenuBitmap()
-					logger.info("Pasting final menu image [%sx%sx%s] at x:%s,y:%s" % (finalMenuBitmap.size[0], finalMenuBitmap.size[1], finalMenuBitmap.mode, settings.GFX_MASTER_LINE_1_XPOS + 1, 0))
+					logger.debug("Pasting final menu image [%sx%sx%s] at x:%s,y:%s" % (finalMenuBitmap.size[0], finalMenuBitmap.size[1], finalMenuBitmap.mode, settings.GFX_MASTER_LINE_1_XPOS + 1, 0))
 					self.image.paste(finalMenuBitmap, (settings.GFX_MASTER_LINE_1_XPOS + 1, 0))
 			
 				###########################################
@@ -925,7 +925,7 @@ class MasterMenu():
 					finalitems = copy.copy(subitems[self.subMenuIndex]['items'])
 					finalitems.reverse()
 					helpBitmap = self.wrappedHelpWindowText(text = finalitems[self.finalMenuIndex]['itemText'], windowLevel = "final")
-					logger.info("Pasting helptext image [%sx%sx%s] at x:%s,y:%s" % (helpBitmap.size[0], helpBitmap.size[1], helpBitmap.mode, settings.GFX_MASTER_LINE_2_XPOS + 1, 0))
+					logger.debug("Pasting helptext image [%sx%sx%s] at x:%s,y:%s" % (helpBitmap.size[0], helpBitmap.size[1], helpBitmap.mode, settings.GFX_MASTER_LINE_2_XPOS + 1, 0))
 					self.image.paste(helpBitmap, (settings.GFX_MASTER_LINE_2_XPOS + 2, 0))
 				
 			self.frameCache[key] = copy.copy(self.image)		

@@ -107,12 +107,12 @@ class EcuData():
 	def setCounter(self, counter):
 		""" Set counter """
 		
-		self.counter.value = counter
+		self.counter.value = int(counter)
 	
 	def getCounter(self):
 		""" Return current sample counter """
 		
-		return self.counter.value
+		return int(self.counter.value)
 	
 	def get_errors(self):
 		""" Return a list of any logged errors """

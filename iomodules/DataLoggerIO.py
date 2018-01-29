@@ -50,7 +50,7 @@ def getNextLogfile():
 		# Increment file number
 		nextFilenumber = int(latestFilenumber) + 1
 		# Construct filename
-		nextFilenumberStr = "" % nextFilenumber
+		nextFilenumberStr = "%03d" % nextFilenumber
 		nextFilename = settings.LOGGING_FILE_PREFIX + str(nextFilenumberStr) + settings.LOGGING_FILE_SUFFIX
 	return nextFilename
 
@@ -68,23 +68,38 @@ def DataLoggerIO(ecudata, controlQueue, actionQueue):
 		'logfile'	: "",
 		'sampleCount' : 0,
 	}
+	f = False
 	sensorIds = []
+	previousSampleCount = -1
 	while True:
 		logger.debug("Waking")
 		
 		if logging:
 			stats['sampleCount'] = ecudata.getCounter()
 			
-		# Get all sensor ids
-		#sensorIds
-		
-		# get current sample counter
-		# write line where all sensors == current sample counter
-		# construct a line of text, each sensor value seperated by ","
-		
-		# check for free disk space
-		# check if reaching a set limit of time/space
-		
+			if stats['sampleCount'] != previousSampleCount:
+			
+				# Get all sensor ids
+				#sensorIds
+				
+				# get current sample counter
+				# write line where all sensors == current sample counter
+				t_now = time.time() - t_start
+				line = str(stats['sampleCount']) + "," + str(t_now) + ","
+				for sensorId in sensorIds:
+					d = ecudata.getData(sensorId)
+					if d is None:
+						line = line + "0,"
+					else:
+						line = line + str(d) + ","
+				f.write(line + "\n")
+				# construct a line of text, each sensor value seperated by ","
+				
+				# check for free disk space
+				# check if reaching a set limit of time/space
+
+			previousSampleCount = stats['sampleCount']
+
 		# Listen for control messages
 		if controlQueue.empty() == False:
 			cdata = controlQueue.get()
@@ -106,6 +121,18 @@ def DataLoggerIO(ecudata, controlQueue, actionQueue):
 						filename = getNextLogfile()
 						stats['logfile'] = filename
 						# open logfile
+						try:
+							f = open(settings.LOGGING_DIR + "/" + filename, 'w')
+							header = "Counter,Time,"
+							for sensorId in sensorIds:
+								header = header + sensorId + ","
+							header = header + "\n"
+							f.write(header)
+							t_start = time.time()
+						except Exception as e:
+							logger.error("Unable to open logfile")
+							logger.error("%s" % e)
+							f = False
 			
 				# Stop logging
 				if cdata.button == settings.BUTTON_LOGGING_STOPPED:
@@ -115,6 +142,8 @@ def DataLoggerIO(ecudata, controlQueue, actionQueue):
 						logging = False
 						# send message to say stopped
 						# close logfile
+						if f:
+							f.close()
 						
 		
 		# Send heartbeat message indicating logging status
@@ -129,7 +158,7 @@ def DataLoggerIO(ecudata, controlQueue, actionQueue):
 			# Reset timer
 			heartbeat_timer = timeit.default_timer()
 			
-		if logging:
-			time.sleep(settings.LOGGING_ACTIVE_SLEEP)
-		else:
+		if logging is False:
 			time.sleep(settings.LOGGING_SLEEP)
+		else:
+			time.sleep(0.005)
