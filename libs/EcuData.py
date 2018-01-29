@@ -75,11 +75,15 @@ class EcuData():
 		if sensorId in self.data.keys():
 			if len(self.data[sensorId]) > 0:
 				logger.debug("Queried %s: value:%s sampletime:%.4f counter:%s [allData:%s]" % (sensorId, self.data[sensorId][0], self.data[sensorId][1], self.data[sensorId][2], allData))
-				if allData:
-					return self.data[sensorId]
-				else:
-					v = self.data[sensorId][0]
-					return v
+				if self.data[sensorId][0] is not None:
+					if allData:
+						return self.data[sensorId]
+					else:
+						v = self.data[sensorId][0]
+						return v
+				
+		# If no data has been recorded, or the value of the data is None, then simply return None as the result, ignoring any sample timer or loop counter
+		return None
 	
 	def getSensorIds(self):
 		

@@ -147,6 +147,7 @@ def GraphicsIO(ecudata, controlQueue, actionQueue):
 	
 	# Load data about sensors (names etc.) from config file into a local look-up table
 	local_sensors = {}
+	
 	for sensor in settings.SENSORS:
 		sensorId = sensor['sensorId']
 		local_sensors[sensorId] = sensor
@@ -428,9 +429,7 @@ def GraphicsIO(ecudata, controlQueue, actionQueue):
 				# As the list is a fixed size, this also pushes the oldest
 				# value off the back of the list.
 				local_sensors[currentSensorId]['previousValues'].append(ecudata.getData(currentSensorId))
-		
-				#print(ecudata.getData(currentSensorId))
-		
+				
 				# Waveform gauge
 				if currentMode == settings.GFX_MODE_WAVEFORM:
 					image = gaugeWaveform(ecudata = ecudata, sensor = local_sensors[currentSensorId], font = font, windowSettings = settings.GFX_WINDOWS[w], highlight_current = True)

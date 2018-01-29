@@ -69,7 +69,10 @@ class CosworthSensors():
 		if sensorId in self.sensors.keys():
 			# Has the refresh timer expired
 			raw_v = self.sensors[sensorId].get(force = force)
-			v = self.__translate__(sensorId, raw_v)
+			if raw_v:
+				v = self.__translate__(sensorId, raw_v)
+			else:
+				v = raw_v
 			return {  'sensor' : self.sensors[sensorId].data(), 'value' : v, 'rawValue' : raw_v}
 		else:
 			# Not a valid sensor
@@ -278,12 +281,11 @@ class CosworthSensors():
 		This is registered as the getter() callback in the GenericSensor class.	
 		"""
 
-		if self.serial:
+		if self.connected:
 			raw_value = None
 			get_start_time = timeit.default_timer()
 
 			if len(sensorData['controlCodes']) == 1:
-				#print([sensorData['controlCodes'][0]])
 				self.serial.write(bytes([sensorData['controlCodes'][0]]))
 				raw_value = self.serial.read(1)[0]
 				
@@ -299,7 +301,7 @@ class CosworthSensors():
 				logger.error("Unsupported number of control codes for sensor %s" % sensorData['sensorId'])
 				return None, None
 		else:
-			logger.error("Serial port is not open")
+			logger.debug("Serial port is not open")
 			return None, None
 		
 		return raw_value, (timeit.default_timer() - get_start_time)
@@ -408,10 +410,10 @@ class CosworthSensors():
 				dsrdtr=0, 
 				timeout=self.comms_timeout
 			)
-			print(self.serial)
 			logger.info("Serial interface up")
 			self.connected = True
 		except Exception as e:
+			self.connected = False
 			self.serial = False
 			logger.fatal("Unable to open requested serial port for Cosworth ECU module")
 			logger.fatal("%s" % e)

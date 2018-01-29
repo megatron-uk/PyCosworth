@@ -77,8 +77,6 @@ def updateSDLWindow(pilImage, windowSettings):
 	# Turn the PIL.Image object into a numpy array
 	numpyimage = numpy.array(pilImage)
 	
-	#print(windowSettings)
-	
 	# Add missing alpha channel rotate 90', and flip upside down to match screen
 	numpyimage = numpy.dstack((numpyimage, numpy.zeros((windowSettings['y_size'], windowSettings['x_size']))))
 	numpyimage = numpy.rot90(numpyimage)

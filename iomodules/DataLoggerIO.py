@@ -20,6 +20,8 @@
 import multiprocessing
 import time
 import timeit 
+import os
+import re
 
 # Controldata messages
 from libs.ControlData import ControlData
@@ -30,6 +32,27 @@ from libs import settings
 # Start a new logger
 from libs.newlog import newlog
 logger = newlog(__name__)
+
+def getNextLogfile():
+	""" Find the next free logfile name. """
+	
+	reMatch = '%s[0-9][0-9][0-9]%s' % (settings.LOGGING_FILE_PREFIX, settings.LOGGING_FILE_SUFFIX)
+	currentFilenames = [f for f in os.listdir(settings.LOGGING_DIR + "/") if re.match(r'%s' % reMatch, f)]
+	
+	if len(currentFilenames) == 0:
+		nextFilename = settings.LOGGING_FILE_PREFIX + "000" + settings.LOGGING_FILE_SUFFIX
+	else:
+		currentFilenames.sort()
+		# Latest file
+		latestFilename = currentFilenames[-1]
+		# Latest file number
+		latestFilenumber = latestFilename.split("_")[1].split(settings.LOGGING_FILE_SUFFIX)[0]
+		# Increment file number
+		nextFilenumber = int(latestFilenumber) + 1
+		# Construct filename
+		nextFilenumberStr = "" % nextFilenumber
+		nextFilename = settings.LOGGING_FILE_PREFIX + str(nextFilenumberStr) + settings.LOGGING_FILE_SUFFIX
+	return nextFilename
 
 def DataLoggerIO(ecudata, controlQueue, actionQueue):
 	""" Logs ecu data to disk """
@@ -51,7 +74,10 @@ def DataLoggerIO(ecudata, controlQueue, actionQueue):
 		
 		if logging:
 			stats['sampleCount'] = ecudata.getCounter()
+			
 		# Get all sensor ids
+		#sensorIds
+		
 		# get current sample counter
 		# write line where all sensors == current sample counter
 		# construct a line of text, each sensor value seperated by ","
@@ -77,6 +103,8 @@ def DataLoggerIO(ecudata, controlQueue, actionQueue):
 						sensorIds.sort()
 						# send message to say started
 						# find name of next logfile
+						filename = getNextLogfile()
+						stats['logfile'] = filename
 						# open logfile
 			
 				# Stop logging

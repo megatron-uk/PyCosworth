@@ -356,7 +356,6 @@ def showSensorText(menuClass = None, controlData = None):
 					x_pos = col * menuClass.customData['sensorColumnOffsets']
 					y_pos = (title_size[1]) + (sensor_size[1] * inner_idx)
 				
-					print(x_pos, y_pos)
 					sensorData = menuClass.ecudata.getSensorData(sensorId = sensorId)
 					sampleData = menuClass.ecudata.getData(sensorId = sensorId, allData = True)
 					if (sensorData is not None) and (sampleData is not None):

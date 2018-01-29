@@ -124,19 +124,30 @@ def SensorIO(transmitQueue, receiveQueue, controlQueue):
 			sensorId = sensor['sensorId']
 			sensorData = False
 			
-			if sensorId in cosworth_sensors:
-				sensorData = cosworth.sensor(sensorId)
-				timerData = cosworth.performance(sensorId)
-				
-			if SENSOR_DEMO:
+			# is demo mode disabled?
+			if SENSOR_DEMO is False:
+				# Is this a cosworth sensor?
+				if sensorId in cosworth_sensors:
+					sensorData = cosworth.sensor(sensorId)
+					timerData = cosworth.performance(sensorId)
+				# is it a gearbox sensor?
+				#elif sensorId in gearbox_sensors:
+				#	pass
+				# is it a wibble sensor?
+				#elif sensorId in wibble_sensors:
+				#	pass
+			else:
+				# Otherwise read from the demo sensors, if demo mode is active
 				if (sensorData is False) and (sensorId in demo_sensors):
 					sensorData = demo.sensor(sensorId)
 					timerData = demo.performance(sensorId)
 			
+			# Did we get any data for this sensor?
 			if sensorData:
-				receiveQueue.put((settings.TYPE_DATA, sensorData, counter, timerData['last']))
-				logger.debug("Received %s: value:%s counter:%s" % (sensorData['sensor']['sensorId'], sensorData['value'], counter))
-		
+				if sensorData['value'] is not None:
+					logger.debug("Received %s: value:%s counter:%s" % (sensorData['sensor']['sensorId'], sensorData['value'], counter))
+					receiveQueue.put((settings.TYPE_DATA, sensorData, counter, timerData['last']))
+				
 		# Sleep at the end of each round so that we don't
 		# consume too many processor cycles. May need to experiment
 		# with this value for different platforms.

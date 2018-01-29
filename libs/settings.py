@@ -75,25 +75,21 @@ DEBUG = False
 # Any sensor available in a back-end sensor module, needs to be listed below.
 #
 # 'sensorId' 		value is the keyword by which that sensor value is accessed in any display routine. DO NOT CHANGE!
-# 'sensorUnit' 		parameter is the suffic that is printed after each sensor item.
-# 'byteCommand' 	value is the byte that must be transmitted to the ECU to trigger data retrieval for a sensor.
-# 'refresh' 		parameter controls the time, in seconds, between each call to refresh that data from the ECU.
-# 'defaultValue'	parameter is the value that should be sent in the event of no ECU signal being present (i.e for testing of display devices)
 # 'maxValue'		used to calculate maximum height of any graphs or displays for this sensor
 # 'warnValue'		the value, which, if exceeded, the system will try to warn the driver of that sensor
 
 # This needs to be simplified to remove min/max, unit, refresh etc. as it is all now defined per sensor module backend (see iomodules/sensors/Cosworth.py, demo.py etc.)
 SENSORS = [
-	{ 	'sensorId'	: 'RPM',	'sensorUnit'	: 'rpm',	'refresh'	: 0.1,	'defaultValue'	: 7250,	'minValue' : 0,	'maxValue'	: 7500, 	'warnValue' : 6000, 	},
-	{	'sensorId' 	: 'ECT',	'sensorUnit'	: 'c',		'refresh'	: 0.5,	'defaultValue'	: 90,	'minValue' : 0,	'maxValue'	: 150,	'warnValue' : 110, 	},
-	{	'sensorId'	: 'IAT',	'sensorUnit'	: 'c',		'refresh'	: 0.5,	'defaultValue'	: 32,	'minValue' : 0,	'maxValue'	: 60,		'warnValue' : 50,		},
-	{	'sensorId' 	: 'MAP',	'sensorUnit'	: 'mbar',	'refresh'	: 0.2,	'defaultValue'	: 2850,	'minValue' : -350,	'maxValue'	: 3000,	'warnValue' : 2500,	},
-	{	'sensorId' 	: 'TPS',	'sensorUnit'	: 'deg.',	'refresh'	: 0.1,	'defaultValue'	: 66,	'minValue' : -0.3,	'maxValue'	: 90,		'warnValue' : 100,		},
-	{	'sensorId' 	: 'CO',		'sensorUnit'	: '%',		'refresh'	: 0.5,	'defaultValue'	: 5,	'minValue' : 0,	'maxValue'	: 50,		'warnValue' : 100,		},
-	{	'sensorId' 	: 'BAT',	'sensorUnit'	: 'v',		'refresh'	: 0.5,	'defaultValue'	: 12,	'minValue' : 0,	'maxValue'	: 14,		'warnValue' : 15,		},
-	{	'sensorId' 	: 'INJDUR',	'sensorUnit'	: 'ms',		'refresh'	: 0.1,	'defaultValue'	: 2.2,	'minValue' : 0,	'maxValue'	: 5,		'warnValue' : 20,		},
-	{	'sensorId' 	: 'AMAL',	'sensorUnit'	: '%',		'refresh'	: 0.2,	'defaultValue'	: 100,	'minValue' : 0,	'maxValue'	: 100,	'warnValue' : 110,		},
-	{	'sensorId' 	: 'IGNADV',	'sensorUnit'	: 'deg',	'refresh'	: 0.2,	'defaultValue'	: 16.5,	'minValue' : 0,	'maxValue'	: 40,		'warnValue' : 36,		},
+	{ 	'sensorId'	: 'RPM',	'minValue' : 0,		'maxValue'	: 7500, 'warnValue' : 6000,	},
+	{	'sensorId' 	: 'ECT',	'minValue' : 0,		'maxValue'	: 150,	'warnValue' : 110, 	},
+	{	'sensorId'	: 'IAT',	'minValue' : 0,		'maxValue'	: 60,	'warnValue' : 50,	},
+	{	'sensorId' 	: 'MAP',	'minValue' : -350,	'maxValue'	: 3000,	'warnValue' : 2500,	},
+	{	'sensorId' 	: 'TPS',	'minValue' : -0.3,	'maxValue'	: 90,	'warnValue' : 100,	},
+	{	'sensorId' 	: 'CO',		'minValue' : 0,		'maxValue'	: 50,	'warnValue' : 100,	},
+	{	'sensorId' 	: 'BAT',	'minValue' : 0,		'maxValue'	: 14,	'warnValue' : 15,	},
+	{	'sensorId' 	: 'INJDUR',	'minValue' : 0,		'maxValue'	: 5,	'warnValue' : 20,	},
+	{	'sensorId' 	: 'AMAL',	'minValue' : 0,		'maxValue'	: 100,	'warnValue' : 110,	},
+	{	'sensorId' 	: 'IGNADV',	'minValue' : 0,		'maxValue'	: 40,	'warnValue' : 36,	},
 ]
 # A list of all sensor id's
 SENSOR_IDS = []
@@ -519,4 +515,4 @@ LOGGING_SLEEP = 2 # How long to sleep while recording inactive
 
 LOGGING_DIR = "logs"
 LOGGING_FILE_PREFIX = "pycosworth_"
-LOGGINF_FILE_SUFFIX = ".csv"
+LOGGING_FILE_SUFFIX = ".csv"

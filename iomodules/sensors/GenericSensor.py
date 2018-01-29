@@ -71,9 +71,12 @@ class GenericSensor():
 		
 		if force or self.refresh():
 			raw_value, get_time = self.getter(self.sensorData)
-			self.history_raw_values.append(raw_value)
-			self.history_get_times.append(get_time)
-			return self.value()
+			if (raw_value) and (get_time):
+				self.history_raw_values.append(raw_value)
+				self.history_get_times.append(get_time)
+				return self.value()
+			else:
+				return None
 		else:
 			return self.value()
 		
@@ -83,7 +86,7 @@ class GenericSensor():
 		if len(self.history_raw_values)>0:
 			return self.history_raw_values[-1]
 		else:
-			return 0
+			return None
 	
 	def history(self):
 		

@@ -70,7 +70,7 @@ class GearIndicatorSensors():
 		if sensorId in self.sensors.keys():
 			# Has the refresh timer expired
 			v = self.sensors[sensorId].get(force = force)
-			return {  'sensor' : self.sensors[sensorId].data(), 'value' : v }
+			return {  'sensor' : self.sensors[sensorId].data(), 'value' : v, 'rawValue' : v }
 		else:
 			# Not a valid sensor
 			logger.warn("Unsupported sensor type: %s" % sensorId)
@@ -183,8 +183,10 @@ class GearIndicatorSensors():
 	def __setSensors__(self):
 		""" Set up the list of sensors we can use """
 		
-		for sensorId in self.all_sensors.keys():
-	
+		sensorIds = list(self.all_sensors.keys())
+		sensorIds.sort()
+		for sensorId in sensorIds:
+			logger.debug("Adding sensor [%s]" % self.all_sensors[sensorId]['classId'])
 			# Add a new instance of a generic sensor
 			newSensor = GenericSensor(sensorData = self.all_sensors[sensorId], getter = self.__get__)
 			# Set the refresh timer
