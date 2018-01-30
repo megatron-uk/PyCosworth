@@ -84,6 +84,7 @@ class MasterMenu():
 		self.menuShow = False
 		
 		# Index into the menu
+		self.menuIndex_prev = None
 		self.menuIndex = None
 		self.subMenuIndex = None
 		self.finalMenuIndex = None
@@ -141,6 +142,15 @@ class MasterMenu():
 		# Add all current sensors to the Sensor menu
 		self.sensor_keys = []
 		self.addSensors()
+		
+		# Selected sensors
+		self.selectedSensors = {
+			'left' : None,
+			'full' : None,
+			'right' : None,
+		}
+		
+		self.defaultVisualisation = "line"
 		
 		# The custom function and its associated data which run
 		# run every time the mastermenu class has 'buildimage' called
@@ -344,13 +354,14 @@ class MasterMenu():
 					self.menuIndex_prev = self.menuIndex
 					self.menuIndex = (len(self.menu) - 1)
 					self.slideInHelp = "l2r"
+
 			# Scroll right
 			if controlData.button == settings.BUTTON_RIGHT:
 				if (self.menuIndex < (len(self.menu) - 1)):
 					self.menuIndex_prev = self.menuIndex
 					self.menuIndex += 1
 					self.slideInHelp = "r2l"
-				
+								
 			# Open the 1st level menu item that is selected
 			if controlData.button == settings.BUTTON_SELECT:
 				if self.menuIndex > -1:
@@ -367,8 +378,22 @@ class MasterMenu():
 				
 		elif self.customFunction is not None:
 			# Pass any control data to the current custom function
-			self.customFunction(menuClass = self, controlData = controlData)
-			
+			returnFunction = self.customFunction(menuClass = self, controlData = controlData)			
+			# Functions can return the name of the next function...
+			if returnFunction:
+				if returnFunction is True:
+					pass
+				else:
+					logger.debug("Got a returnFunction - running on next cycle")
+					self.customFunction = returnFunction
+					self.buildCustomData()
+					self.resetMenus()
+					self.selectedItem = None
+					self.subMenuIndex = None
+					self.finalMenuIndex = None
+					self.menuIndex = None
+					self.menuShow = False
+					self.slideOut = True
 		else:
 			# Nothing selected, bring up the menu
 			if controlData.button == settings.BUTTON_SELECT:
@@ -386,7 +411,7 @@ class MasterMenu():
 				self.slideOut = True
 				# Return to the last running function
 				self.returnCustomFunction() 
-		
+			
 		#logger.info("menuIndex:%s subMenuIndex:%s finalMenuIndex:%s menuShow:%s slideIn:%s slideOut:%s" % (self.menuIndex, self.subMenuIndex, self.finalMenuIndex, self.menuShow, self.slideIn, self.slideOut))
 	
 	def buildCustomData(self):
@@ -478,7 +503,7 @@ class MasterMenu():
 					bitmap = self.image.copy(), 
 					x_start = 0, 
 					y_start = 0, 
-					y_end = (self.windowSettings['y_size']), 
+					y_end = (self.windowSettings['y_size'] + 2), 
 					direction = "down", 
 					steps = 20,
 					sleep = 0.025)
@@ -497,7 +522,7 @@ class MasterMenu():
 					self.buildMenu(showHelp = False)
 					baseBitmap = self.image.copy()
 					# Slide out previous help
-					oldHelpBitmap = self.wrappedHelpWindowText(text = self.menu[self.menuIndex_prev]['itemText'], windowLevel = "main")
+					oldHelpBitmap = self.wrappedHelpWindowText(text = self.menu[self.menuIndex]['itemText'], windowLevel = "main")
 					self.slideSubBitmapHorizontal(
 						bitmap = baseBitmap,
 						subBitmap = oldHelpBitmap,
@@ -509,7 +534,7 @@ class MasterMenu():
 						sleep = 0.02
 						)
 					# Slide in current help
-					newHelpBitmap = self.wrappedHelpWindowText(text = self.menu[self.menuIndex]['itemText'], windowLevel = "main")
+					newHelpBitmap = self.wrappedHelpWindowText(text = self.menu[self.menuIndex_prev]['itemText'], windowLevel = "main")
 					if self.slideInHelp == "l2r":
 						# set start pos to be negative if we slide in from past the left
 						# edge of the screen

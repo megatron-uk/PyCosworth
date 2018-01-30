@@ -113,16 +113,169 @@ def doNothing(menuClass = None, controlData = None):
 	menuClass.resetCustomFunction()
 	return True
 	
+def sensorVisualisation(menuClass = None, controlData = None):
+	""" Run visualisation of at least one selected sensor """
+		
+	if 'displayModes' not in menuClass.windowSettings.keys():
+		menuClass.windowSettings['displayModes'] = {}
+		for sensor in settings.SENSORS:
+			sensorId = sensor['sensorId']	
+			menuClass.windowSettings['displayModes'][sensorId] = sensorGraphicsInit(sensor, menuClass.windowSettings)
+			
+	if controlData:
+		# If we get a select or cancel button, exit the custom function
+		if controlData.button in [ settings.BUTTON_SELECT, settings.BUTTON_CANCEL ]:
+			menuClass.resetCustomFunction()
+			menuClass.resetMenus(showMenu = True)
+			return True
+			
+	font_big = menuClass.getFont(name = "pixel", style="header", size=16)
+	font_small = menuClass.getFont(name = "pixel", style="plain", size=8)
+		
+	if (menuClass.selectedSensors['full'] is not None):
+		sensorId = menuClass.selectedSensors['full']
+		value = menuClass.ecudata.getData(sensorId)
+		if value:
+			menuClass.windowSettings['displayModes'][sensorId]['previousValues'].append(value)
+		sensorData = menuClass.ecudata.getSensorData(sensorId)
+		image = gaugeLine(ecudata = menuClass.ecudata, sensor = menuClass.windowSettings['displayModes'][sensorId], font = font_big, windowSettings = menuClass.windowSettings, sensorData = sensorData)
+		menuClass.image = image.copy()
+	elif (menuClass.selectedSensors['left'] is not None) or (menuClass.selectedSensors['right'] is not None):
+		pass
+	else:
+		i = Image.new('1', (menuClass.windowSettings['x_size'], menuClass.windowSettings['y_size']))
+		d = ImageDraw.Draw(i)
+			
+		title = "ERROR!"
+		d.text((0,0), title, font = font_big, fill = "white")
+		
+		icon = Image.open(settings.GFX_ICONS['sensor']['icon'])
+		i.paste(icon,(menuClass.windowSettings['x_size'] - settings.GFX_ICONS['sensor']['size'][0],0))
+		
+		text = "No sensors selected. Choose one or more."
+		d.text((0,30), text, font = font_small, fill = "white")
+		
+		text = "Press Select to return to menu"
+		d.text((0,40), text, font = font_small, fill = "white")
+		menuClass.image = copy.copy(i)
+		return True
 
 def sensorSelectFull(menuClass = None, controlData = None):
-	pass
+	""" Selects a sensor to display full width in the main window """
+	
+	menuClass.selectedSensors['left'] = None
+	menuClass.selectedSensors['right'] = None
+	
+	if controlData:
+		# If we get a select or cancel button, exit the custom function
+		if controlData.button in [ settings.BUTTON_SELECT, settings.BUTTON_CANCEL ]:
+			menuClass.resetCustomFunction()
+			menuClass.resetMenus(showMenu = True)
+			# Activate visualisation
+			return sensorVisualisation
+
+	font_big = menuClass.getFont(name = "pixel", style="header", size=16)
+	font_small = menuClass.getFont(name = "pixel", style="plain", size=8)
+	i = Image.new('1', (menuClass.windowSettings['x_size'], menuClass.windowSettings['y_size']))
+	d = ImageDraw.Draw(i)
+		
+	title = "Sensor Config"
+	d.text((0,0), title, font = font_big, fill = "white")
+	
+	icon = Image.open(settings.GFX_ICONS['sensor']['icon'])
+	i.paste(icon,(menuClass.windowSettings['x_size'] - settings.GFX_ICONS['sensor']['size'][0],0))
+	
+	menuIndex = menuClass.customData['selectedItem'][0]
+	subMenuIndex = menuClass.customData['selectedItem'][1]
+	items = copy.copy(menuClass.menu[menuIndex]['items'])
+	items.reverse()
+	sensorId = items[subMenuIndex]['itemName']
+	menuClass.selectedSensors['full'] = sensorId
+
+	text = "%s is set for FULL width" % sensorId
+	d.text((0,30), text, font = font_small, fill = "white")
+	
+	text = "Press Select to return to menu"
+	d.text((0,40), text, font = font_small, fill = "white")
+	menuClass.image = copy.copy(i)
+	return True
 
 def sensorSelectLeft(menuClass = None, controlData = None):
-	pass
+	""" Select the left hand sensor to display in the main window """
+	
+	menuClass.selectedSensors['full'] = None
+	
+	if controlData:
+		# If we get a select or cancel button, exit the custom function
+		if controlData.button in [ settings.BUTTON_SELECT, settings.BUTTON_CANCEL ]:
+			menuClass.resetCustomFunction()
+			menuClass.resetMenus(showMenu = True)
+			# Activate visualisation
+			return sensorVisualisation
+	
+	font_big = menuClass.getFont(name = "pixel", style="header", size=16)
+	font_small = menuClass.getFont(name = "pixel", style="plain", size=8)
+	i = Image.new('1', (menuClass.windowSettings['x_size'], menuClass.windowSettings['y_size']))
+	d = ImageDraw.Draw(i)
+		
+	title = "Sensor Config"
+	d.text((0,0), title, font = font_big, fill = "white")
+	icon = Image.open(settings.GFX_ICONS['sensor']['icon'])
+	i.paste(icon,(menuClass.windowSettings['x_size'] - settings.GFX_ICONS['sensor']['size'][0],0))		
+			
+	menuIndex = menuClass.customData['selectedItem'][0]
+	subMenuIndex = menuClass.customData['selectedItem'][1]
+	items = copy.copy(menuClass.menu[menuIndex]['items'])
+	items.reverse()
+	sensorId = items[subMenuIndex]['itemName']
+	menuClass.selectedSensors['left'] = sensorId
 
+	text = "%s is selected as LEFT" % sensorId
+	d.text((0,30), text, font = font_small, fill = "white")
+	
+	text = "Press Select to return to menu"
+	d.text((0,40), text, font = font_small, fill = "white")
+	menuClass.image = copy.copy(i)
+	return True
+	
 def sensorSelectRight(menuClass = None, controlData = None):
-	pass
+	""" Selects the right hand sensor to display in the main window """
 
+	menuClass.selectedSensors['full'] = None
+	
+	if controlData:
+		# If we get a select or cancel button, exit the custom function
+		if controlData.button in [ settings.BUTTON_SELECT, settings.BUTTON_CANCEL ]:
+			menuClass.resetCustomFunction()
+			menuClass.resetMenus(showMenu = True)
+			# Activate visualisation on exit
+			return sensorVisualisation
+			
+	font_big = menuClass.getFont(name = "pixel", style="header", size=16)
+	font_small = menuClass.getFont(name = "pixel", style="plain", size=8)
+	i = Image.new('1', (menuClass.windowSettings['x_size'], menuClass.windowSettings['y_size']))
+	d = ImageDraw.Draw(i)
+		
+	title = "Sensor Config"
+	d.text((0,0), title, font = font_big, fill = "white")
+	icon = Image.open(settings.GFX_ICONS['sensor']['icon'])
+	i.paste(icon,(menuClass.windowSettings['x_size'] - settings.GFX_ICONS['sensor']['size'][0],0))		
+			
+	menuIndex = menuClass.customData['selectedItem'][0]
+	subMenuIndex = menuClass.customData['selectedItem'][1]
+	items = copy.copy(menuClass.menu[menuIndex]['items'])
+	items.reverse()
+	sensorId = items[subMenuIndex]['itemName']
+	menuClass.selectedSensors['right'] = sensorId
+
+	text = "%s is now selected as RIGHT" % sensorId
+	d.text((0,30), text, font = font_small, fill = "white")
+	
+	text = "Press Select to return to menu"
+	d.text((0,40), text, font = font_small, fill = "white")
+	menuClass.image = copy.copy(i)
+	return True
+	
 def showLoggingState(menuClass = None, controlData = None):
 	
 	if 'loggerData' not in menuClass.customData.keys():
