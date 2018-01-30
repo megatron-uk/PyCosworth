@@ -93,7 +93,7 @@ def GPIOButtonIO(actionQueue, stdin):
 		i += 1
 			
 		if i == 1000:
-			logger.info("Still running [%s]" % proc_name)
+			logger.debug("Still running [%s]" % proc_name)
 			i = 0
 
 		if USE_GPIO:
@@ -131,7 +131,7 @@ def GPIOButtonIO(actionQueue, stdin):
 				cdata = ControlData()
 				cdata.setButton(mybutton)
 				actionQueue.put(cdata)
-				logger.info("Send controldata message: BUTTON[%s] DESTINATION[%s]" % (mybutton, mydest))
+				logger.debug("Send controldata message: BUTTON[%s] DESTINATION[%s]" % (mybutton, mydest))
 			
 		######################################################
 		# Sleep until next time

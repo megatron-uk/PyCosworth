@@ -37,7 +37,8 @@ class EcuData():
 		ecuCounter = None, 
 		ecuErrors = None, 
 		ecuSampleTime = None, 
-		ecuMatrixLCDDict = None):
+		ecuMatrixLCDDict = None,
+		ecuStatusDict = None):
 		""" Initialise the class with the shared data manager dictionary """
 		
 		self.data = ecuDataDict
@@ -45,6 +46,7 @@ class EcuData():
 		self.errors = ecuErrors
 		self.counter = ecuCounter
 		self.timer = ecuSampleTime
+		self.status = ecuStatusDict
 		
 		# Initialise sensor values structure
 		for sensor in settings.SENSORS:
@@ -103,6 +105,11 @@ class EcuData():
 			self.sensor[sensorData['sensorId']] = sensorData
 		else:
 			return None
+	
+	def setStatusData(self, statusData = None):
+		
+		sourceId = statusData['sourceId']
+		self.status[sourceId] = statusData
 	
 	def setCounter(self, counter):
 		""" Set counter """

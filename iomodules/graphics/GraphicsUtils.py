@@ -111,40 +111,19 @@ def blankImage(windowSettings):
 def gaugeWaveform(ecudata, sensor, font, windowSettings, highlight_current = False):
 	""" Render a waveform type image """
 	
-	sensorId = sensor['sensorId']
+	sensorId = sensor['sensor']['sensorId']
 	sensorValueString = "%.f" % (sensor['previousValues'][-1])
 	
 	# Have we created an image for this sensor before?
-	if 'sensors' in windowSettings.keys():
-		if "waveform" in windowSettings['sensors'].keys():
-			if "image" in windowSettings['sensors']['waveform'].keys():
-				image = copy.copy(windowSettings['sensors']['waveform']['image'])
-				draw = ImageDraw.Draw(image)
-				font = windowSettings['sensors']['waveform']['font']
-				font_small = windowSettings['sensors']['waveform']['font_small']
-			else:
-				windowSettings['sensors']['waveform']['image'] = None
-				windowSettings['sensors']['waveform']['font'] = None
-				windowSettings['sensors']['waveform']['font_small'] = None
-				blank = blankImage(windowSettings)
-				image = blank['image']
-				font = blank['font']
-				font_small = blank['font_small']
-		else:
-			windowSettings['sensors']['waveform'] = {}
-			windowSettings['sensors']['waveform']['image'] = None
-			windowSettings['sensors']['waveform']['font'] = None
-			windowSettings['sensors']['waveform']['font_small'] = None
-			blank = blankImage(windowSettings)
-			image = blank['image']
-			font = blank['font']
-			font_small = blank['font_small']
+	if "image" in sensor['waveform'].keys():
+		image = copy.copy(sensor['waveform']['image'])
+		draw = ImageDraw.Draw(image)
+		font = sensor['waveform']['font']
+		font_small = sensor['waveform']['font_small']
 	else:
-		windowSettings['sensors'] = {}
-		windowSettings['sensors']['waveform'] = {}
-		windowSettings['sensors']['waveform']['image'] = None
-		windowSettings['sensors']['waveform']['font'] = None
-		windowSettings['sensors']['waveform']['font_small'] = None
+		sensor['waveform']['image'] = None
+		sensor['waveform']['font'] = None
+		sensor['waveform']['font_small'] = None
 		blank = blankImage(windowSettings)
 		image = blank['image']
 		font = blank['font']
@@ -161,11 +140,11 @@ def gaugeWaveform(ecudata, sensor, font, windowSettings, highlight_current = Fal
 			zy = False
 		
 		# Draw the maximum value of the Y axis
-		max_x = windowSettings['x_size'] - (8 * (len(str(sensor['maxValue'])) - 1))
+		max_x = windowSettings['x_size'] - (8 * (len(str(sensor['sensor']['maxValue'])) - 1))
 		max_y = 0
 		
 		# Draw the minimum value
-		min_x = windowSettings['x_size'] - (8 * (len(str(sensor['minValue'])) - 1))
+		min_x = windowSettings['x_size'] - (8 * (len(str(sensor['sensor']['minValue'])) - 1))
 		min_y = windowSettings['y_size'] - 8
 		
 		#############################################
@@ -177,20 +156,20 @@ def gaugeWaveform(ecudata, sensor, font, windowSettings, highlight_current = Fal
 		if zx:
 			draw.text((zx - 6, zy - 8), "0", fill="white", font = font_small)
 		# Max value
-		draw.text((max_x, max_y), str(sensor["maxValue"]), fill="white", font = font_small)
+		draw.text((max_x, max_y), str(sensor['sensor']["maxValue"]), fill="white", font = font_small)
 		# Min value
 		if zy:
 			if zy > (windowSettings['y_size'] -  8):
 				pass
 			else:
-				draw.text((min_x, min_y), str(sensor["minValue"]), fill="white", font = font_small)
+				draw.text((min_x, min_y), str(sensor['sensor']["minValue"]), fill="white", font = font_small)
 		# Add sensor name to top left
-		draw.text((0, 0), sensor['sensorId'], fill="white", font = font)
+		draw.text((0, 0), sensorId, fill="white", font = font)
 	
 		# Save a copy of the image for next time around
-		windowSettings['sensors']['waveform']['image'] = copy.copy(image)
-		windowSettings['sensors']['waveform']['font'] = font
-		windowSettings['sensors']['waveform']['font_small'] = font_small
+		sensor['waveform']['image'] = copy.copy(image)
+		sensor['waveform']['font'] = font
+		sensor['waveform']['font_small'] = font_small
 		
 	###############################################
 	#
@@ -202,7 +181,7 @@ def gaugeWaveform(ecudata, sensor, font, windowSettings, highlight_current = Fal
 	for x in range(0, windowSettings['x_size']):
 		v = sensor['previousValues'][x]
 		# Cope with sensors who have a min value < 0
-		v = abs(sensor['minValue']) + v
+		v = abs(sensor['sensor']['minValue']) + v
 		# Calculate how many lines/height
 		lines = int(v / sensor['waveform']['valuePerLine'])
 		# Y-position is screen size minus number of lines
@@ -225,7 +204,7 @@ def gaugeWaveform(ecudata, sensor, font, windowSettings, highlight_current = Fal
 	if highlight_current:
 		v = sensor['previousValues'][-1]
 		# Cope with sensors who have a min value < 0
-		v = abs(sensor['minValue']) + v
+		v = abs(sensor['sensor']['minValue']) + v
 		# Calculate how many lines/height
 		lines = int(v / sensor['waveform']['valuePerLine'])
 		# Y-position is screen size minus number of lines
@@ -296,11 +275,11 @@ def gaugeLEDSegments(ecudata, sensor, font, windowSettings):
 	
 	return image
 
-def gaugeLine(ecudata, sensor, font, windowSettings):
+def gaugeLine(ecudata, sensor, font, windowSettings, sensorData):
 	""" Render a vertical line chart, single pixel width """
 	
 	sensorValueString = "%.f" % (sensor['previousValues'][-1])
-	
+	t1 = timeit.default_timer()
 	# Have we created an image for this sensor before?
 	if "image" in sensor['line'].keys():
 		image = copy.copy(sensor['line']['image'])
@@ -311,11 +290,12 @@ def gaugeLine(ecudata, sensor, font, windowSettings):
 		# Image is 1bit black and white
 		image = Image.new('1', (windowSettings['x_size'], windowSettings['y_size']))
 		draw = ImageDraw.Draw(image)
-		font = ImageFont.truetype(settings.GFX_FONTS['sans']['plain']['font'], 16)
-		font_small = ImageFont.truetype(settings.GFX_FONTS['sans']['plain']['font'], 8)
+		font = ImageFont.truetype(settings.GFX_FONTS["pixel"]["header"]['font'], size = 16)
+		font_small = ImageFont.truetype(settings.GFX_FONTS['pixel']['plain']['font'], size = 8)
+
 
 		# Add sensor name to top left
-		draw.text((0, 0), sensor['sensorId'], fill="white", font = font)
+		draw.text((0, 0), sensor['sensor']['sensorId'], fill="white", font = font)
 
 		# Save a copy of the image for next time around
 		sensor['line']['image'] = copy.copy(image)
@@ -324,7 +304,7 @@ def gaugeLine(ecudata, sensor, font, windowSettings):
 
 	v = sensor['previousValues'][-1]
 	# Cope with sensors who have a min value < 0
-	v = abs(sensor['minValue']) + v
+	v = abs(sensor['sensor']['minValue']) + v
 	# Calculate how many lines to draw
 	num_lines = int(v / sensor['line']['lineValue'])
 
@@ -339,8 +319,10 @@ def gaugeLine(ecudata, sensor, font, windowSettings):
 	# Add raw sensor value at middle left
 	draw.text((0, 16), sensorValueString, fill="white", font = font)
 	text_size = font.getsize(sensorValueString)
-	draw.text((text_size[0] + 2, 16), sensor['sensorUnit'], fill="white", font = font_small)
+	draw.text((text_size[0] + 2, 16), sensorData['sensorUnit'], fill="white", font = font_small)
 	
+	t2 = timeit.default_timer() - t1
+	logger.info("gaugeLine Draw time: %0.4fms" % (t2 * 1000))
 	return image
 
 def gaugeClock(ecudata, sensor, font, windowSettings):
@@ -358,8 +340,8 @@ def gaugeClock(ecudata, sensor, font, windowSettings):
 		# Image is 1bit black and white
 		image = Image.new('1', (windowSettings['x_size'], windowSettings['y_size']))
 		draw = ImageDraw.Draw(image)
-		font = ImageFont.truetype(settings.GFX_FONTS['sans']['plain']['font'], 16)
-		font_small = ImageFont.truetype(settings.GFX_FONTS['sans']['plain']['font'], 8)
+		font = ImageFont.truetype(settings.GFX_FONTS["pixel"]["header"]['font'], size = 16)
+		font_small = ImageFont.truetype(settings.GFX_FONTS['pixel']['plain']['font'], size = 8)
 
 		# Draw the arc and outline of the gauge
 		draw.chord([(0, 8), (windowSettings['x_size'], windowSettings['y_size'] * 2)], 180, 360, outline = "white", fill = 0)
@@ -374,7 +356,7 @@ def gaugeClock(ecudata, sensor, font, windowSettings):
 		sensor['clock']['needleOrigin'] = int(windowSettings['x_size'] / 2)
 		
 		# Add sensor name to top left
-		draw.text((0, 0), sensor['sensorId'], fill="white", font = font)
+		draw.text((0, 0), sensor['sensor']['sensorId'], fill="white", font = font)
 		
 		# Save a copy of the image for next time around
 		sensor['clock']['image'] = copy.copy(image)
@@ -385,7 +367,7 @@ def gaugeClock(ecudata, sensor, font, windowSettings):
 	x1 = sensor['clock']['needleOrigin']
 	y1 = windowSettings['y_size']
 	v = sensor['previousValues'][-1]
-	v = abs(sensor['minValue']) + v
+	v = abs(sensor['sensor']['minValue']) + v
 	degrees = int(v / sensor['clock']['degreeValue'])
 	armlength = windowSettings['y_size'] - 8
 	d = 180 + degrees
@@ -556,3 +538,107 @@ def highlightSelectedWindow(use_oled = False, use_sdl = False, windowSettings = 
 			if use_sdl:
 				# Update the SDL window
 				updateSDLWindow(pilImage = i, windowSettings = settings.GFX_WINDOWS[w])
+
+def sensorInitWaveform(sensor, windowSettings):
+	""" Derive the parameters for a waveform display """
+	
+	data = {}
+	
+	###################################################################
+	# Set up defaults for waveform display
+	###################################################################
+	
+	# The value of each Y pixel on the waveform
+	data['valuePerLine'] = ((sensor['maxValue'] - sensor['minValue']) * 1.0) / windowSettings['y_size']
+	
+	if sensor['minValue'] < 0:
+		# If the scale is below zero, where is zero on the Y axis?
+		data['zeroline'] = windowSettings['y_size'] - int(abs(sensor['minValue']) / data['valuePerLine'])
+		data['baseline'] = windowSettings['y_size']
+	elif sensor['minValue'] > 0:
+		# No zero line if the Y axis starts at a positive number
+		data['zeroline'] = None
+		data['baseline'] = windowSettings['y_size']
+	else:
+		# Otherwise zero is at the very bottom of the screen
+		data['zeroline'] = windowSettings['y_size']
+		data['baseline'] = None
+	data['maxline'] = 0
+
+	return data
+
+def sensorInitSegment(sensor, windowSettings):
+	""" Derive params for a LED segment display """
+	
+	data = {}
+	
+	###################################################################
+	# Set up defaults for LED segment display
+	###################################################################
+	segments = 12
+	data['segmentValue'] = ((sensor['maxValue'] - sensor['minValue']) * 1.0) / segments
+	if windowSettings['y_size'] == 64:
+		led_height = [ 8, 8, 10, 10, 14, 14, 20, 28, 36, 44, 52, 63 ]
+	elif windowSettings['y_size'] == 32:
+		led_height = [ 5, 5, 6, 7, 8, 10, 12, 16, 20, 26, 31, 31 ]
+	else:
+		logger.error("No support for windows of %s height - defaulting to 32px height" % windowSettings['y_size'])
+		led_height = [ 5, 5, 6, 7, 8, 10, 12, 16, 20, 26, 31, 31 ]
+	data['segmentHeights'] = led_height
+	
+	return data
+
+def sensorInitClock(sensor, windowSettings):
+	""" Derive params for an analogue gauge/clock """
+	
+	data = {}
+	
+	###################################################################
+	# Set up defaults for analogue clock display
+	###################################################################
+	degrees = 180
+	data['degreeValue'] =  ((sensor['maxValue'] - sensor['minValue']) * 1.0) / degrees	
+	
+	return data
+
+def sensorInitLine(sensor, windowSettings):
+	""" Derive params for a line gauge """
+	
+	data = {}
+	
+	###################################################################
+	# Set up defaults for line gauge display
+	###################################################################
+	
+	graph_range = numpy.logspace(numpy.log10(6), numpy.log10(windowSettings['y_size']), num=windowSettings['x_size'])
+	line_height = []
+	for v in graph_range:
+		line_height.append(int(v))
+	lines = windowSettings['x_size']
+	data['lineHeights'] = line_height
+	data['lineValue'] = ((sensor['maxValue'] - sensor['minValue']) * 1.0) / lines
+	
+	return data
+
+def sensorGraphicsInit(sensor = None, windowSettings = None):
+	""" Get the default params for a sensor (height, width, line weight, number of bars per pixel, etc)
+	, given a particular window """
+	
+	sensorParams = {}
+	
+	# Parameters for the various visualisations
+	sensorParams['sensor'] = sensor
+	sensorParams['waveform'] = sensorInitWaveform(sensor, windowSettings)
+	sensorParams['segment'] = sensorInitSegment(sensor, windowSettings)
+	sensorParams['clock'] = sensorInitClock(sensor, windowSettings)
+	sensorParams['line'] = sensorInitLine(sensor, windowSettings)
+	
+	###################################################################
+	# Create a local deque to hold historical sensor values
+	###################################################################
+	sensorParams['previousValues'] = deque(maxlen = windowSettings['x_size'])
+	for n in range(0, windowSettings['x_size']):
+		sensorParams['previousValues'].append(0)
+				
+	return sensorParams
+	

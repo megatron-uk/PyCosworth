@@ -65,8 +65,6 @@ def DataLoggerIO(ecudata, controlQueue, actionQueue):
 	heartbeat_timer = timeit.default_timer()
 	stats = {
 		'status' 	: False,
-		'logfile'	: "",
-		'sampleCount' : 0,
 	}
 	f = False
 	sensorIds = []
@@ -79,13 +77,11 @@ def DataLoggerIO(ecudata, controlQueue, actionQueue):
 			
 			if stats['sampleCount'] != previousSampleCount:
 			
-				# Get all sensor ids
-				#sensorIds
-				
-				# get current sample counter
-				# write line where all sensors == current sample counter
+				# Write counter sample number and time from start of log file
 				t_now = time.time() - t_start
-				line = str(stats['sampleCount']) + "," + str(t_now) + ","
+				line = "%s,%.3f," % (stats['sampleCount'], t_now)
+				
+				# Write a line containing the value of every sensor
 				for sensorId in sensorIds:
 					d = ecudata.getData(sensorId)
 					if d is None:
@@ -93,13 +89,12 @@ def DataLoggerIO(ecudata, controlQueue, actionQueue):
 					else:
 						line = line + str(d) + ","
 				f.write(line + "\n")
-				# construct a line of text, each sensor value seperated by ","
 				
 				# check for free disk space
 				# check if reaching a set limit of time/space
-
+				
 			previousSampleCount = stats['sampleCount']
-
+			
 		# Listen for control messages
 		if controlQueue.empty() == False:
 			cdata = controlQueue.get()
@@ -119,7 +114,7 @@ def DataLoggerIO(ecudata, controlQueue, actionQueue):
 						# send message to say started
 						# find name of next logfile
 						filename = getNextLogfile()
-						stats['logfile'] = filename
+						stats['logFile'] = filename
 						# open logfile
 						try:
 							f = open(settings.LOGGING_DIR + "/" + filename, 'w')
@@ -140,6 +135,9 @@ def DataLoggerIO(ecudata, controlQueue, actionQueue):
 						# stop
 						logger.info("Stop logging")
 						logging = False
+						stats = {
+							'status' : False
+						}
 						# send message to say stopped
 						# close logfile
 						if f:
@@ -153,6 +151,9 @@ def DataLoggerIO(ecudata, controlQueue, actionQueue):
 			cdata.button = settings.BUTTON_LOGGING_STATUS
 			cdata.destination = settings.BUTTON_DEST_ALL
 			stats['status'] = logging
+			if logging and f:
+				f_stat = os.stat(settings.LOGGING_DIR + "/" + filename)
+				stats['fileSize'] = f_stat.st_size / 1024 / 1024
 			cdata.setPayload(data = stats)
 			actionQueue.put(cdata)
 			# Reset timer

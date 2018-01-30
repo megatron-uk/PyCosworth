@@ -90,6 +90,7 @@ if __name__ == '__main__':
 	dataManager = multiprocessing.Manager()
 	ecuMatrixLCDDict = dataManager.dict(settings.MATRIX_CONFIG)
 	ecuDataDict = dataManager.dict()
+	ecuStatusDict = dataManager.dict()
 	ecuSensorDict = dataManager.dict()
 	ecuCounter = multiprocessing.Value('d', 0)
 	ecuSampleTime = multiprocessing.Value('d', 0.0)
@@ -101,7 +102,8 @@ if __name__ == '__main__':
 		ecuCounter = ecuCounter, 
 		ecuErrors = ecuErrors, 
 		ecuSampleTime = ecuSampleTime, 
-		ecuMatrixLCDDict = ecuMatrixLCDDict)
+		ecuMatrixLCDDict = ecuMatrixLCDDict,
+		ecuStatusDict = ecuStatusDict)
 	#for sensor in settings.SENSORS:
 	#	ecuData.setSensorData(sensor = sensor)
 			
@@ -220,6 +222,9 @@ if __name__ == '__main__':
 				ecuData.setCounter(loopCount)
 				ecuData.setSensorData(sensorData['sensor'])
 				ecuData.setData(sensorData['sensor']['sensorId'], sensorData['value'], timerData, loopCount)
+			elif sensorDataType == settings.TYPE_STATUS:
+				# A status update - failed connection, enable/disable demo, ecu error, etc
+				ecuData.setSensorStatus(statusData = sensorData)
 			else:
 				logger.warn("Unknown message type from SensorIO process")
 			

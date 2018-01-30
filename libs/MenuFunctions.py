@@ -128,6 +128,9 @@ def showLoggingState(menuClass = None, controlData = None):
 	if 'loggerData' not in menuClass.customData.keys():
 		menuClass.customData['loggerData'] = {}
 		menuClass.customData['lastUpdate'] = time.time()
+		menuClass.customData['tick'] = False
+		menuClass.customData['tickSpeed'] = 0.5
+		menuClass.customData['tickTimer'] = timeit.default_timer()
 	
 	if controlData:
 		# If we get a select or cancel button, exit the custom function
@@ -135,49 +138,87 @@ def showLoggingState(menuClass = None, controlData = None):
 			menuClass.resetCustomFunction()
 			menuClass.resetMenus(showMenu = True)
 			return True
-			
-	font_big = menuClass.getFont(name = "pixel", style="header", size=16)
-	font_small = menuClass.getFont(name = "pixel", style="plain", size=8)
-	i = Image.new('1', (menuClass.windowSettings['x_size'], menuClass.windowSettings['y_size']))
-	d = ImageDraw.Draw(i)
 	
 	# if we got a datalogger status message, update our locally held data
 	if controlData:
 		if controlData.button == settings.BUTTON_LOGGING_STATUS:
 			menuClass.customData['lastUpdate'] = time.time()
 			menuClass.customData['loggerData'] = controlData.getPayload()
-			print(menuClass.customData['loggerData'])
-
-	# Render a screen
 	
-	title = "Data Logging"
-	d.text((0,0), title, font = font_big, fill = "white")
+	font_big = menuClass.getFont(name = "pixel", style="header", size=16)
+	font_small = menuClass.getFont(name = "pixel", style="plain", size=8)
 	
-	logdir = os.getcwd() + "/" + settings.LOGGING_DIR
-	disk_use = psutil.disk_usage(logdir)
-	avail_mbytes = int(disk_use.free / 1024 / 1024)
-	t5 = "Available space: %s MBytes" % avail_mbytes
 	log_keys = menuClass.customData['loggerData'].keys()
 	if 'status' in log_keys:
 		if menuClass.customData['loggerData']['status'] == True:
-			t1 = "Current status: Recording"
+			recording = True
+			t1 = "Status: Recording"
 		else:
-			t1 = "Current status: Not running"
+			recording = False
+			t1 = "Status: Not running"
 	else:
-		t1 = "Current status: N/A"
+		recording = False
+		t1 = "Status: N/A"
 		
+	# Number of samples in log
 	if 'sampleCount' in log_keys:
-		t2 = "Sample points: %s" % menuClass.customData['loggerData']['sampleCount']
+		t2 = "Samples: %s" % menuClass.customData['loggerData']['sampleCount']
 	else:
-		t2 = "Sample points: N/A"
+		t2 = "Samples: N/A"
 		
-	if 'logfile' in log_keys:
-		t3 = "File name: %s" % menuClass.customData['loggerData']['logfile']
-		t4 = "File size: 1"
+	# Name of logfile
+	if 'logFile' in log_keys:
+		t3 = "File name: %s" % menuClass.customData['loggerData']['logFile']
 	else:
 		t3 = "File name: N/A"
-		t4 = "File size: 0"
 		
+	# Size of logfile
+	if 'fileSize' in log_keys:
+		t4 = "File size: %.2f MBytes" % menuClass.customData['loggerData']['fileSize']
+	else:
+		t4 = "File size: N/A"
+		
+	# Available disk space
+	try:
+		logdir = os.getcwd() + "/" + settings.LOGGING_DIR
+		disk_use = psutil.disk_usage(logdir)
+		avail_mbytes = int(disk_use.free / 1024 / 1024)
+		t5 = "Disk space: %s MBytes" % avail_mbytes
+	except Exception as e:
+		logger.error("Unable to calculate disk space")
+		logger.error("%s" % e)
+		t5 = "WARNING: Unable to calculate disk space!"
+	
+	####### Cache this
+	if (timeit.default_timer() - menuClass.customData['tickTimer']) >= menuClass.customData['tickSpeed']:
+		menuClass.customData['tick'] = not(menuClass.customData['tick'])
+		menuClass.customData['tickTimer'] = timeit.default_timer()
+	
+	if recording:
+		k = "showLoggingState|recording:True,tick:%s" % menuClass.customData['tick']
+	else:
+		k = "showLoggingState|recording:False"
+	if k in menuClass.bitmapCache.keys():
+		i = menuClass.bitmapCache[key].copy()
+		d = ImageDraw.Draw(i)	
+	else:
+		i = Image.new('1', (menuClass.windowSettings['x_size'], menuClass.windowSettings['y_size']))
+		d = ImageDraw.Draw(i)	
+		title = "Data Logging"
+		d.text((0,0), title, font = font_big, fill = "white")
+		if recording:
+			if menuClass.customData['tick']:
+				icon = Image.open(settings.GFX_ICONS['stopwatch']['icon'])
+				i.paste(icon,(menuClass.windowSettings['x_size'] - settings.GFX_ICONS['stopwatch']['size'][0],0))
+			else:
+				icon = Image.open(settings.GFX_ICONS['stopwatch']['alt'])
+				i.paste(icon,(menuClass.windowSettings['x_size'] - settings.GFX_ICONS['stopwatch']['size'][0],0))
+		else:
+			icon = Image.open(settings.GFX_ICONS['stopwatch']['icon'])
+			i.paste(icon,(menuClass.windowSettings['x_size'] - settings.GFX_ICONS['stopwatch']['size'][0],0))
+	####### end cache
+	
+	
 	d.text((0,20), t1, font = font_small, fill = "white")
 	d.text((0,28), t2, font = font_small, fill = "white")
 	d.text((0,36), t3, font = font_small, fill = "white")
@@ -207,10 +248,13 @@ def startLogging(menuClass = None, controlData = None):
 	title = "Data Logging"
 	d.text((0,0), title, font = font_big, fill = "white")
 	
+	icon = Image.open(settings.GFX_ICONS['stopwatch']['icon'])
+	i.paste(icon,(menuClass.windowSettings['x_size'] - settings.GFX_ICONS['stopwatch']['size'][0],0))
+	
 	text = "Datalogger is now starting"
 	d.text((0,30), text, font = font_small, fill = "white")
 	
-	text = "Press Select or Cancel to return to menu"
+	text = "Press Select to return to menu"
 	d.text((0,40), text, font = font_small, fill = "white")
 	menuClass.image = copy.copy(i)
 	
@@ -242,10 +286,13 @@ def stopLogging(menuClass = None, controlData = None):
 	title = "Data Logging"
 	d.text((0,0), title, font = font_big, fill = "white")
 	
+	icon = Image.open(settings.GFX_ICONS['stopwatch']['icon'])
+	i.paste(icon,(menuClass.windowSettings['x_size'] - settings.GFX_ICONS['stopwatch']['size'][0],0))
+	
 	text = "Datalogger is stopping"
 	d.text((0,30), text, font = font_small, fill = "white")
 	
-	text = "Press Select or Cancel to return to menu"
+	text = "Press Select to return to menu"
 	d.text((0,40), text, font = font_small, fill = "white")
 	menuClass.image = copy.copy(i)
 	
@@ -286,7 +333,6 @@ def showSensorText(menuClass = None, controlData = None):
 		else:
 			menuClass.customData['sensorColumnOffsets'] = 0
 		
-	#font_small = menuClass.getFont(name = "sans", size=12)
 	font_big = menuClass.getFont(name = "pixel", style="header", size=16)
 	font_small = menuClass.getFont(name = "pixel", style="plain", size=8)
 	title = "Sensors"
@@ -332,6 +378,8 @@ def showSensorText(menuClass = None, controlData = None):
 		if (timeit.default_timer() - menuClass.customData['timer']) >= menuClass.customData['refreshTime']:
 						
 			i = Image.new('1', (menuClass.windowSettings['x_size'], menuClass.windowSettings['y_size']))
+			icon = Image.open(settings.GFX_ICONS['sensor']['icon'])
+			i.paste(icon,(menuClass.windowSettings['x_size'] - settings.GFX_ICONS['sensor']['size'][0],0))
 			d = ImageDraw.Draw(i)
 			d.text((0,0), title, font = font_big, fill = "white")
 			
@@ -359,7 +407,7 @@ def showSensorText(menuClass = None, controlData = None):
 					sensorData = menuClass.ecudata.getSensorData(sensorId = sensorId)
 					sampleData = menuClass.ecudata.getData(sensorId = sensorId, allData = True)
 					if (sensorData is not None) and (sampleData is not None):
-						t = "%s: %4.0f%s" % (sensorId, sampleData[0], sensorData['sensorUnit'])
+						t = "%s: %4.1f%s" % (sensorId, sampleData[0], sensorData['sensorUnit'])
 						d.text((x_pos, y_pos), t, font = font_small, fill = "white")
 					else:
 						t = "%s: No Data" % sensorId
@@ -414,8 +462,13 @@ def showSysInfo(menuClass = None, controlData = None):
 			
 			i = Image.new('1', (menuClass.windowSettings['x_size'], menuClass.windowSettings['y_size']))
 			d = ImageDraw.Draw(i)
-			font_big = menuClass.getFont(name = "pixel", style="plain", size=16)
-			font_small = menuClass.getFont(name = "pixel", size=8)
+			icon = Image.open(settings.GFX_ICONS['microchip']['icon'])
+			i.paste(icon,(menuClass.windowSettings['x_size'] - settings.GFX_ICONS['microchip']['size'][0],0))
+		
+			#font_big = menuClass.getFont(name = "pixel", style="plain", size=16)
+			#font_small = menuClass.getFont(name = "pixel", size=8)
+			font_big = menuClass.getFont(name = "pixel", style="header", size=16)
+			font_small = menuClass.getFont(name = "pixel", style="plain", size=8)
 			
 			########################################################################
 			
@@ -426,11 +479,14 @@ def showSysInfo(menuClass = None, controlData = None):
 				load_average = os.getloadavg()
 				cpu_speeds = []
 				cpu_cores = psutil.cpu_count()
+				cpu_model = "Unknown CPU"
 				try:
 					f = open('/proc/cpuinfo', 'r')
 					cpuinfo = f.readlines()
 					f.close()
 					for l in cpuinfo:
+						if 'model name' in l:
+							cpu_model = l.split(':')[1].strip()
 						if 'MHz' in l:
 							cpu_mhz = l.split(':')[1].split('.')[0].strip() 
 							cpu_speeds.append(int(cpu_mhz))
@@ -440,20 +496,24 @@ def showSysInfo(menuClass = None, controlData = None):
 				t = "Processor"
 				d.text((0,0), t, font = font_big, fill = "white")
 				
+				# CPU model
+				t = "%s" % cpu_model
+				d.text((0,18), t, font = font_small, fill = "white")
+				
 				# Current CPU %
-				t = "CPU: %s%%" % cpu_percent
-				d.text((0,18), t, font = font_big, fill = "white")
+				t = "CPU Use: %s%%" % cpu_percent
+				d.text((0,30), t, font = font_small, fill = "white")
 				
 				# Load average
-				t = "Load: %s" % load_average[0] 
-				d.text((120,18), t, font = font_big, fill = "white")
+				t = "Current Load: %s" % load_average[0] 
+				d.text((80,30), t, font = font_small, fill = "white")
 				
 				# CPU speed and cores
 				t_avg = int(sum(cpu_speeds) / cpu_cores)
 				t = "Cores: %s" % cpu_cores
-				d.text((0,36), t, font = font_big, fill = "white")
-				t = "%sMHz" % t_avg
-				d.text((120,36), t, font = font_big, fill = "white")
+				d.text((0,42), t, font = font_small, fill = "white")
+				t = "Current Speed: %sMHz" % t_avg
+				d.text((80,42), t, font = font_small, fill = "white")
 			
 			########################################################################
 			
@@ -468,14 +528,14 @@ def showSysInfo(menuClass = None, controlData = None):
 				t_total = int(vm.total / (1024 * 1024))
 				t_avail = int(vm.available / (1024 * 1024))
 				t = "Total: %sMB" % t_total
-				d.text((0,18), t, font = font_big, fill = "white")
+				d.text((0,18), t, font = font_small, fill = "white")
 				
 				# Warning if less than 100MB available
 				if t_avail <= 100:
 					t = "Avail: %sMB !Warning!" % t_avail
 				else:
 					t = "Avail: %sMB" % t_avail
-				d.text((0,36), t, font = font_big, fill = "white")
+				d.text((0,30), t, font = font_small, fill = "white")
 			
 			########################################################################
 			
@@ -491,7 +551,7 @@ def showSysInfo(menuClass = None, controlData = None):
 				
 				# psutil
 				t = "psutil - %s" % str(psutil.version_info)
-				d.text((120,18), t, font = font_small, fill = "white")
+				d.text((110,18), t, font = font_small, fill = "white")
 				
 				# Imaging library
 				t = "PIL - %s" % PIL_VERSION
@@ -499,7 +559,7 @@ def showSysInfo(menuClass = None, controlData = None):
 				
 				# RPI.GPIO
 				t = "RPi.GPIO - %s" % RPIGPIO_VERSION
-				d.text((120,26), t, font = font_small, fill = "white")
+				d.text((110,26), t, font = font_small, fill = "white")
 				
 				# OLED driver
 				t = "Luma.OLED - %s" % LUMA_VERSION
@@ -507,7 +567,7 @@ def showSysInfo(menuClass = None, controlData = None):
 				
 				# gpiozero
 				t = "GPIOZero - %s" % GPIOZERO_VERSION
-				d.text((120,34), t, font = font_small, fill = "white")
+				d.text((110,34), t, font = font_small, fill = "white")
 				
 				# Pyserial
 				t = "PySerial - %s" % SERIAL_VERSION
@@ -515,7 +575,7 @@ def showSysInfo(menuClass = None, controlData = None):
 				
 				# Numpy
 				t = "Numpy - %s" % NUMPY_VERSION
-				d.text((120,42), t, font = font_small, fill = "white")
+				d.text((110,42), t, font = font_small, fill = "white")
 				
 				# PySDL2
 				t = "PySDL2 - %s" % SDL2_VERSION
@@ -523,11 +583,11 @@ def showSysInfo(menuClass = None, controlData = None):
 				
 				# lcdbackpack
 				t = "LCDBackPack - %s" % LCDBACKPACK_VERSION
-				d.text((120,50), t, font = font_small, fill = "white")
+				d.text((110,50), t, font = font_small, fill = "white")
 			
 			# Page number
 			t = "%s/3" % menuClass.customData['page']
-			d.text((menuClass.windowSettings['x_size'] - 30, 48), t, font = font_big, fill = "white")
+			d.text((menuClass.windowSettings['x_size'] - 30, 50), t, font = font_big, fill = "white")
 			
 			menuClass.image = copy.copy(i)
 			menuClass.customData['timer'] = timeit.default_timer()

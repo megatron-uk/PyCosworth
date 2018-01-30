@@ -107,11 +107,22 @@ def SensorIO(transmitQueue, receiveQueue, controlQueue):
 						SENSOR_DEMO = False
 						demo = False
 						demo_sensors = []
+						status = {
+							'sourceId' : myButtonId,
+							'demoMode' : True
+						}
+						receiveQueue.put((settings.TYPE_STATUS, status, counter, None))
 					elif SENSOR_DEMO is False:
 						logger.info("Enable demo mode")
 						SENSOR_DEMO = True
 						demo = DemoSensors()
 						demo_sensors = demo.available()
+						status = {
+							'sourceId' : myButtonId,
+							'demoMode' : True
+						}
+						receiveQueue.put((settings.TYPE_STATUS, status, counter, None))
+
 						
 				# Reset Cosworth ecu comms
 				if (settings.USE_COSWORTH) and (cdata.button == settings.BUTTON_RESET_COSWORTH_ECU):

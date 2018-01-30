@@ -141,82 +141,25 @@ def GraphicsIO(ecudata, controlQueue, actionQueue):
 	# through these each time we want to refresh.
 	gfx_window_keys = []
 	for w in settings.GFX_WINDOWS.keys():
-		if settings.GFX_WINDOWS[w]['luma_driver'] or settings.GFX_WINDOWS[w]['sdlWindow']:
+		windowSettings = settings.GFX_WINDOWS[w]
+		if windowSettings['luma_driver'] or windowSettings['sdlWindow']:
 			logger.info("Added screen '%s' to list of available SDL/OLED screens" % w)
 			gfx_window_keys.append(w)
 	
-	# Load data about sensors (names etc.) from config file into a local look-up table
-	local_sensors = {}
+	# Load data about sensors (names etc.) from config file into a local look-up table for EACH window, since 
+	# each window MAY be a different size and need a different number of lines/pixels per value/refresh etc.
 	
-	for sensor in settings.SENSORS:
-		sensorId = sensor['sensorId']
-		local_sensors[sensorId] = sensor
-				
-		###################################################################
-		# Set up defaults for waveform display
-		###################################################################
-		local_sensors[sensorId]['waveform'] = {}
-		local_sensors[sensorId]['waveform']['valuePerLine'] = ((local_sensors[sensorId]['maxValue'] - local_sensors[sensorId]['minValue']) * 1.0) / settings.GFX_OLED_SIZE[1]
-		if sensor['minValue'] < 0:
-			local_sensors[sensorId]['waveform']['zeroline'] = settings.GFX_OLED_SIZE[1] - int(abs(sensor['minValue']) / local_sensors[sensorId]['waveform']['valuePerLine'])
-			local_sensors[sensorId]['waveform']['baseline'] = settings.GFX_OLED_SIZE[1]
-		elif sensor['minValue'] > 0:
-			local_sensors[sensorId]['waveform']['zeroline'] = None
-			local_sensors[sensorId]['waveform']['baseline'] = settings.GFX_OLED_SIZE[1]
-		else:
-			local_sensors[sensorId]['waveform']['zeroline'] = settings.GFX_OLED_SIZE[1]
-			local_sensors[sensorId]['waveform']['baseline'] = None
-		local_sensors[sensorId]['waveform']['maxline'] = 0
-		
-		###################################################################
-		# Set up defaults for LED segment display
-		###################################################################
-		local_sensors[sensorId]['segment'] = {}
-		segments = 12
-		local_sensors[sensorId]['segment']['segmentValue'] = ((local_sensors[sensorId]['maxValue'] - local_sensors[sensorId]['minValue']) * 1.0) / segments
-		if settings.GFX_OLED_SIZE[1] == 64:
-			led_height = [ 8, 8, 10, 10, 14, 14, 20, 28, 36, 44, 52, 63 ]
-		elif settings.GFX_OLED_SIZE[1] == 32:
-			led_height = [ 5, 5, 6, 7, 8, 10, 12, 16, 20, 26, 31, 31 ]
-		else:
-			logger.fatal("This LED SEGMENT mode only supports OLED displays of 32 or 64 pixels in height")
-			logger.fatal("This process will now exit")
-			exit(1)
-		local_sensors[sensorId]['segment']['segmentHeights'] = led_height
-		
-		###################################################################
-		# Set up defaults for analogue clock display
-		###################################################################
-		local_sensors[sensorId]['clock'] = {}
-		degrees = 180
-		local_sensors[sensorId]['clock']['degreeValue'] =  ((local_sensors[sensorId]['maxValue'] - local_sensors[sensorId]['minValue']) * 1.0) / degrees	
-		
-		###################################################################
-		# Set up defaults for line gauge display
-		###################################################################
-		local_sensors[sensorId]['line'] = {}
-		graph_range = numpy.logspace(numpy.log10(6), numpy.log10(settings.GFX_OLED_SIZE[1]), num=settings.GFX_OLED_SIZE[0])
-		line_height = []
-		for v in graph_range:
-			line_height.append(int(v))
-		lines = settings.GFX_OLED_SIZE[0]
-		local_sensors[sensorId]['line']['lineHeights'] = line_height
-		local_sensors[sensorId]['line']['lineValue'] = ((local_sensors[sensorId]['maxValue'] - local_sensors[sensorId]['minValue']) * 1.0) / lines
-		
-		###################################################################
-		# Create a local deque to hold historical sensor values
-		###################################################################
-		#local_sensors[sensorId]['previousValues'] = deque(maxlen = settings.GFX_OLED_SIZE[0])
-		#for n in range(0, settings.GFX_OLED_SIZE[0]):
-		#	local_sensors[sensorId]['previousValues'].append(0)
-		local_sensors[sensorId]['previousValues'] = deque(maxlen = settings.GFX_MASTER_SIZE[0])
-		for n in range(0, settings.GFX_MASTER_SIZE[0]):
-			local_sensors[sensorId]['previousValues'].append(0)
-		
-	# Set default display modes
 	for w in gfx_window_keys:
-		settings.GFX_WINDOWS[w]['currentMode'] = settings.GFX_WINDOWS[w]['mode'][0]
-		settings.GFX_WINDOWS[w]['currentSensorId'] = settings.GFX_WINDOWS[w]['sensorIds'][0]
+		windowSettings = settings.GFX_WINDOWS[w]
+		windowSettings['displayModes'] = {}
+		for sensor in settings.SENSORS:
+			sensorId = sensor['sensorId']
+			
+			windowSettings['displayModes'][sensorId] = sensorGraphicsInit(sensor, windowSettings)
+			
+		# Set default modes
+		windowSettings['currentMode'] = windowSettings['mode'][0]
+		windowSettings['currentSensorId'] = windowSettings['sensorIds'][0]
 		
 	# Pre-load any image assets
 	image_assets = buildImageAssets(USE_OLED_GRAPHICS_MASTER, USE_SDL_GRAPHICS_MASTER)
@@ -422,36 +365,39 @@ def GraphicsIO(ecudata, controlQueue, actionQueue):
 				# TO DO
 				
 				# Generate the latest image of sensor data for this gfx window (be it SDL or OLED)
-				currentSensorId = settings.GFX_WINDOWS[w]['currentSensorId']
-				currentMode = settings.GFX_WINDOWS[w]['currentMode']
+				currentSensorId = windowSettings['currentSensorId']
+				currentMode = windowSettings['currentMode']
 				
 				# Add latest sensor value to list of previous values
 				# As the list is a fixed size, this also pushes the oldest
 				# value off the back of the list.
-				local_sensors[currentSensorId]['previousValues'].append(ecudata.getData(currentSensorId))
+				value = ecudata.getData(currentSensorId)
+				if value:
+					windowSettings['displayModes'][currentSensorId]['previousValues'].append(value)
+				sensorData = ecudata.getSensorData(currentSensorId)
 				
 				# Waveform gauge
 				if currentMode == settings.GFX_MODE_WAVEFORM:
-					image = gaugeWaveform(ecudata = ecudata, sensor = local_sensors[currentSensorId], font = font, windowSettings = settings.GFX_WINDOWS[w], highlight_current = True)
+					image = gaugeWaveform(ecudata = ecudata, sensor = windowSettings['displayModes'][currentSensorId], font = font, windowSettings = windowSettings, highlight_current = True)
 				elif currentMode == settings.GFX_MODE_SEGMENTS:
 					# LED segment style bargraph gauge
-					image = gaugeLEDSegments(ecudata = ecudata, sensor = local_sensors[currentSensorId], font = font, windowSettings = settings.GFX_WINDOWS[w])
+					image = gaugeLEDSegments(ecudata = ecudata, sensor = windowSettings['displayModes'][currentSensorId], font = font, windowSettings = windowSettings)
 				elif currentMode == settings.GFX_MODE_CLOCK:
 					# Traditional clock type gauge
-					image = gaugeClock(ecudata = ecudata, sensor = local_sensors[currentSensorId], font = font, windowSettings = settings.GFX_WINDOWS[w])
+					image = gaugeClock(ecudata = ecudata, sensor = windowSettings['displayModes'][currentSensorId], font = font, windowSettings = windowSettings)
 				elif currentMode == settings.GFX_MODE_LINE:
 					# Vertical line gauge
-					image = gaugeLine(ecudata = ecudata, sensor = local_sensors[currentSensorId], font = font, windowSettings = settings.GFX_WINDOWS[w])
+					image = gaugeLine(ecudata = ecudata, sensor = windowSettings['displayModes'][currentSensorId], font = font, windowSettings = windowSettings, sensorData = sensorData)
 				else:
 					pass
 				
 				if USE_OLED_GRAPHICS:
 					# Update the OLED screen
-					updateOLEDScreen(pilImage = image, windowSettings = settings.GFX_WINDOWS[w])
+					updateOLEDScreen(pilImage = image, windowSettings = windowSettings)
 				
 				if USE_SDL_GRAPHICS:
 					# Update the SDL window
-					updateSDLWindow(pilImage = image, windowSettings = settings.GFX_WINDOWS[w])
+					updateSDLWindow(pilImage = image, windowSettings = windowSettings)
 					
 				# Reset the timer for this window
 				setRefresh(windowSettings)

@@ -200,7 +200,7 @@ class CosworthSensors():
 			'IGNADV': { 
 				'classId' : 'Cosworth.IGNADV', 
 				'sensorId' : 'IGNADV',
-				'sensorUnit' : 'deg BTDC',
+				'sensorUnit' : 'deg',
 				'refresh' : 0.2,
 				'controlCodes' : [0x86],
 				'supportedECU' : ['L8 Pectel', 'P8'],

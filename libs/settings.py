@@ -33,6 +33,7 @@ MAX_ERRORS = 255
 # Standard types of message we may get back from the SensorIO process
 TYPE_ERROR = "ERR_MSG"
 TYPE_DATA = "DATA_MSG"
+TYPE_STATUS = "STATUS_MSG"
 
 ##############################################################
 #
@@ -321,9 +322,9 @@ GFX_ASSETS_DIR = "images/"
 GFX_CACHE_DIR = "cache/"
 
 # Boot up logo for the OLED screens
-GFX_BOOT_LOGO 		= "cosworth.bmp"
-GFX_BOOT_LOGO_BIG 	= "cosworth_256.bmp"
-GFX_BOOT_LOGO_BIG 	= "cosworth_outline.bmp"
+GFX_BOOT_LOGO 		= "logo/cosworth.bmp"
+GFX_BOOT_LOGO_BIG 	= "logo/cosworth_256.bmp"
+GFX_BOOT_LOGO_BIG 	= "logo/cosworth_outline.bmp"
 
 # Font used for most on-screen text
 GFX_FONT 		= "pixelmix.ttf"
@@ -387,7 +388,7 @@ GFX_WINDOWS = {
 		'i2cAddress'		: 0x3C,
 		'spiAddress'		: None,
 		'setting'			: GFX_SETTING_FIXED,
-		'mode'				: [GFX_MODE_CLOCK, GFX_MODE_WAVEFORM, GFX_MODE_LINE, GFX_MODE_SEGMENTS, ],
+		'mode'				: [GFX_MODE_CLOCK, GFX_MODE_LINE, GFX_MODE_SEGMENTS, GFX_MODE_WAVEFORM],
 		'currentModeIdx'	: 0,
 		'currentMode'		: None,
 		'sensorIds'			: ['RPM', 'TPS'],
@@ -437,29 +438,48 @@ GFX_MASTER_WINDOW = {
 # All of the bitmaps that make up the main menu control screen
 GFX_MASTER_BITMAPS = {
 	'sensor': {
-		'off'	: GFX_ASSETS_DIR + 'menu button - Sensor.bmp',
-		'on'	: GFX_ASSETS_DIR + 'menu button - Sensor - selected.bmp',
+		'off'	: GFX_ASSETS_DIR + 'buttons/menu button - Sensor.bmp',
+		'on'	: GFX_ASSETS_DIR + 'buttons/menu button - Sensor - selected.bmp',
 		'size'	: (64, 20),
 	},
 	'config': {
-		'off'	: GFX_ASSETS_DIR + 'menu button - Config.bmp',
-		'on' 	: GFX_ASSETS_DIR + 'menu button - Config - selected.bmp',
+		'off'	: GFX_ASSETS_DIR + 'buttons/menu button - Config.bmp',
+		'on' 	: GFX_ASSETS_DIR + 'buttons/menu button - Config - selected.bmp',
 		'size'	: (64, 20),
 	},
 	'data'	: {
-		'off'	: GFX_ASSETS_DIR + 'menu button - Data.bmp',
-		'on'	: GFX_ASSETS_DIR + 'menu button - Data - selected.bmp',
+		'off'	: GFX_ASSETS_DIR + 'buttons/menu button - Data.bmp',
+		'on'	: GFX_ASSETS_DIR + 'buttons/menu button - Data - selected.bmp',
 		'size'	: (64, 20),
 	},	
 	'diag'	: {
-		'off'	: GFX_ASSETS_DIR + 'menu button - Diag.bmp',
-		'on'	: GFX_ASSETS_DIR + 'menu button - Diag - selected.bmp',
+		'off'	: GFX_ASSETS_DIR + 'buttons/menu button - Diag.bmp',
+		'on'	: GFX_ASSETS_DIR + 'buttons/menu button - Diag - selected.bmp',
 		'size'	: (64, 20),
 	},
 	'arrow'	: {
-		'up'	: GFX_ASSETS_DIR + 'arrow - up.bmp',
-		'down'	: GFX_ASSETS_DIR + 'arrow - down.bmp',
+		'up'	: GFX_ASSETS_DIR + 'buttons/arrow - up.bmp',
+		'down'	: GFX_ASSETS_DIR + 'buttons/arrow - down.bmp',
 		'size'	: (5, 13),
+	},	
+}
+
+# Icons that can be shown in top right to indicate mode
+GFX_ICONS = {
+	'stopwatch' : {
+		'icon'	: GFX_ASSETS_DIR + 'icons/stopwatch.bmp',
+		'alt'	: GFX_ASSETS_DIR + 'icons/stopwatch_alt.bmp',
+		'size'	: (48, 48)
+	},
+	'microchip' : {
+		'icon'	: GFX_ASSETS_DIR + 'icons/microchip.bmp',
+		'alt'	: GFX_ASSETS_DIR + 'icons/microchip.bmp',
+		'size'	: (48, 48)
+	},
+	'sensor' : {
+		'icon'	: GFX_ASSETS_DIR + 'icons/sensor.bmp',
+		'alt'	: GFX_ASSETS_DIR + 'icons/sensor.bmp',
+		'size'	: (48, 48)
 	}
 }
 

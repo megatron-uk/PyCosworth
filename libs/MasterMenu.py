@@ -136,6 +136,7 @@ class MasterMenu():
 		self.slideIn = False
 		self.slideOut = False
 		self.slideOutIn = False
+		self.slideInHelp = False
 		
 		# Add all current sensors to the Sensor menu
 		self.sensor_keys = []
@@ -336,13 +337,19 @@ class MasterMenu():
 			# Scroll left
 			if controlData.button == settings.BUTTON_LEFT:
 				if (self.menuIndex >0):
+					self.menuIndex_prev = self.menuIndex
 					self.menuIndex -= 1
+					self.slideInHelp = "l2r"
 				elif (self.menuIndex <0):
+					self.menuIndex_prev = self.menuIndex
 					self.menuIndex = (len(self.menu) - 1)
+					self.slideInHelp = "l2r"
 			# Scroll right
 			if controlData.button == settings.BUTTON_RIGHT:
 				if (self.menuIndex < (len(self.menu) - 1)):
+					self.menuIndex_prev = self.menuIndex
 					self.menuIndex += 1
+					self.slideInHelp = "r2l"
 				
 			# Open the 1st level menu item that is selected
 			if controlData.button == settings.BUTTON_SELECT:
@@ -478,8 +485,55 @@ class MasterMenu():
 				self.slideOut = False
 				self.menuShow = False
 			else:
+				#####################################################################
+				#
+				# This is shown when the main menu bar is on screen and one of the 
+				# bottom menu icons is selected. NOT shown when a sub menu is active
+				#
 				# Display a normal menu screen from the selected menu options
-				self.buildMenu()
+				if self.slideInHelp:
+					
+					# Show base menu without help
+					self.buildMenu(showHelp = False)
+					baseBitmap = self.image.copy()
+					# Slide out previous help
+					oldHelpBitmap = self.wrappedHelpWindowText(text = self.menu[self.menuIndex_prev]['itemText'], windowLevel = "main")
+					self.slideSubBitmapHorizontal(
+						bitmap = baseBitmap,
+						subBitmap = oldHelpBitmap,
+						x_start = 0,
+						y_start = 0,
+						x_end = (self.windowSettings['x_size']),
+						direction = self.slideInHelp,
+						steps = 8,
+						sleep = 0.02
+						)
+					# Slide in current help
+					newHelpBitmap = self.wrappedHelpWindowText(text = self.menu[self.menuIndex]['itemText'], windowLevel = "main")
+					if self.slideInHelp == "l2r":
+						# set start pos to be negative if we slide in from past the left
+						# edge of the screen
+						x_start = (0 - self.windowSettings['x_size'])
+					else:
+						
+						x_start = self.windowSettings['x_size']
+					self.slideSubBitmapHorizontal(
+						bitmap = baseBitmap,
+						subBitmap = newHelpBitmap,
+						x_start = x_start,
+						y_start = 0,
+						x_end = 0,
+						direction = self.slideInHelp,
+						steps = 16,
+						sleep = 0.02
+						)
+					self.slideInHelp = False
+					self.buildMenu()
+				else:
+					self.buildMenu()
+				#
+				#
+				########################################################################
 		else:
 			if self.slideOut:
 				# Slide out the entire screen
@@ -786,7 +840,67 @@ class MasterMenu():
 				time.sleep(sleep)
 				y_pos += y_increment
 			# Slide a bitmap from top to bottom
+	
+	def slideSubBitmapHorizontal(self, bitmap = None, subBitmap = None, x_start = 0, y_start = 0, x_end = 0, steps = 0, direction = "l2r", sleep = 0.1, slowdown = True):
+		""" Slide in a bitmap horizontally - either from left or right of screen """
 		
+		y_pos = y_start
+		x_pos = x_start
+		x_increment = int(bitmap.size[0] / steps)
+		
+		if direction == "l2r":
+			logger.debug("Horizontally sliding sub-image left to right from x:%s to x:%s in x%s %spx steps" % (x_start, x_end, steps, x_increment))
+			l = list(range(0, steps + 1))
+			if len(l) > 6:
+				slow_increments = [l[-5], [-4], l[-3]]
+				slower_increments = [l[-2], l[-1]]
+			else:
+				slow_increments = []
+				slower_increments = []
+			for i in l:
+				logger.debug("Pasting bitmap at x:%s,y:%s" % (x_pos, y_pos))
+				self.image = bitmap.copy()
+				self.image.paste(subBitmap,(x_pos, y_pos))
+				# Slow down towards end of sliding
+				if slowdown:
+					if i in slow_increments:
+						time.sleep(sleep * 2)
+					elif i in slower_increments:
+						time.sleep(sleep * 3)
+					else:
+						time.sleep(sleep)
+				else:
+					time.sleep(sleep)
+				self.update()
+				x_pos += x_increment
+		else:
+			logger.debug("Horizontally sliding sub-image right to left from x:%s to x:%s in x%s %spx steps" % (x_start, x_end, steps, x_increment))
+			l = list(range(0, steps + 1))
+			l.reverse()
+			if len(l) > 6:
+				slow_increments = [l[-5], [-4], l[-3]]
+				slower_increments = [l[-2], l[-1]]
+			else:
+				slow_increments = []
+				slower_increments = []
+			for i in l:
+				logger.debug("Pasting bitmap at x:%s,y:%s" % (x_pos, y_pos))
+				self.image = bitmap.copy()
+				self.image.paste(subBitmap,(x_pos, y_pos))
+				# Slow down towards end of sliding
+				if slowdown:
+					if i in slow_increments:
+						time.sleep(sleep * 2)
+					elif i in slower_increments:
+						time.sleep(sleep * 3)
+					else:
+						time.sleep(sleep)
+				else:
+					time.sleep(sleep)
+				self.update()
+				x_pos -= x_increment
+	
+	
 	def wrappedHelpWindowText(self, text = "Default text", windowLevel = "main"):
 		""" Display text, wrapped over several lines, for a given menu level """
 				
@@ -826,11 +940,11 @@ class MasterMenu():
 		return self.bitmapCache[key].copy()
 		
 		
-	def buildMenu(self):
+	def buildMenu(self, showHelp = True):
 		""" If at least one menu item is selected, build and show a menu screen """
 		
 		# Have we generated an image frame for this combination of selected menu and items before?
-		key = "menu|menuIndex:" + str(self.menuIndex) + ",subMenuIndex:" + str(self.subMenuIndex) + ",finalMenuIndex:" + str(self.finalMenuIndex)
+		key = "menu|menuIndex:" + str(self.menuIndex) + ",subMenuIndex:" + str(self.subMenuIndex) + ",finalMenuIndex:" + str(self.finalMenuIndex) + ",showHelp:" + str(showHelp)
 		if (key in self.frameCache.keys()) and (self.useFrameCache):
 			# Serve the previously generated image
 			self.image = self.frameCache[key]
@@ -863,7 +977,7 @@ class MasterMenu():
 				# only highlighted an item in the bottom menu
 				# but not yet clicked on it
 				###########################################
-				if (self.menuIndex > -1) and (self.subMenuIndex is None) and (self.finalMenuIndex is None):
+				if (self.menuIndex > -1) and (self.subMenuIndex is None) and (self.finalMenuIndex is None) and (showHelp):
 					# Show a description of the main menu item we've got highlighted
 					helpBitmap = self.wrappedHelpWindowText(text = self.menu[self.menuIndex]['itemText'], windowLevel = "main")
 					logger.debug("Pasting helptext image [%sx%sx%s] at x:%s,y:%s" % (helpBitmap.size[0], helpBitmap.size[1], helpBitmap.mode, 0, 0))
@@ -888,7 +1002,7 @@ class MasterMenu():
 				# an element from the submenu, but we've
 				# not yet gone on to the final menu.
 				###########################################
-				if (self.subMenuIndex > -1) and (self.finalMenuIndex is None):
+				if (self.subMenuIndex > -1) and (self.finalMenuIndex is None) and (showHelp):
 					# Show a description of the sub menu item we've got highlighted
 					items = copy.copy(self.menu[self.menuIndex]['items'])
 					items.reverse()
@@ -899,7 +1013,7 @@ class MasterMenu():
 			####################################
 			# Generate any third level menu
 			####################################
-			if (self.finalMenuIndex is not None):
+			if (self.finalMenuIndex is not None) and (showHelp):
 				# No item in the sub-menu is highlighted
 				logger.info("Show the final menu")			
 			
@@ -918,7 +1032,7 @@ class MasterMenu():
 				# This section only shows if we have highlighted 
 				# an element from the final menu.
 				###########################################
-				if (self.finalMenuIndex > -1):
+				if (self.finalMenuIndex > -1) and (showHelp):
 					# Show a description of the final menu item we've got highlighted
 					subitems = copy.copy(self.menu[self.menuIndex]['items'])
 					subitems.reverse()
