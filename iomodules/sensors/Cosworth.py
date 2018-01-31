@@ -313,9 +313,14 @@ class CosworthSensors():
 			if rawValue == 0:
 				value = 0
 			else:
-				# FIAT value
-				#value = int(30000000 / rawValue)
-				# Pectel/Ford value
+				# This is the FIAT value calculation
+				# value = int(30000000 / rawValue)
+				#
+				# This is the calculation for Pectel/Ford units.
+				#
+				# This calculation was kindly provided by RP Labs, developers
+				# of the ECU diagnostics and programming tools for the Weber/Marelli
+				# ecu: http://www.rp-lab.com/hp.shtml
 				value = int(1875000 / rawValue)
 		elif sensorId == 'INJDUR':
 			if rawValue == 0:
@@ -349,19 +354,28 @@ class CosworthSensors():
 				# This is the FIAT calculation
 				value = (rawValue * 0.7058) - 90
 		elif sensorId == "BAT":
-			if rawValue == 0:
-				value = 0
-			else:
-				# This is the FIAT calculation
-				value = rawValue * 0.0628
+			# This is the FIAT calculation
+			value = rawValue * 0.0628
 		elif sensorId == "IGNADV":
-			if rawValue == 0:
-				value = 0
-			else:
-				# This is the FIAT calculation
-				value = rawValue / 4
+			# This is the FIAT calculation
+			value = rawValue / 4
 		elif sensorId in ['IAT', 'ECT']:
-			value = rawValue
+			# The FIAT translation for temperature relies
+			# on a table of values. These are not available for
+			# the Cosworth.
+			#
+			# This calculation was kindly provided by RP Labs, developers
+			# of the ECU diagnostics and programming tools for the Weber/Marelli
+			# ecu: http://www.rp-lab.com/hp.shtml
+			value = -55 + (0.75 * rawValue)
+		elif sensorId == "CO":
+			# This is the FIAT calculation
+			# value = rawValue - 128
+			#
+			# This calculation was kindly provided by RP Labs, developers
+			# of the ECU diagnostics and programming tools for the Weber/Marelli
+			# ecu: http://www.rp-lab.com/hp.shtml
+			value = ((rawValue - 128) / 128) * 50
 		else:
 			logger.warn("No translation found for sensor [%s]" % sensorId)
 			value = 0
