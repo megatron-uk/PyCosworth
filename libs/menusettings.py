@@ -13,7 +13,14 @@ MASTER_MENU = [
 		'itemName'	: 'config',
 		'itemType'	: 'menu',
 		'itemText'	: 'Configure how sensor data is displayed on all connected devices. Choose visualisation modes for all displays.',
-		'items'		: []
+		'items'		: [
+			{
+				'itemName'	: 'Current',
+				'itemType'	: 'item',
+				'itemText'	: 'Show currently selected sensor configuration for all connected devices.',
+				'itemSelect': showCurrentVisState,
+			}
+		]
 	},
 	{
 		'itemName'	: 'data',

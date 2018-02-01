@@ -108,11 +108,12 @@ def blankImage(windowSettings):
 	}
 	return d
 
-def gaugeWaveform(ecudata, sensor, font, windowSettings, highlight_current = False):
+def gaugeWaveform(ecudata, sensor, font, windowSettings, sensorData, highlight_current = False):
 	""" Render a waveform type image """
 	
 	sensorId = sensor['sensor']['sensorId']
 	sensorValueString = "%.f" % (sensor['previousValues'][-1])
+	t1 = timeit.default_timer()
 	
 	# Have we created an image for this sensor before?
 	if "image" in sensor['waveform'].keys():
@@ -126,9 +127,11 @@ def gaugeWaveform(ecudata, sensor, font, windowSettings, highlight_current = Fal
 		sensor['waveform']['font_small'] = None
 		blank = blankImage(windowSettings)
 		image = blank['image']
-		font = blank['font']
-		font_small = blank['font_small']
+		font = ImageFont.truetype(settings.GFX_FONTS["pixel"]["header"]['font'], size = 16)
+		font_small = ImageFont.truetype(settings.GFX_FONTS['pixel']['plain']['font'], size = 8)
 		draw = ImageDraw.Draw(image)
+
+		print(sensor['waveform'])
 
 		# If the scale is from <0 to >0 then plot where 0 is on the Y axis
 		if sensor['waveform']['zeroline'] is not None:
@@ -140,12 +143,12 @@ def gaugeWaveform(ecudata, sensor, font, windowSettings, highlight_current = Fal
 			zy = False
 		
 		# Draw the maximum value of the Y axis
-		max_x = windowSettings['x_size'] - (8 * (len(str(sensor['sensor']['maxValue'])) - 1))
+		max_x = windowSettings['x_size'] - (font.getsize(str(sensor['sensor']['maxValue']))[0])
 		max_y = 0
 		
 		# Draw the minimum value
-		min_x = windowSettings['x_size'] - (8 * (len(str(sensor['sensor']['minValue'])) - 1))
-		min_y = windowSettings['y_size'] - 8
+		min_x = windowSettings['x_size'] - (font.getsize(str(sensor['sensor']['minValue']))[0])
+		min_y = windowSettings['y_size'] - (font.getsize(str(sensor['sensor']['minValue']))[1])
 		
 		#############################################
 		#
@@ -159,7 +162,7 @@ def gaugeWaveform(ecudata, sensor, font, windowSettings, highlight_current = Fal
 		draw.text((max_x, max_y), str(sensor['sensor']["maxValue"]), fill="white", font = font_small)
 		# Min value
 		if zy:
-			if zy > (windowSettings['y_size'] -  8):
+			if zy > (windowSettings['y_size'] -  (font.getsize(str(sensor['sensor']['minValue']))[1])):
 				pass
 			else:
 				draw.text((min_x, min_y), str(sensor['sensor']["minValue"]), fill="white", font = font_small)
@@ -218,13 +221,18 @@ def gaugeWaveform(ecudata, sensor, font, windowSettings, highlight_current = Fal
 	# Add raw sensor value at bottom left
 	draw.text((4, windowSettings['y_size'] - 12), sensorValueString, fill="white", font = font)
 	
+	t2 = (timeit.default_timer() - t1) * 1000
+	frame_time = "%.2fms" % t2
+	logger.debug("gaugeWaveform Draw time: %s" % frame_time)
+	
 	return image
 
-def gaugeLEDSegments(ecudata, sensor, font, windowSettings):
+def gaugeLEDSegments(ecudata, sensor, font, windowSettings, sensorData):
 	""" Render the 80's style LED segment bar-graph image """
 	
 	led_width = 5
 	sensorValueString = "%.f" % (sensor['previousValues'][-1])
+	t1 = timeit.default_timer()
 	
 	# Definitions for heights of 'LED' segments
 	led_height = sensor['segment']['segmentHeights']
@@ -272,6 +280,9 @@ def gaugeLEDSegments(ecudata, sensor, font, windowSettings):
 	draw.text((0, 16), sensorValueString, fill="white", font = font)
 	text_size = font.getsize(sensorValueString)
 	draw.text((text_size[0] + 2, 16), sensor['sensorUnit'], fill="white", font = font_small)
+	
+	t2 = timeit.default_timer() - t1
+	logger.debug("gaugeLED Draw time: %0.4fms" % (t2 * 1000))
 	
 	return image
 
@@ -322,13 +333,14 @@ def gaugeLine(ecudata, sensor, font, windowSettings, sensorData):
 	draw.text((text_size[0] + 2, 16), sensorData['sensorUnit'], fill="white", font = font_small)
 	
 	t2 = timeit.default_timer() - t1
-	logger.info("gaugeLine Draw time: %0.4fms" % (t2 * 1000))
+	logger.debug("gaugeLine Draw time: %0.4fms" % (t2 * 1000))
 	return image
 
-def gaugeClock(ecudata, sensor, font, windowSettings):
+def gaugeClock(ecudata, sensor, font, windowSettings, sensorData):
 	""" Render an analogue clock style image """
 	
 	sensorValueString = "%4.f" % (sensor['previousValues'][-1])
+	t1 = timeit.default_timer()
 	
 	# Have we created an image for this sensor before?
 	if "image" in sensor['clock'].keys():
@@ -380,6 +392,9 @@ def gaugeClock(ecudata, sensor, font, windowSettings):
 	# Add raw sensor value at middle left
 	draw.text((windowSettings['x_size'] - ((len(sensorValueString) * 12) - 12), 0), sensorValueString, fill="white", font = font)
 
+	t2 = timeit.default_timer() - t1
+	logger.debug("gaugeClock Draw time: %0.4fms" % (t2 * 1000))
+	
 	return image
 
 def buildImageAssets(use_oled_master = False, use_sdl_master = False):
@@ -560,8 +575,8 @@ def sensorInitWaveform(sensor, windowSettings):
 		data['zeroline'] = None
 		data['baseline'] = windowSettings['y_size']
 	else:
-		# Otherwise zero is at the very bottom of the screen
-		data['zeroline'] = windowSettings['y_size']
+		# Otherwise zero is at the very bottom of the screen, so dont show it
+		data['zeroline'] = None
 		data['baseline'] = None
 	data['maxline'] = 0
 

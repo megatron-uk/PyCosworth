@@ -138,7 +138,12 @@ def sensorVisualisation(menuClass = None, controlData = None):
 		if value:
 			menuClass.windowSettings['displayModes'][sensorId]['previousValues'].append(value)
 		sensorData = menuClass.ecudata.getSensorData(sensorId)
-		image = gaugeLine(ecudata = menuClass.ecudata, sensor = menuClass.windowSettings['displayModes'][sensorId], font = font_big, windowSettings = menuClass.windowSettings, sensorData = sensorData)
+		
+		#image = gaugeWaveform(ecudata = menuClass.ecudata, sensor = menuClass.windowSettings['displayModes'][sensorId], font = font_big, windowSettings = menuClass.windowSettings, sensorData = sensorData)
+		#image = gaugeLEDSegments(ecudata = menuClass.ecudata, sensor = menuClass.windowSettings['displayModes'][sensorId], font = font_big, windowSettings = menuClass.windowSettings, sensorData = sensorData)
+		#image = gaugeLine(ecudata = menuClass.ecudata, sensor = menuClass.windowSettings['displayModes'][sensorId], font = font_big, windowSettings = menuClass.windowSettings, sensorData = sensorData)
+		image = gaugeClock(ecudata = menuClass.ecudata, sensor = menuClass.windowSettings['displayModes'][sensorId], font = font_big, windowSettings = menuClass.windowSettings, sensorData = sensorData)
+		
 		menuClass.image = image.copy()
 	elif (menuClass.selectedSensors['left'] is not None) or (menuClass.selectedSensors['right'] is not None):
 		pass

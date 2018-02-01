@@ -378,16 +378,37 @@ def GraphicsIO(ecudata, controlQueue, actionQueue):
 				
 				# Waveform gauge
 				if currentMode == settings.GFX_MODE_WAVEFORM:
-					image = gaugeWaveform(ecudata = ecudata, sensor = windowSettings['displayModes'][currentSensorId], font = font, windowSettings = windowSettings, highlight_current = True)
+					image = gaugeWaveform(ecudata = ecudata, 
+						sensor = windowSettings['displayModes'][currentSensorId],
+						font = font,
+						windowSettings = windowSettings,
+						sensorData = sensorData, 
+						highlight_current = True
+					)
 				elif currentMode == settings.GFX_MODE_SEGMENTS:
 					# LED segment style bargraph gauge
-					image = gaugeLEDSegments(ecudata = ecudata, sensor = windowSettings['displayModes'][currentSensorId], font = font, windowSettings = windowSettings)
+					image = gaugeLEDSegments(ecudata = ecudata, 
+						sensor = windowSettings['displayModes'][currentSensorId],
+						font = font,
+						windowSettings = windowSettings,
+						sensorData = sensorData
+					)
 				elif currentMode == settings.GFX_MODE_CLOCK:
 					# Traditional clock type gauge
-					image = gaugeClock(ecudata = ecudata, sensor = windowSettings['displayModes'][currentSensorId], font = font, windowSettings = windowSettings)
+					image = gaugeClock(ecudata = ecudata,
+						sensor = windowSettings['displayModes'][currentSensorId],
+						font = font,
+						windowSettings = windowSettings,
+						sensorData = sensorData
+					)
 				elif currentMode == settings.GFX_MODE_LINE:
 					# Vertical line gauge
-					image = gaugeLine(ecudata = ecudata, sensor = windowSettings['displayModes'][currentSensorId], font = font, windowSettings = windowSettings, sensorData = sensorData)
+					image = gaugeLine(ecudata = ecudata,
+						sensor = windowSettings['displayModes'][currentSensorId],
+						font = font,
+						windowSettings = windowSettings,
+						sensorData = sensorData
+					)
 				else:
 					pass
 				
