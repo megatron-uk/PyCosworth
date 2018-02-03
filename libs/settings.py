@@ -47,7 +47,7 @@ USE_CONSOLE = False			# Output to a standard terminal / command prompt
 USE_BUTTONS = True			# Run a process which monitors Raspberry Pi GPIO buttons for button presses
 USE_GRAPHICS = True			# Output to OLED modules or on-screen graphics
 USE_DATALOGGER = True		# Run the datalogger module to record ecudata to disk
-USE_OLED_GRAPHICS = False 	# Try to output to an OLED module
+USE_OLED_GRAPHICS = True 	# Try to output to an OLED module
 USE_SDL_GRAPHICS = True  	# Try to output to on-screen windows
 
 # Sensor modules
@@ -347,7 +347,7 @@ GFX_FONT_BIG 	= "neoletters.ttf"
 #
 # Assuming your hardware can keep up, 0.05 should average 20fps, which
 # is plenty fast to update an LCD/OLED gauge.
-GFX_SLEEP_TIME = 0.02
+GFX_SLEEP_TIME = 0.01
 
 # How long a period to measure framerate over
 GFX_FRAME_COUNT_TIME = 5
@@ -388,38 +388,38 @@ GFX_WINDOWS = {
 		'i2cAddress'		: 0x3C,
 		'spiAddress'		: None,
 		'setting'			: GFX_SETTING_FIXED,
-		'mode'				: [GFX_MODE_CLOCK, GFX_MODE_LINE, GFX_MODE_SEGMENTS, GFX_MODE_WAVEFORM],
+		'mode'				: [GFX_MODE_WAVEFORM, GFX_MODE_LINE, GFX_MODE_SEGMENTS, GFX_MODE_WAVEFORM],
 		'currentModeIdx'	: 0,
 		'currentMode'		: None,
 		'sensorIds'			: ['RPM', 'TPS'],
 		'currentSensorIdx'	: 0,
 		'screen_cycleTime'	: 5,
 		'value_refreshTime'	: 0.1,
-		'screen_refreshTime': 0.1,
+		'screen_refreshTime': 0.05,
 		'sdlWindow'			: None,
 		'sdl_framebuffer'	: None,
 		'luma_framebuffer'	: None,
 		'luma_driver'		: None,
 	},
-	'secondary': {
-		'windowName'		: 'secondary',
-		'oledType'			: 'sh1106',
-		'i2cAddress'		: 0x02,
-		'spiAddress'		: None,
-		'setting'			: GFX_SETTING_CYCLE,
-		'mode'				: [GFX_MODE_LINE, GFX_MODE_SEGMENTS, GFX_MODE_CLOCK, GFX_MODE_WAVEFORM],
-		'currentModeIdx'	: 0,
-		'currentMode'		: None,		
-		'sensorIds'			: ['MAP', 'ACT'],
-		'currentSensorIdx'	: 0,
-		'screen_cycleTime'	: 5,
-		'screen_refreshTime': 0.05,
-		'value_refreshTime'	: 0.1,
-		'sdlWindow'			: None,
-		'sdl_framebuffer'	: None,
-		'luma_framebuffer'	: None,
-		'luma_driver'		: None,
-	}
+	#'secondary': {
+	#	'windowName'		: 'secondary',
+	#	'oledType'			: 'sh1106',
+	#	'i2cAddress'		: 0x02,
+	#	'spiAddress'		: None,
+	#	'setting'			: GFX_SETTING_CYCLE,
+	#	'mode'				: [GFX_MODE_WAVEFORM, GFX_MODE_SEGMENTS, GFX_MODE_CLOCK, GFX_MODE_WAVEFORM],
+	#	'currentModeIdx'	: 0,
+	#	'currentMode'		: None,		
+	#	'sensorIds'			: ['MAP', 'ACT'],
+	#	'currentSensorIdx'	: 0,
+	#	'screen_cycleTime'	: 5,
+	#	'screen_refreshTime': 0.05,
+	#	'value_refreshTime'	: 0.1,
+	#	'sdlWindow'			: None,
+	#	'sdl_framebuffer'	: None,
+	#	'luma_framebuffer'	: None,
+	#	'luma_driver'		: None,
+	#}
 }
 
 GFX_MASTER_WINDOW = {

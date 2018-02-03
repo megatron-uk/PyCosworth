@@ -47,7 +47,7 @@ def oledInit(windowSettings, x_res, y_res):
 			serial = i2c(port=1, address=windowSettings['i2cAddress'])
 			windowSettings['luma_driver'] = luma_sh1106(serial)
 		elif windowSettings['oledType'] == 'ssd1322':
-			serial = spi(port = 0, device = 0)
+			serial = spi(port = 0, device = 0, bus_speed_hz=16000000)
 			windowSettings['luma_driver'] = luma_ssd1322(serial_interface = serial, mode = "1")
 		else:
 			logger.warn("OLED type %s is not yet supported" % windowSettings['oledType'])
