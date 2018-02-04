@@ -47,7 +47,7 @@ USE_CONSOLE = False			# Output to a standard terminal / command prompt
 USE_BUTTONS = True			# Run a process which monitors Raspberry Pi GPIO buttons for button presses
 USE_GRAPHICS = True			# Output to OLED modules or on-screen graphics
 USE_DATALOGGER = True		# Run the datalogger module to record ecudata to disk
-USE_OLED_GRAPHICS = True 	# Try to output to an OLED module
+USE_OLED_GRAPHICS = False 	# Try to output to an OLED module
 USE_SDL_GRAPHICS = True  	# Try to output to on-screen windows
 
 # Sensor modules
@@ -382,25 +382,25 @@ GFX_MODE_LINE = "MODE_LINE"
 # in each window (where we have more than one OLED screen connected
 # to our Raspberry Pi).
 GFX_WINDOWS = {
-	"primary": {
-		'windowName'		: 'primary',
-		'oledType'			: 'sh1106',
-		'i2cAddress'		: 0x3C,
-		'spiAddress'		: None,
-		'setting'			: GFX_SETTING_FIXED,
-		'mode'				: [GFX_MODE_WAVEFORM, GFX_MODE_LINE, GFX_MODE_SEGMENTS, GFX_MODE_WAVEFORM],
-		'currentModeIdx'	: 0,
-		'currentMode'		: None,
-		'sensorIds'			: ['RPM', 'TPS'],
-		'currentSensorIdx'	: 0,
-		'screen_cycleTime'	: 5,
-		'value_refreshTime'	: 0.1,
-		'screen_refreshTime': 0.05,
-		'sdlWindow'			: None,
-		'sdl_framebuffer'	: None,
-		'luma_framebuffer'	: None,
-		'luma_driver'		: None,
-	},
+	#"primary": {
+	#	'windowName'		: 'primary',
+	#	'oledType'			: 'sh1106',
+	#	'i2cAddress'		: 0x3C,
+	#	'spiAddress'		: None,
+	#	'setting'			: GFX_SETTING_FIXED,
+	#	'mode'				: [GFX_MODE_SEGMENTS, GFX_MODE_LINE, GFX_MODE_SEGMENTS, GFX_MODE_WAVEFORM],
+	#	'currentModeIdx'	: 0,
+	#	'currentMode'		: None,
+	#	'sensorIds'			: ['RPM', 'TPS'],
+	#	'currentSensorIdx'	: 0,
+	#	'screen_cycleTime'	: 5,
+	#	'value_refreshTime'	: 0.1,
+	#	'screen_refreshTime': 0.05,
+	#	'sdlWindow'			: None,
+	#	'sdl_framebuffer'	: None,
+	#	'luma_framebuffer'	: None,
+	#	'luma_driver'		: None,
+	#},
 	#'secondary': {
 	#	'windowName'		: 'secondary',
 	#	'oledType'			: 'sh1106',
@@ -442,9 +442,9 @@ GFX_MASTER_BITMAPS = {
 		'on'	: GFX_ASSETS_DIR + 'buttons/menu button - Sensor - selected.bmp',
 		'size'	: (64, 20),
 	},
-	'config': {
-		'off'	: GFX_ASSETS_DIR + 'buttons/menu button - Config.bmp',
-		'on' 	: GFX_ASSETS_DIR + 'buttons/menu button - Config - selected.bmp',
+	'display': {
+		'off'	: GFX_ASSETS_DIR + 'buttons/menu button - Display.bmp',
+		'on' 	: GFX_ASSETS_DIR + 'buttons/menu button - Display - selected.bmp',
 		'size'	: (64, 20),
 	},
 	'data'	: {
@@ -479,6 +479,18 @@ GFX_ICONS = {
 	'sensor' : {
 		'icon'	: GFX_ASSETS_DIR + 'icons/sensor.bmp',
 		'alt'	: GFX_ASSETS_DIR + 'icons/sensor.bmp',
+		'size'	: (48, 48)
+	},
+	'monitor' : {
+		'icon'	: GFX_ASSETS_DIR + 'icons/monitor.bmp',
+		'alt'	: GFX_ASSETS_DIR + 'icons/monitor.bmp',
+		'size'	: (48, 48)
+	},
+	'vis-select' : {
+		'waveform'	: GFX_ASSETS_DIR + 'icons/vis-waveform.bmp',
+		'segment'	: GFX_ASSETS_DIR + 'icons/vis-segment.bmp',
+		'line'		: GFX_ASSETS_DIR + 'icons/vis-segment.bmp',
+		'clock'		: GFX_ASSETS_DIR + 'icons/vis-segment.bmp',
 		'size'	: (48, 48)
 	}
 }
@@ -520,6 +532,12 @@ GFX_FONTS = {
 # Size of font for each menu
 GFX_MASTER_SUBMENU_FONTSIZE = 11
 GFX_MASTER_HELP_FONTSIZE = 10
+
+# Number of segments in a LED segment style visualisation
+# This should always be a power of 2 so that it divides cleanly
+# in to the width of all OLED screens.
+GFX_LED_SEGMENT_NUMBER = 16
+GFX_LED_SEGMENT_NUMBER_MASTER = 32
 
 #######################################################
 #

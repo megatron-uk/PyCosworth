@@ -114,8 +114,60 @@ def doNothing(menuClass = None, controlData = None):
 	return True
 
 
-def showCurrentVisState():
-	pass
+def showCurrentVisState(menuClass = None, controlData = None):
+	""" Show a screen that represents what sensors are going to be shown, and what visualisation modes they each have. 
+	    Allow the user to swap the left and right sensors and change the default visualisation mode for each sensor."""
+	
+	if 'visConfig' not in menuClass.customData.keys():
+		menuClass.customData['visConfig'] = {}
+	
+	if controlData:
+		# If we get a select or cancel button, exit the custom function
+		if controlData.button == settings.BUTTON_CANCEL:
+			menuClass.resetCustomFunction()
+			menuClass.resetMenus(showMenu = True)
+			return True
+	
+	font_big = menuClass.getFont(name = "pixel", style="header", size=16)
+	font_small = menuClass.getFont(name = "pixel", style="plain", size=8)
+	i = Image.new('1', (menuClass.windowSettings['x_size'], menuClass.windowSettings['y_size']))
+	d = ImageDraw.Draw(i)
+		
+	title = "Current Screen Layout"
+	d.text((0,0), title, font = font_big, fill = "white")
+	icon = Image.open(settings.GFX_ICONS['monitor']['icon'])
+	i.paste(icon,(menuClass.windowSettings['x_size'] - settings.GFX_ICONS['monitor']['size'][0],0))
+	
+	if (menuClass.selectedSensors['full'] is not None) or (menuClass.selectedSensors['left'] is not None) or (menuClass.selectedSensors['right'] is not None):
+		# Full screen sensor configured
+		if (menuClass.selectedSensors['full'] is not None):
+			sensorId = menuClass.selectedSensors['full']
+			logger.debug("A fullscreen sensor is selected [%s]" % sensorId)
+		else:
+			# Left sensor configured
+			if (menuClass.selectedSensors['left'] is not None):
+				sensorId = menuClass.selectedSensors['left']
+				logger.debug("A left sensor is selected [%s]" % sensorId)
+			else:
+				# show blank space
+				pass
+				
+			# Right sensor configured
+			if (menuClass.selectedSensors['right'] is not None):
+				sensorId = menuClass.selectedSensors['right']
+				logger.debug("A right sensor is selected [%s]" % sensorId)
+			else:
+				# show blank space
+				pass
+	else:
+		# Nothing configured yet
+		logger.debug("No sensors are selected")
+	
+	text = "Press Cancel to return to menu"
+	text_size = font_small.getsize(text)
+	d.text((0,menuClass.windowSettings['y_size'] - text_size[1] - 1), text, font = font_small, fill = "white")
+	menuClass.image = copy.copy(i)
+	return True
 	
 def sensorVisualisation(menuClass = None, controlData = None):
 	""" Run visualisation of at least one selected sensor """

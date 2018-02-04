@@ -131,8 +131,6 @@ def gaugeWaveform(ecudata, sensor, font, windowSettings, sensorData, highlight_c
 		font_small = ImageFont.truetype(settings.GFX_FONTS['pixel']['plain']['font'], size = 8)
 		draw = ImageDraw.Draw(image)
 
-		print(sensor['waveform'])
-
 		# If the scale is from <0 to >0 then plot where 0 is on the Y axis
 		if sensor['waveform']['zeroline'] is not None:
 			zx = windowSettings['x_size']
@@ -230,7 +228,6 @@ def gaugeWaveform(ecudata, sensor, font, windowSettings, sensorData, highlight_c
 def gaugeLEDSegments(ecudata, sensor, font, windowSettings, sensorData):
 	""" Render the 80's style LED segment bar-graph image """
 	
-	led_width = 5
 	sensorValueString = "%.f" % (sensor['previousValues'][-1])
 	t1 = timeit.default_timer()
 	
@@ -247,18 +244,18 @@ def gaugeLEDSegments(ecudata, sensor, font, windowSettings, sensorData):
 		# Image is 1bit black and white
 		image = Image.new('1', (windowSettings['x_size'], windowSettings['y_size']))
 		draw = ImageDraw.Draw(image)
-		font = ImageFont.truetype(settings.GFX_FONTS['sans']['plain']['font'], 16)
-		font_small = ImageFont.truetype(settings.GFX_FONTS['sans']['plain']['font'], 8)
+		font = ImageFont.truetype(settings.GFX_FONTS["pixel"]["header"]['font'], size = 16)
+		font_small = ImageFont.truetype(settings.GFX_FONTS['pixel']['plain']['font'], size = 8)
 		x = 1
 		
 		# Add sensor name to top left
-		draw.text((0, 0), sensor['sensorId'], fill="white", font = font)
+		draw.text((0, 0), sensor['sensor']['sensorId'], fill="white", font = font)
 		
 		# Draw all the empty LED segments
 		for led_h in led_height:
 			y = (windowSettings['y_size'] -  led_h) 
-			draw.rectangle([(x, windowSettings['y_size'] - 1), (x + led_width, y)], outline="white", fill=0)
-			x += 6 + led_width
+			draw.rectangle([(x, windowSettings['y_size'] - 1), (x + sensor['segment']['segmentWidth'], y)], outline="white", fill=0)
+			x += sensor['segment']['segmentWidth'] + 2
 				
 		# Save a copy of the image for next time around
 		sensor['segment']['image'] = copy.copy(image)
@@ -268,18 +265,26 @@ def gaugeLEDSegments(ecudata, sensor, font, windowSettings, sensorData):
 	# Overwrite any of the empty LED segments will 
 	# filled ones as necessary.
 	v = sensor['previousValues'][-1]
-	v = abs(sensor['minValue']) + v
+	v = abs(sensor['sensor']['minValue']) + v
 	segments = int(v / sensor['segment']['segmentValue'])
+	# Have we exceeded the number of segments shown?
+	if segments > sensor['segment']['segments']:
+		segments = sensor['segment']['segments']
 	x = 1
-	for s in range(1, segments):
-		y = (windowSettings['y_size'] -  led_height[s - 1]) 
-		draw.rectangle([(x, windowSettings['y_size'] - 1), (x + led_width, y)], outline="white", fill=1)
-		x += 6 + led_width
+	for s in range(0, segments):
+		#print("s:%s, v:%s, segments:%s" %(s, v, segments))
+		if s > len(led_height):
+			height = led_height[-1]
+		else:
+			height = led_height[s]
+		y = (windowSettings['y_size'] - height)
+		draw.rectangle([(x, windowSettings['y_size'] - 1), (x + sensor['segment']['segmentWidth'], y)], outline="white", fill=1)
+		x += sensor['segment']['segmentWidth'] + 2
 			
 	# Add raw sensor value at middle left
-	draw.text((0, 16), sensorValueString, fill="white", font = font)
 	text_size = font.getsize(sensorValueString)
-	draw.text((text_size[0] + 2, 16), sensor['sensorUnit'], fill="white", font = font_small)
+	draw.text((0, text_size[1] + 2), sensorValueString, fill="white", font = font)
+	draw.text((text_size[0] + 2, text_size[1]), sensorData['sensorUnit'], fill="white", font = font_small)
 	
 	t2 = timeit.default_timer() - t1
 	logger.debug("gaugeLED Draw time: %0.4fms" % (t2 * 1000))
@@ -319,6 +324,13 @@ def gaugeLine(ecudata, sensor, font, windowSettings, sensorData):
 	# Calculate how many lines to draw
 	num_lines = int(v / sensor['line']['lineValue'])
 
+	# Draw the outline of the chart
+	for peak_pos in range(0, windowSettings['x_size']):
+		x = peak_pos
+		y =  windowSettings['y_size'] - sensor['line']['lineHeights'][x]
+		draw.point((x, y), fill="white")
+	draw.line([(0, windowSettings['y_size']), (windowSettings['x_size'], windowSettings['y_size'])], fill = "white")
+
 	for x_pos in range(0, num_lines):
 		# X-position is the line number
 		x = x_pos
@@ -328,9 +340,9 @@ def gaugeLine(ecudata, sensor, font, windowSettings, sensorData):
 		draw.line([(x, windowSettings['y_size']), (x, windowSettings['y_size'] - y)], fill = "white") 
 		
 	# Add raw sensor value at middle left
-	draw.text((0, 16), sensorValueString, fill="white", font = font)
 	text_size = font.getsize(sensorValueString)
-	draw.text((text_size[0] + 2, 16), sensorData['sensorUnit'], fill="white", font = font_small)
+	draw.text((0, text_size[1] + 2), sensorValueString, fill="white", font = font)
+	draw.text((text_size[0] + 2, text_size[1]), sensorData['sensorUnit'], fill="white", font = font_small)
 	
 	t2 = timeit.default_timer() - t1
 	logger.debug("gaugeLine Draw time: %0.4fms" % (t2 * 1000))
@@ -590,16 +602,18 @@ def sensorInitSegment(sensor, windowSettings):
 	###################################################################
 	# Set up defaults for LED segment display
 	###################################################################
-	segments = 12
-	data['segmentValue'] = ((sensor['maxValue'] - sensor['minValue']) * 1.0) / segments
-	if windowSettings['y_size'] == 64:
-		led_height = [ 8, 8, 10, 10, 14, 14, 20, 28, 36, 44, 52, 63 ]
-	elif windowSettings['y_size'] == 32:
-		led_height = [ 5, 5, 6, 7, 8, 10, 12, 16, 20, 26, 31, 31 ]
+	if windowSettings['x_size'] >= 256:
+		segments = settings.GFX_LED_SEGMENT_NUMBER_MASTER
 	else:
-		logger.error("No support for windows of %s height - defaulting to 32px height" % windowSettings['y_size'])
-		led_height = [ 5, 5, 6, 7, 8, 10, 12, 16, 20, 26, 31, 31 ]
+		segments = settings.GFX_LED_SEGMENT_NUMBER
+	data['segments'] = segments
+	data['segmentValue'] = ((sensor['maxValue'] - sensor['minValue']) * 1.0) / segments
+	graph_range = numpy.logspace(numpy.log10(6), numpy.log10(windowSettings['y_size']), num=segments)
+	led_height = []
+	for v in graph_range:
+		led_height.append(int(v))
 	data['segmentHeights'] = led_height
+	data['segmentWidth'] = int(windowSettings['x_size'] / segments) - 2
 	
 	return data
 

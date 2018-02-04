@@ -10,15 +10,27 @@ MASTER_MENU = [
 		'items' 	: []
 	},
 	{
-		'itemName'	: 'config',
+		'itemName'	: 'display',
 		'itemType'	: 'menu',
 		'itemText'	: 'Configure how sensor data is displayed on all connected devices. Choose visualisation modes for all displays.',
 		'items'		: [
 			{
-				'itemName'	: 'Current',
+				'itemName'	: 'Custom Modes',
 				'itemType'	: 'item',
-				'itemText'	: 'Show currently selected sensor configuration for all connected devices.',
+				'itemText'	: 'A sub-menu of custom display modes; track/race settings, etc.',
+				'itemSelect': doNothing,
+			},
+			{
+				'itemName'	: 'Configure',
+				'itemType'	: 'item',
+				'itemText'	: 'Show currently selected sensor configuration for master screen, swap sensor positions and display modes.',
 				'itemSelect': showCurrentVisState,
+			},
+			{
+				'itemName'	: 'Visualisation',
+				'itemType'	: 'item',
+				'itemText'	: 'Activate current sensor(s) display mode.',
+				'itemSelect': sensorVisualisation,
 			}
 		]
 	},
