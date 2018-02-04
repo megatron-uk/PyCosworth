@@ -148,9 +148,13 @@ class MasterMenu():
 			'left' : None,
 			'full' : None,
 			'right' : None,
+			'custom' : None,
 		}
 		
-		self.defaultVisualisation = "line"
+		self.defaultVisualisation = settings.GFX_MODE_LINE
+		self.leftVisualisation = self.defaultVisualisation
+		self.rightVisualisation = self.defaultVisualisation
+		self.fullVisualisation = self.defaultVisualisation
 		
 		# The custom function and its associated data which run
 		# run every time the mastermenu class has 'buildimage' called

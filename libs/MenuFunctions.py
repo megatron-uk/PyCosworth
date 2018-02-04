@@ -120,23 +120,59 @@ def showCurrentVisState(menuClass = None, controlData = None):
 	
 	if 'visConfig' not in menuClass.customData.keys():
 		menuClass.customData['visConfig'] = {}
+		menuClass.customData['selected'] = None
+		menuClass.customData['visIndex'] = 0
+		menuClass.customData['selector'] = True
+		menuClass.customData['selectorSpeed'] = 0.25
+		menuClass.customData['selectorTimer'] = timeit.default_timer()
 	
 	if controlData:
-		# If we get a select or cancel button, exit the custom function
+		# If we get a cancel button, exit the custom function
 		if controlData.button == settings.BUTTON_CANCEL:
 			menuClass.resetCustomFunction()
 			menuClass.resetMenus(showMenu = True)
 			return True
+	
+		# If we get a left button  select the left window
+		if controlData.button == settings.BUTTON_LEFT:
+			if (menuClass.selectedSensors['full'] is None):
+				menuClass.customData['selected'] = 'left'
+		
+		# If we get a right button  select the right window
+		if controlData.button == settings.BUTTON_RIGHT:
+			if (menuClass.selectedSensors['full'] is None):
+				menuClass.customData['selected'] = 'right'
+				
+		# If a box is selected and we get an up or down, scroll to next vis mode
+		if controlData.button in [settings.BUTTON_UP, settings.BUTTON_DOWN] and (menuClass.customData['selected'] is not None):
+			
+			# Scroll up through list
+			if controlData.button == settings.BUTTON_UP:
+				# Have we reached end of list?
+				if menuClass.customData['visIndex'] < len(settings.GFX_MODES):
+					menuClass.customData['visIndex'] = 0
+			
 	
 	font_big = menuClass.getFont(name = "pixel", style="header", size=16)
 	font_small = menuClass.getFont(name = "pixel", style="plain", size=8)
 	i = Image.new('1', (menuClass.windowSettings['x_size'], menuClass.windowSettings['y_size']))
 	d = ImageDraw.Draw(i)
 		
-	title = "Current Screen Layout"
+	title = "Configure Screen Layout"
 	d.text((0,0), title, font = font_big, fill = "white")
+	title_size = font_big.getsize(title)
 	icon = Image.open(settings.GFX_ICONS['monitor']['icon'])
 	i.paste(icon,(menuClass.windowSettings['x_size'] - settings.GFX_ICONS['monitor']['size'][0],0))
+	
+	exit_text1 = "U/D: Vis mode.  L/R: Switch selection."
+	exit_text2 = "Select: Save settings.  Cancel: Return to menu."
+	exit_text_size = font_small.getsize(exit_text1)
+	d.text((0,menuClass.windowSettings['y_size'] - exit_text_size[1] - 1), exit_text2, font = font_small, fill = "white")
+	d.text((0,menuClass.windowSettings['y_size'] - (exit_text_size[1] * 2) - 1), exit_text1, font = font_small, fill = "white")
+	
+	if (timeit.default_timer() - menuClass.customData['selectorTimer']) >= menuClass.customData['selectorSpeed']:
+		menuClass.customData['selector'] = not(menuClass.customData['selector'])
+		menuClass.customData['selectorTimer'] = timeit.default_timer()
 	
 	if (menuClass.selectedSensors['full'] is not None) or (menuClass.selectedSensors['left'] is not None) or (menuClass.selectedSensors['right'] is not None):
 		# Full screen sensor configured
@@ -148,24 +184,88 @@ def showCurrentVisState(menuClass = None, controlData = None):
 			if (menuClass.selectedSensors['left'] is not None):
 				sensorId = menuClass.selectedSensors['left']
 				logger.debug("A left sensor is selected [%s]" % sensorId)
+				x_start = 0
+				y_start = title_size[1] + 1
+				x_end = 100
+				y_end = (menuClass.windowSettings['y_size'] -  (exit_text_size[1] * 2)) - 2
+				d.rectangle([(x_start, y_start), (x_end,  y_end)], outline="white", fill=0 )
+				# Print sensor name
+				d.text((x_start + 2, y_start + 2), sensorId, font = font_big, fill = "white")
+				
+				# Paste in bitmap of currently selected visualisation
+				if menuClass.leftVisualisation == settings.GFX_MODE_WAVEFORM:
+					visText = "Waveform"
+				elif menuClass.leftVisualisation == settings.GFX_MODE_SEGMENTS:
+					visText = "LED Segment"
+				elif menuClass.leftVisualisation == settings.GFX_MODE_CLOCK:
+					visText = "Analogue Clock"
+				elif menuClass.leftVisualisation == settings.GFX_MODE_LINE:
+					visText = "Log Graph"
+				else:
+					visText = "Unknown!"
+				visText_size = font_small.getsize(visText)
+				d.text((x_start + 2, y_end - visText_size[1] - 2), visText, font = font_small, fill = "white")
 			else:
 				# show blank space
-				pass
+				x_start = 0
+				y_start = title_size[1] + 1
+				x_end = 100
+				y_end = (menuClass.windowSettings['y_size'] -  (exit_text_size[1] * 2)) - 2
+				d.rectangle([(x_start, y_start), (x_end,  y_end)], outline="white", fill=0 )
+				d.text((x_start + 2, y_start + 2), "Free", font = font_big, fill = "white")
+				
+			if menuClass.customData['selected'] == 'left':
+				if menuClass.customData['selector']:
+					selector = Image.open(settings.GFX_ICONS['selector']['outer'])
+				else:
+					selector = Image.open(settings.GFX_ICONS['selector']['inner'])
+				i.paste(selector, (x_end - settings.GFX_ICONS['selector']['size'][0], y_end - settings.GFX_ICONS['selector']['size'][1]))
 				
 			# Right sensor configured
 			if (menuClass.selectedSensors['right'] is not None):
 				sensorId = menuClass.selectedSensors['right']
 				logger.debug("A right sensor is selected [%s]" % sensorId)
+				x_start = 100
+				y_start = title_size[1] + 1
+				x_end = 200
+				y_end = (menuClass.windowSettings['y_size'] -  (exit_text_size[1] * 2)) - 2
+				d.rectangle([(x_start, y_start), (x_end,  y_end)], outline="white", fill=0 )
+				# Print sensor name
+				d.text((x_start + 2, y_start + 2), sensorId, font = font_big, fill = "white")
+				
+				# Paste in bitmap of currently selected visualisation
+				if menuClass.leftVisualisation == settings.GFX_MODE_WAVEFORM:
+					visText = "Waveform"
+				elif menuClass.leftVisualisation == settings.GFX_MODE_SEGMENTS:
+					visText = "LED Segment"
+				elif menuClass.leftVisualisation == settings.GFX_MODE_CLOCK:
+					visText = "Analogue Clock"
+				elif menuClass.leftVisualisation == settings.GFX_MODE_LINE:
+					visText = "Log Graph"
+				else:
+					visText = "Unknown!"
+				visText_size = font_small.getsize(visText)
+				d.text((x_start + 2, y_end - visText_size[1] - 2), visText, font = font_small, fill = "white")
 			else:
 				# show blank space
-				pass
+				x_start = 100
+				y_start = title_size[1] + 1
+				x_end = 200
+				y_end = (menuClass.windowSettings['y_size'] -  (exit_text_size[1] * 2)) - 2
+				d.rectangle([(x_start, y_start), (x_end,  y_end)], outline="white", fill=0 )
+				d.text((x_start + 2, y_start + 2), "Free", font = font_big, fill = "white")
+				
+			if menuClass.customData['selected'] == 'right':
+				if menuClass.customData['selector']:
+					selector = Image.open(settings.GFX_ICONS['selector']['outer'])
+				else:
+					selector = Image.open(settings.GFX_ICONS['selector']['inner'])
+				i.paste(selector, (x_end - settings.GFX_ICONS['selector']['size'][0], y_end - settings.GFX_ICONS['selector']['size'][1]))
 	else:
 		# Nothing configured yet
 		logger.debug("No sensors are selected")
+		d.text((2, 26), "No sensors selected!", font = font_big, fill = "white")
 	
-	text = "Press Cancel to return to menu"
-	text_size = font_small.getsize(text)
-	d.text((0,menuClass.windowSettings['y_size'] - text_size[1] - 1), text, font = font_small, fill = "white")
 	menuClass.image = copy.copy(i)
 	return True
 	

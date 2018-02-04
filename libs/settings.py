@@ -47,8 +47,8 @@ USE_CONSOLE = False			# Output to a standard terminal / command prompt
 USE_BUTTONS = True			# Run a process which monitors Raspberry Pi GPIO buttons for button presses
 USE_GRAPHICS = True			# Output to OLED modules or on-screen graphics
 USE_DATALOGGER = True		# Run the datalogger module to record ecudata to disk
-USE_OLED_GRAPHICS = False 	# Try to output to an OLED module
-USE_SDL_GRAPHICS = True  	# Try to output to on-screen windows
+USE_OLED_GRAPHICS = True 	# Try to output to an OLED module
+USE_SDL_GRAPHICS = False  	# Try to output to on-screen windows
 
 # Sensor modules
 USE_GEAR_INDICATOR = True	# Try to read gear indicator position via GPIO 
@@ -377,6 +377,10 @@ GFX_MODE_WAVEFORM = "MODE_WAVE"
 GFX_MODE_SEGMENTS = "MODE_SEGMENT"
 GFX_MODE_CLOCK = "MODE_CLOCK"
 GFX_MODE_LINE = "MODE_LINE"
+GFX_MODE_OFF = "OFF"
+
+# Available modes that a sensor can be shown in
+GFX_MODES = [GFX_MODE_WAVEFORM, GFX_MODE_SEGMENTS, GFX_MODE_CLOCK, GFX_MODE_LINE, GFX_MODE_OFF]
 
 # Similar to MATRIX_CONFIG, this defines what sensors should be shown
 # in each window (where we have more than one OLED screen connected
@@ -492,7 +496,12 @@ GFX_ICONS = {
 		'line'		: GFX_ASSETS_DIR + 'icons/vis-segment.bmp',
 		'clock'		: GFX_ASSETS_DIR + 'icons/vis-segment.bmp',
 		'size'	: (48, 48)
-	}
+	},
+	'selector' : {
+		'inner'	: GFX_ASSETS_DIR + 'icons/selector-inner.bmp',
+		'outer'	: GFX_ASSETS_DIR + 'icons/selector-outer.bmp',
+		'size'	: (16, 16)
+	},
 }
 
 # Size of each menu

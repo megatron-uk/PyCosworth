@@ -23,7 +23,7 @@ MASTER_MENU = [
 			{
 				'itemName'	: 'Configure',
 				'itemType'	: 'item',
-				'itemText'	: 'Show currently selected sensor configuration for master screen, swap sensor positions and display modes.',
+				'itemText'	: 'Show currently selected sensor configuration for master screen, configure sensor positions and display modes.',
 				'itemSelect': showCurrentVisState,
 			},
 			{
