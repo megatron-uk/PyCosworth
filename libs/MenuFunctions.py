@@ -121,9 +121,11 @@ def showCurrentVisState(menuClass = None, controlData = None):
 	if 'visConfig' not in menuClass.customData.keys():
 		menuClass.customData['visConfig'] = {}
 		menuClass.customData['selected'] = None
-		menuClass.customData['visIndex'] = 0
+		menuClass.customData['visIndexLeft'] = 0
+		menuClass.customData['visIndexRight'] = 0
+		menuClass.customData['visIndexFull'] = 0
 		menuClass.customData['selector'] = True
-		menuClass.customData['selectorSpeed'] = 0.25
+		menuClass.customData['selectorSpeed'] = 0.35
 		menuClass.customData['selectorTimer'] = timeit.default_timer()
 	
 	if controlData:
@@ -133,25 +135,94 @@ def showCurrentVisState(menuClass = None, controlData = None):
 			menuClass.resetMenus(showMenu = True)
 			return True
 	
+		# If we get a select button
+		if controlData.button == settings.BUTTON_SELECT:
+			if menuClass.customData['selected'] == 'left':
+				# Turn the sensor off
+				if settings.GFX_MODES[menuClass.customData['visIndexLeft']] == settings.GFX_MODE_OFF:
+					menuClass.leftVisualisation = menuClass.defaultVisualisation
+					menuClass.selectedSensors['left'] = None
+				else:
+					# Set the vis mode
+					menuClass.leftVisualisation = settings.GFX_MODES[menuClass.customData['visIndexLeft']]
+				
+			if menuClass.customData['selected'] == 'right':
+				# Turn the sensor off
+				if settings.GFX_MODES[menuClass.customData['visIndexRight']] == settings.GFX_MODE_OFF:
+					menuClass.rightVisualisation = menuClass.defaultVisualisation
+					menuClass.selectedSensors['right'] = None
+				else:
+					# Set the vis mode
+					menuClass.rightVisualisation = settings.GFX_MODES[menuClass.customData['visIndexRight']]
+				
+			if menuClass.customData['selected'] == 'full':
+				# Turn the sensor off
+				if settings.GFX_MODES[menuClass.customData['visIndexFull']] == settings.GFX_MODE_OFF:
+					menuClass.fullVisualisation = menuClass.defaultVisualisation
+					menuClass.selectedSensors['full'] = None
+				else:
+					# Set the vis mode
+					menuClass.fullVisualisation = settings.GFX_MODES[menuClass.customData['visIndexFull']]
+			
+			return True
+	
 		# If we get a left button  select the left window
 		if controlData.button == settings.BUTTON_LEFT:
 			if (menuClass.selectedSensors['full'] is None):
 				menuClass.customData['selected'] = 'left'
+			return True
 		
 		# If we get a right button  select the right window
 		if controlData.button == settings.BUTTON_RIGHT:
 			if (menuClass.selectedSensors['full'] is None):
 				menuClass.customData['selected'] = 'right'
+			return True
 				
 		# If a box is selected and we get an up or down, scroll to next vis mode
 		if controlData.button in [settings.BUTTON_UP, settings.BUTTON_DOWN] and (menuClass.customData['selected'] is not None):
 			
 			# Scroll up through list
 			if controlData.button == settings.BUTTON_UP:
-				# Have we reached end of list?
-				if menuClass.customData['visIndex'] < len(settings.GFX_MODES):
-					menuClass.customData['visIndex'] = 0
-			
+				if menuClass.customData['selected'] == 'left':
+					# Have we reached end of list?
+					if menuClass.customData['visIndexLeft'] < (len(settings.GFX_MODES) - 1):
+						menuClass.customData['visIndexLeft'] += 1
+					else:
+						menuClass.customData['visIndexLeft'] = 0
+				if menuClass.customData['selected'] == 'right':
+					# Have we reached end of list?
+					if menuClass.customData['visIndexRight'] < (len(settings.GFX_MODES) - 1):
+						menuClass.customData['visIndexRight'] += 1
+					else:
+						menuClass.customData['visIndexRight'] = 0
+				if menuClass.customData['selected'] == 'full':
+					# Have we reached end of list?
+					if menuClass.customData['visIndexFull'] < (len(settings.GFX_MODES) - 1):
+						menuClass.customData['visIndexFull'] += 1
+					else:
+						menuClass.customData['visIndexFull'] = 0
+						
+			# Scroll down through list
+			if controlData.button == settings.BUTTON_DOWN:
+				if menuClass.customData['selected'] == 'left':
+					# Have we reached end of list?
+					if menuClass.customData['visIndexLeft'] > 0:
+						menuClass.customData['visIndexLeft'] -= 1
+					else:
+						menuClass.customData['visIndexLeft'] = 0
+				if menuClass.customData['selected'] == 'right':
+					# Have we reached end of list?
+					if menuClass.customData['visIndexRight'] > 0:
+						menuClass.customData['visIndexRight'] -= 1
+					else:
+						menuClass.customData['visIndexRight'] = 0
+				if menuClass.customData['selected'] == 'full':
+					# Have we reached end of list?
+					if menuClass.customData['visIndexFull'] > 0:
+						menuClass.customData['visIndexFull'] -= 1
+					else:
+						menuClass.customData['visIndexFull'] = 0
+		return True	
 	
 	font_big = menuClass.getFont(name = "pixel", style="header", size=16)
 	font_small = menuClass.getFont(name = "pixel", style="plain", size=8)
@@ -164,11 +235,11 @@ def showCurrentVisState(menuClass = None, controlData = None):
 	icon = Image.open(settings.GFX_ICONS['monitor']['icon'])
 	i.paste(icon,(menuClass.windowSettings['x_size'] - settings.GFX_ICONS['monitor']['size'][0],0))
 	
-	exit_text1 = "U/D: Vis mode.  L/R: Switch selection."
-	exit_text2 = "Select: Save settings.  Cancel: Return to menu."
+	exit_text1 = "U/D:Mode   L/R:Switch   Select:Save   Cancel:Exit"
+	#exit_text2 = "Select: Save settings.  Cancel: Return to menu."
 	exit_text_size = font_small.getsize(exit_text1)
-	d.text((0,menuClass.windowSettings['y_size'] - exit_text_size[1] - 1), exit_text2, font = font_small, fill = "white")
-	d.text((0,menuClass.windowSettings['y_size'] - (exit_text_size[1] * 2) - 1), exit_text1, font = font_small, fill = "white")
+	#d.text((0,menuClass.windowSettings['y_size'] - exit_text_size[1] - 1), exit_text2, font = font_small, fill = "white")
+	d.text((0,menuClass.windowSettings['y_size'] - exit_text_size[1] - 1), exit_text1, font = font_small, fill = "white")
 	
 	if (timeit.default_timer() - menuClass.customData['selectorTimer']) >= menuClass.customData['selectorSpeed']:
 		menuClass.customData['selector'] = not(menuClass.customData['selector'])
@@ -177,8 +248,45 @@ def showCurrentVisState(menuClass = None, controlData = None):
 	if (menuClass.selectedSensors['full'] is not None) or (menuClass.selectedSensors['left'] is not None) or (menuClass.selectedSensors['right'] is not None):
 		# Full screen sensor configured
 		if (menuClass.selectedSensors['full'] is not None):
+			
+			menuClass.customData['selected'] = 'full'
 			sensorId = menuClass.selectedSensors['full']
 			logger.debug("A fullscreen sensor is selected [%s]" % sensorId)
+			
+			x_start = 0
+			y_start = title_size[1] + 1
+			x_end = 200
+			y_end = (menuClass.windowSettings['y_size'] - exit_text_size[1]) - 2
+			d.rectangle([(x_start, y_start), (x_end,  y_end)], outline="white", fill=0 )
+			# Print sensor name
+			t = "%s - Fullscreen" % sensorId
+			d.text((x_start + 2, y_start + 2), t, font = font_big, fill = "white")
+			
+			# Paste in bitmap of currently selected visualisation
+			if menuClass.fullVisualisation == settings.GFX_MODE_WAVEFORM:
+				visText = "Now: Waveform"
+			elif menuClass.fullVisualisation == settings.GFX_MODE_SEGMENTS:
+				visText = "Now: LED Segment"
+			elif menuClass.fullVisualisation == settings.GFX_MODE_CLOCK:
+				visText = "Now: Clock"
+			elif menuClass.fullVisualisation == settings.GFX_MODE_LINE:
+				visText = "Now: Log Graph"
+			else:
+				visText = "Unknown Mode!"
+			sensorId_size = font_big.getsize(sensorId)
+			visText_size = font_small.getsize(visText)
+			d.text((x_start + 2, y_start + sensorId_size[1] + 2), visText, font = font_small, fill = "white")
+			
+			nextVis = settings.GFX_MODES[menuClass.customData['visIndexFull']]
+			nextVisText = "Next: %s" % nextVis
+			d.text((x_start + 2, y_start + sensorId_size[1] + visText_size[1] + 2), nextVisText, font = font_small, fill = "white")
+			
+			if menuClass.customData['selector']:
+				selector = Image.open(settings.GFX_ICONS['selector']['outer'])
+			else:
+				selector = Image.open(settings.GFX_ICONS['selector']['inner'])
+			i.paste(selector, (x_end - settings.GFX_ICONS['selector']['size'][0] - 1, y_start + 1))
+			
 		else:
 			# Left sensor configured
 			if (menuClass.selectedSensors['left'] is not None):
@@ -187,30 +295,35 @@ def showCurrentVisState(menuClass = None, controlData = None):
 				x_start = 0
 				y_start = title_size[1] + 1
 				x_end = 100
-				y_end = (menuClass.windowSettings['y_size'] -  (exit_text_size[1] * 2)) - 2
+				y_end = (menuClass.windowSettings['y_size'] - exit_text_size[1]) - 2
 				d.rectangle([(x_start, y_start), (x_end,  y_end)], outline="white", fill=0 )
 				# Print sensor name
 				d.text((x_start + 2, y_start + 2), sensorId, font = font_big, fill = "white")
-				
+								
 				# Paste in bitmap of currently selected visualisation
 				if menuClass.leftVisualisation == settings.GFX_MODE_WAVEFORM:
-					visText = "Waveform"
+					visText = "Now: Waveform"
 				elif menuClass.leftVisualisation == settings.GFX_MODE_SEGMENTS:
-					visText = "LED Segment"
+					visText = "Now: LED Segment"
 				elif menuClass.leftVisualisation == settings.GFX_MODE_CLOCK:
-					visText = "Analogue Clock"
+					visText = "Now: Clock"
 				elif menuClass.leftVisualisation == settings.GFX_MODE_LINE:
-					visText = "Log Graph"
+					visText = "Now: Log Graph"
 				else:
-					visText = "Unknown!"
+					visText = "Unknown Mode!"
+				sensorId_size = font_big.getsize(sensorId)
 				visText_size = font_small.getsize(visText)
-				d.text((x_start + 2, y_end - visText_size[1] - 2), visText, font = font_small, fill = "white")
+				d.text((x_start + 2, y_start + sensorId_size[1] + 2), visText, font = font_small, fill = "white")
+				
+				nextVis = settings.GFX_MODES[menuClass.customData['visIndexLeft']]
+				nextVisText = "Next: %s" % nextVis
+				d.text((x_start + 2, y_start + sensorId_size[1] + visText_size[1] + 2), nextVisText, font = font_small, fill = "white")
 			else:
 				# show blank space
 				x_start = 0
 				y_start = title_size[1] + 1
 				x_end = 100
-				y_end = (menuClass.windowSettings['y_size'] -  (exit_text_size[1] * 2)) - 2
+				y_end = (menuClass.windowSettings['y_size'] - exit_text_size[1]) - 2
 				d.rectangle([(x_start, y_start), (x_end,  y_end)], outline="white", fill=0 )
 				d.text((x_start + 2, y_start + 2), "Free", font = font_big, fill = "white")
 				
@@ -219,7 +332,7 @@ def showCurrentVisState(menuClass = None, controlData = None):
 					selector = Image.open(settings.GFX_ICONS['selector']['outer'])
 				else:
 					selector = Image.open(settings.GFX_ICONS['selector']['inner'])
-				i.paste(selector, (x_end - settings.GFX_ICONS['selector']['size'][0], y_end - settings.GFX_ICONS['selector']['size'][1]))
+				i.paste(selector, (x_end - settings.GFX_ICONS['selector']['size'][0] - 1, y_start + 1))
 				
 			# Right sensor configured
 			if (menuClass.selectedSensors['right'] is not None):
@@ -228,30 +341,34 @@ def showCurrentVisState(menuClass = None, controlData = None):
 				x_start = 100
 				y_start = title_size[1] + 1
 				x_end = 200
-				y_end = (menuClass.windowSettings['y_size'] -  (exit_text_size[1] * 2)) - 2
+				y_end = (menuClass.windowSettings['y_size'] - exit_text_size[1]) - 2
 				d.rectangle([(x_start, y_start), (x_end,  y_end)], outline="white", fill=0 )
 				# Print sensor name
 				d.text((x_start + 2, y_start + 2), sensorId, font = font_big, fill = "white")
 				
 				# Paste in bitmap of currently selected visualisation
-				if menuClass.leftVisualisation == settings.GFX_MODE_WAVEFORM:
-					visText = "Waveform"
-				elif menuClass.leftVisualisation == settings.GFX_MODE_SEGMENTS:
-					visText = "LED Segment"
-				elif menuClass.leftVisualisation == settings.GFX_MODE_CLOCK:
-					visText = "Analogue Clock"
-				elif menuClass.leftVisualisation == settings.GFX_MODE_LINE:
-					visText = "Log Graph"
+				if menuClass.rightVisualisation == settings.GFX_MODE_WAVEFORM:
+					visText = "Now: Waveform"
+				elif menuClass.rightVisualisation == settings.GFX_MODE_SEGMENTS:
+					visText = "Now: LED Segment"
+				elif menuClass.rightVisualisation == settings.GFX_MODE_CLOCK:
+					visText = "Now: Clock"
+				elif menuClass.rightVisualisation == settings.GFX_MODE_LINE:
+					visText = "Now: Log Graph"
 				else:
-					visText = "Unknown!"
+					visText = "Unknown Mode!"
+				sensorId_size = font_big.getsize(sensorId)
 				visText_size = font_small.getsize(visText)
-				d.text((x_start + 2, y_end - visText_size[1] - 2), visText, font = font_small, fill = "white")
+				d.text((x_start + 2, y_start + sensorId_size[1] + 2), visText, font = font_small, fill = "white")
+				nextVis = settings.GFX_MODES[menuClass.customData['visIndexRight']]
+				nextVisText = "Next: %s" % nextVis
+				d.text((x_start + 2, y_start + sensorId_size[1] + visText_size[1] + 2), nextVisText, font = font_small, fill = "white")
 			else:
 				# show blank space
 				x_start = 100
 				y_start = title_size[1] + 1
 				x_end = 200
-				y_end = (menuClass.windowSettings['y_size'] -  (exit_text_size[1] * 2)) - 2
+				y_end = (menuClass.windowSettings['y_size'] - exit_text_size[1]) - 2
 				d.rectangle([(x_start, y_start), (x_end,  y_end)], outline="white", fill=0 )
 				d.text((x_start + 2, y_start + 2), "Free", font = font_big, fill = "white")
 				
@@ -260,7 +377,7 @@ def showCurrentVisState(menuClass = None, controlData = None):
 					selector = Image.open(settings.GFX_ICONS['selector']['outer'])
 				else:
 					selector = Image.open(settings.GFX_ICONS['selector']['inner'])
-				i.paste(selector, (x_end - settings.GFX_ICONS['selector']['size'][0], y_end - settings.GFX_ICONS['selector']['size'][1]))
+				i.paste(selector, (x_end - settings.GFX_ICONS['selector']['size'][0] - 1, y_start + 1))
 	else:
 		# Nothing configured yet
 		logger.debug("No sensors are selected")
@@ -277,6 +394,10 @@ def sensorVisualisation(menuClass = None, controlData = None):
 		for sensor in settings.SENSORS:
 			sensorId = sensor['sensorId']	
 			menuClass.windowSettings['displayModes'][sensorId] = sensorGraphicsInit(sensor, menuClass.windowSettings)
+		menuClass.windowSettings['halfDisplayModes'] = {}
+		for sensor in settings.SENSORS:
+			sensorId = sensor['sensorId']	
+			menuClass.windowSettings['halfDisplayModes'][sensorId] = sensorGraphicsInit(sensor, menuClass.windowSettings, scale_x = 2) # Assume half x resolution
 			
 	if controlData:
 		# If we get a select or cancel button, exit the custom function
@@ -289,20 +410,77 @@ def sensorVisualisation(menuClass = None, controlData = None):
 	font_small = menuClass.getFont(name = "pixel", style="plain", size=8)
 		
 	if (menuClass.selectedSensors['full'] is not None):
+		
+		# Render a fullscreen sensor visualisation
 		sensorId = menuClass.selectedSensors['full']
 		value = menuClass.ecudata.getData(sensorId)
 		if value:
 			menuClass.windowSettings['displayModes'][sensorId]['previousValues'].append(value)
 		sensorData = menuClass.ecudata.getSensorData(sensorId)
-		
-		#image = gaugeWaveform(ecudata = menuClass.ecudata, sensor = menuClass.windowSettings['displayModes'][sensorId], font = font_big, windowSettings = menuClass.windowSettings, sensorData = sensorData)
-		#image = gaugeLEDSegments(ecudata = menuClass.ecudata, sensor = menuClass.windowSettings['displayModes'][sensorId], font = font_big, windowSettings = menuClass.windowSettings, sensorData = sensorData)
-		image = gaugeLine(ecudata = menuClass.ecudata, sensor = menuClass.windowSettings['displayModes'][sensorId], font = font_big, windowSettings = menuClass.windowSettings, sensorData = sensorData)
-		#image = gaugeClock(ecudata = menuClass.ecudata, sensor = menuClass.windowSettings['displayModes'][sensorId], font = font_big, windowSettings = menuClass.windowSettings, sensorData = sensorData)
+		if menuClass.fullVisualisation == settings.GFX_MODE_WAVEFORM:
+			image = gaugeWaveform(ecudata = menuClass.ecudata, sensor = menuClass.windowSettings['displayModes'][sensorId], font = font_big, windowSettings = menuClass.windowSettings, sensorData = sensorData)
+		elif menuClass.fullVisualisation == settings.GFX_MODE_SEGMENTS:
+			image = gaugeLEDSegments(ecudata = menuClass.ecudata, sensor = menuClass.windowSettings['displayModes'][sensorId], font = font_big, windowSettings = menuClass.windowSettings, sensorData = sensorData)
+		elif menuClass.fullVisualisation == settings.GFX_MODE_LINE:
+			image = gaugeLine(ecudata = menuClass.ecudata, sensor = menuClass.windowSettings['displayModes'][sensorId], font = font_big, windowSettings = menuClass.windowSettings, sensorData = sensorData)
+		elif menuClass.fullVisualisation == settings.GFX_MODE_CLOCK:
+			image = gaugeClock(ecudata = menuClass.ecudata, sensor = menuClass.windowSettings['displayModes'][sensorId], font = font_big, windowSettings = menuClass.windowSettings, sensorData = sensorData)
 		
 		menuClass.image = image.copy()
 	elif (menuClass.selectedSensors['left'] is not None) or (menuClass.selectedSensors['right'] is not None):
-		pass
+		
+		# New blank image
+		i = Image.new('1', (menuClass.windowSettings['x_size'], menuClass.windowSettings['y_size']))
+		
+		# Store the original x resolution
+		old_x = menuClass.windowSettings['x_size']
+		menuClass.windowSettings['x_size'] = int(menuClass.windowSettings['x_size'] / 2)
+		# Render a left side sensor visualisation
+		# paste bitmap at:
+		if (menuClass.selectedSensors['left'] is not None):
+			x = 0
+			y = 0
+			# Render a fullscreen sensor visualisation
+			sensorId = menuClass.selectedSensors['left']
+			value = menuClass.ecudata.getData(sensorId)
+			if value:
+				menuClass.windowSettings['halfDisplayModes'][sensorId]['previousValues'].append(value)
+			sensorData = menuClass.ecudata.getSensorData(sensorId)
+			if menuClass.leftVisualisation == settings.GFX_MODE_WAVEFORM:
+				image = gaugeWaveform(ecudata = menuClass.ecudata, sensor = menuClass.windowSettings['halfDisplayModes'][sensorId], font = font_big, windowSettings = menuClass.windowSettings, sensorData = sensorData)
+			elif menuClass.leftVisualisation == settings.GFX_MODE_SEGMENTS:
+				image = gaugeLEDSegments(ecudata = menuClass.ecudata, sensor = menuClass.windowSettings['halfDisplayModes'][sensorId], font = font_big, windowSettings = menuClass.windowSettings, sensorData = sensorData)
+			elif menuClass.leftVisualisation == settings.GFX_MODE_LINE:
+				image = gaugeLine(ecudata = menuClass.ecudata, sensor = menuClass.windowSettings['halfDisplayModes'][sensorId], font = font_big, windowSettings = menuClass.windowSettings, sensorData = sensorData)
+			elif menuClass.leftVisualisation == settings.GFX_MODE_CLOCK:
+				image = gaugeClock(ecudata = menuClass.ecudata, sensor = menuClass.windowSettings['halfDisplayModes'][sensorId], font = font_big, windowSettings = menuClass.windowSettings, sensorData = sensorData)
+			i.paste(image, (x, y))
+	
+		if (menuClass.selectedSensors['right'] is not None):
+			# Render a right side sensor visualisation
+			# paste bitmap at:
+			x = menuClass.windowSettings['x_size']
+			y = 0
+			# Render a fullscreen sensor visualisation
+			sensorId = menuClass.selectedSensors['right']
+			value = menuClass.ecudata.getData(sensorId)
+			if value:
+				menuClass.windowSettings['halfDisplayModes'][sensorId]['previousValues'].append(value)
+			sensorData = menuClass.ecudata.getSensorData(sensorId)
+			if menuClass.rightVisualisation == settings.GFX_MODE_WAVEFORM:
+				image = gaugeWaveform(ecudata = menuClass.ecudata, sensor = menuClass.windowSettings['halfDisplayModes'][sensorId], font = font_big, windowSettings = menuClass.windowSettings, sensorData = sensorData)
+			elif menuClass.rightVisualisation == settings.GFX_MODE_SEGMENTS:
+				image = gaugeLEDSegments(ecudata = menuClass.ecudata, sensor = menuClass.windowSettings['halfDisplayModes'][sensorId], font = font_big, windowSettings = menuClass.windowSettings, sensorData = sensorData)
+			elif menuClass.rightVisualisation == settings.GFX_MODE_LINE:
+				image = gaugeLine(ecudata = menuClass.ecudata, sensor = menuClass.windowSettings['halfDisplayModes'][sensorId], font = font_big, windowSettings = menuClass.windowSettings, sensorData = sensorData)
+			elif menuClass.rightVisualisation == settings.GFX_MODE_CLOCK:
+				image = gaugeClock(ecudata = menuClass.ecudata, sensor = menuClass.windowSettings['halfDisplayModes'][sensorId], font = font_big, windowSettings = menuClass.windowSettings, sensorData = sensorData)
+			i.paste(image, (x, y))
+			
+		# Paste the combined image
+		menuClass.image = i.copy()
+		# Restore full x resolution
+		menuClass.windowSettings['x_size'] = old_x
 	else:
 		i = Image.new('1', (menuClass.windowSettings['x_size'], menuClass.windowSettings['y_size']))
 		d = ImageDraw.Draw(i)

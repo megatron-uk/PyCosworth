@@ -566,7 +566,7 @@ def highlightSelectedWindow(use_oled = False, use_sdl = False, windowSettings = 
 				# Update the SDL window
 				updateSDLWindow(pilImage = i, windowSettings = settings.GFX_WINDOWS[w])
 
-def sensorInitWaveform(sensor, windowSettings):
+def sensorInitWaveform(sensor, windowSettings, scale_x):
 	""" Derive the parameters for a waveform display """
 	
 	data = {}
@@ -594,7 +594,7 @@ def sensorInitWaveform(sensor, windowSettings):
 
 	return data
 
-def sensorInitSegment(sensor, windowSettings):
+def sensorInitSegment(sensor, windowSettings, scale_x):
 	""" Derive params for a LED segment display """
 	
 	data = {}
@@ -602,7 +602,7 @@ def sensorInitSegment(sensor, windowSettings):
 	###################################################################
 	# Set up defaults for LED segment display
 	###################################################################
-	if windowSettings['x_size'] >= 256:
+	if int(windowSettings['x_size'] / scale_x) >= 256:
 		segments = settings.GFX_LED_SEGMENT_NUMBER_MASTER
 	else:
 		segments = settings.GFX_LED_SEGMENT_NUMBER
@@ -613,11 +613,11 @@ def sensorInitSegment(sensor, windowSettings):
 	for v in graph_range:
 		led_height.append(int(v))
 	data['segmentHeights'] = led_height
-	data['segmentWidth'] = int(windowSettings['x_size'] / segments) - 2
+	data['segmentWidth'] = int((windowSettings['x_size'] * scale_x) / segments) - 2
 	
 	return data
 
-def sensorInitClock(sensor, windowSettings):
+def sensorInitClock(sensor, windowSettings, scale_x):
 	""" Derive params for an analogue gauge/clock """
 	
 	data = {}
@@ -630,7 +630,7 @@ def sensorInitClock(sensor, windowSettings):
 	
 	return data
 
-def sensorInitLine(sensor, windowSettings):
+def sensorInitLine(sensor, windowSettings, scale_x):
 	""" Derive params for a line gauge """
 	
 	data = {}
@@ -639,17 +639,17 @@ def sensorInitLine(sensor, windowSettings):
 	# Set up defaults for line gauge display
 	###################################################################
 	
-	graph_range = numpy.logspace(numpy.log10(6), numpy.log10(windowSettings['y_size']), num=windowSettings['x_size'])
+	graph_range = numpy.logspace(numpy.log10(6), numpy.log10(windowSettings['y_size']), num=(int(windowSettings['x_size'] / scale_x)))
 	line_height = []
 	for v in graph_range:
 		line_height.append(int(v))
-	lines = windowSettings['x_size']
+	lines = int(windowSettings['x_size'] / scale_x)
 	data['lineHeights'] = line_height
 	data['lineValue'] = ((sensor['maxValue'] - sensor['minValue']) * 1.0) / lines
 	
 	return data
 
-def sensorGraphicsInit(sensor = None, windowSettings = None):
+def sensorGraphicsInit(sensor = None, windowSettings = None, scale_x = 1):
 	""" Get the default params for a sensor (height, width, line weight, number of bars per pixel, etc)
 	, given a particular window """
 	
@@ -657,17 +657,19 @@ def sensorGraphicsInit(sensor = None, windowSettings = None):
 	
 	# Parameters for the various visualisations
 	sensorParams['sensor'] = sensor
-	sensorParams['waveform'] = sensorInitWaveform(sensor, windowSettings)
-	sensorParams['segment'] = sensorInitSegment(sensor, windowSettings)
-	sensorParams['clock'] = sensorInitClock(sensor, windowSettings)
-	sensorParams['line'] = sensorInitLine(sensor, windowSettings)
+	sensorParams['waveform'] = sensorInitWaveform(sensor, windowSettings, scale_x)
+	sensorParams['segment'] = sensorInitSegment(sensor, windowSettings, scale_x)
+	sensorParams['clock'] = sensorInitClock(sensor, windowSettings, scale_x)
+	sensorParams['line'] = sensorInitLine(sensor, windowSettings, scale_x)
 	
 	###################################################################
 	# Create a local deque to hold historical sensor values
 	###################################################################
-	sensorParams['previousValues'] = deque(maxlen = windowSettings['x_size'])
-	for n in range(0, windowSettings['x_size']):
+	sensorParams['previousValues'] = deque(maxlen = int(windowSettings['x_size'] / scale_x))
+	x_size = int(windowSettings['x_size'] / scale_x)
+	for n in range(0, x_size):
 		sensorParams['previousValues'].append(0)
 				
+	print(sensorParams)
 	return sensorParams
 	

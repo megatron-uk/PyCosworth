@@ -47,8 +47,8 @@ USE_CONSOLE = False			# Output to a standard terminal / command prompt
 USE_BUTTONS = True			# Run a process which monitors Raspberry Pi GPIO buttons for button presses
 USE_GRAPHICS = True			# Output to OLED modules or on-screen graphics
 USE_DATALOGGER = True		# Run the datalogger module to record ecudata to disk
-USE_OLED_GRAPHICS = True 	# Try to output to an OLED module
-USE_SDL_GRAPHICS = False  	# Try to output to on-screen windows
+USE_OLED_GRAPHICS = False 	# Try to output to an OLED module
+USE_SDL_GRAPHICS = True  	# Try to output to on-screen windows
 
 # Sensor modules
 USE_GEAR_INDICATOR = True	# Try to read gear indicator position via GPIO 
@@ -373,10 +373,10 @@ GFX_SETTING_FIXED = 0x02
 # LINE	
 #	A logarithmic vertical line chart with the same X-resolution as the
 #	number of pixels your OLED display is in width.
-GFX_MODE_WAVEFORM = "MODE_WAVE"
-GFX_MODE_SEGMENTS = "MODE_SEGMENT"
-GFX_MODE_CLOCK = "MODE_CLOCK"
-GFX_MODE_LINE = "MODE_LINE"
+GFX_MODE_WAVEFORM = "Waveform"
+GFX_MODE_SEGMENTS = "LED Segment"
+GFX_MODE_CLOCK = "Clock"
+GFX_MODE_LINE = "Log Graph"
 GFX_MODE_OFF = "OFF"
 
 # Available modes that a sensor can be shown in

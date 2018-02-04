@@ -151,7 +151,7 @@ class MasterMenu():
 			'custom' : None,
 		}
 		
-		self.defaultVisualisation = settings.GFX_MODE_LINE
+		self.defaultVisualisation = settings.GFX_MODES[0]
 		self.leftVisualisation = self.defaultVisualisation
 		self.rightVisualisation = self.defaultVisualisation
 		self.fullVisualisation = self.defaultVisualisation
