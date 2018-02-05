@@ -100,9 +100,19 @@ class EcuData():
 	
 	def setSensorData(self, sensorData = None):
 		
+		mapped = False
 		if sensorData['sensorId'] not in self.sensor.keys():
-			logger.info("New sensor type added: %s" % sensorData['classId'])
+			for s in settings.SENSORS:
+				if s['sensorId'] == sensorData['sensorId']:
+					logger.info("New sensor [%s] mapped to settings.SENSORS[%s]" % (sensorData['classId'], s['sensorId']))
+					sensorData['minValue'] = s['minValue']
+					sensorData['maxValue'] = s['maxValue']
+					sensorData['warnValue'] = s['warnValue']
+					mapped = True
+					
 			self.sensor[sensorData['sensorId']] = sensorData
+			if mapped is False:
+				logger.warn("New sensor [%s] no mapping to settings.SENSORS found - ignored" % sensorData['classId'])
 		else:
 			return None
 	

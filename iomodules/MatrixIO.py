@@ -30,6 +30,9 @@ from libs import settings
 # Import the lcd driver
 from lcdbackpack import LcdBackpack
 
+# Import the I2C lcd driver
+from iomodules.graphics.I2CLCDInit import i2clcd
+
 # ECU data storage structure
 from libs.EcuData import EcuData
 
@@ -37,37 +40,71 @@ from libs.EcuData import EcuData
 from libs.newlog import newlog
 logger = newlog(__name__)
 
-def lcdWriteNumeric(lcd = None, ecudata = None, sensorId = None, previousId = False, row = 1, peak = False):
+def lcdWriteNumeric(lcd = None, ecudata = None, sensorId = None, previous = False, row = 1, peak = False):
 	""" Write a numeric sensor value """
-	lcd.set_cursor_position(1, row)
-	lcd.write("                ")
-	lcd.set_cursor_position(1, row)
-	lcd.write("%3s %s%s" % (sensorId, int(ecudata.data[sensorId]), ecudata.sensor[sensorId]['sensorUnit']))
+	if previous != False:
+		#print("%s fast replace" % sensorId)
+		lcd.set_cursor_position(len(sensorId) + 2, row)
+		if ecudata.data[sensorId][0] is not None:
+			valueString = "%s%s" % (int(ecudata.data[sensorId][0]), ecudata.sensor[sensorId]['sensorUnit'])
+		else:
+			valueString = "NO DATA"
+			
+		if previous is not None:
+			lastValueString = "%s%s"% (int(previous), ecudata.sensor[sensorId]['sensorUnit'])
+		else:
+			lastValueString = "NO DATA"
+		
+		# Is the new string longer than the old?
+		if len(valueString) >= len(lastValueString):
+			# Just write the new value
+			lcd.write("%s" % valueString)
+		else:
+			# Write new value....
+			lcd.write("%s" % valueString)
+			# ... and then blank to end of line
+			blankString = " " * (len(lastValueString) - len(valueString) + 1)
+			lcd.write(blankString)
+	else:
+		#print("%s full replace" % sensorId)
+		lcd.set_cursor_position(1, row)
+		blankString = " " * settings.MATRIX_COLS
+		lcd.write(blankString)
+		lcd.set_cursor_position(1, row)
+		if ecudata.data[sensorId][0] is not None:
+			valueString = "%s%s" % (int(ecudata.data[sensorId][0]), ecudata.sensor[sensorId]['sensorUnit'])
+		else:
+			valueString = "NO DATA"
+		lcd.write("%3s %s" % (sensorId, valueString))
 	return None
 
-def lcdWriteBarGraph(lcd = None, ecudata = None, sensorId = None, previousId = False, row = 1, peak = False, peak_segments = 0):
+def lcdWriteBarGraph(lcd = None, ecudata = None, sensorId = None, previous = False, row = 1, peak = False, peak_segments = 0):
 	""" Display a bar graph of the sensor value """
 	
 	# How many columns do we have to play with?
-	max_cols = settings.MATRIX_COLS - (len(sensorId) + 1)
-	max_value = ecudata.sensor[sensorId]['maxValue']
+	max_cols = settings.MATRIX_COLS - (len(sensorId) + 2)
+	sensordata = ecudata.getSensorData(sensorId)
+	max_value = sensordata['maxValue']
 	segment_value = (max_value * 1.0) / max_cols
-	total_segments = int(ecudata.data[sensorId] / segment_value)
+	if ecudata.data[sensorId][0] is None:
+		total_segments = 0
+	else:
+		total_segments = int(ecudata.data[sensorId][0] / segment_value)
+	start_col = len(sensorId) + 2
 	
-	if previousId:
+	if previous:
 		lcd.set_cursor_position(1, row)
-		lcd.write("%3s" % (sensorId))
+		#lcd.write("%3s" % (sensorId))
 		# Same sensor as previous
-		old_segments = int(ecudata.data_previous[sensorId] / segment_value)
+		old_segments = int(previous / segment_value)
 		if old_segments != total_segments:
 			# Seek to start position
-			lcd.set_cursor_position(settings.MATRIX_DATA_START_COL, row)
+			lcd.set_cursor_position(start_col, row)
 			
 			# Write new bar graph
 			lcd._write_command([0xC0, settings.MATRIX_FONT_BANK])
-			for n in range(0, total_segments - 1):
+			for n in range(0, total_segments):
 				lcd.write(chr(settings.MATRIX_FONT_BOX_FILLED))
-			lcd.write(chr(settings.MATRIX_FONT_RIGHT_ANGLE))
 			for n in range(total_segments, max_cols - 1):
 				lcd.write(" ")
 		else:
@@ -77,9 +114,9 @@ def lcdWriteBarGraph(lcd = None, ecudata = None, sensorId = None, previousId = F
 		if peak:
 			if (peak_segments > total_segments) and (peak_segments > 1):
 				# Write new bar graph
-				lcd.set_cursor_position(settings.MATRIX_DATA_START_COL + peak_segments - 1, row)
+				lcd.set_cursor_position(start_col + peak_segments - 1, row)
 				lcd._write_command([0xC0, settings.MATRIX_FONT_BANK])
-				lcd.write(chr(settings.MATRIX_FONT_PEAK))
+				lcd.write(chr(settings.MATRIX_FONT_RIGHT_ANGLE))
 				return None
 			else:
 				return (True, total_segments)
@@ -87,13 +124,12 @@ def lcdWriteBarGraph(lcd = None, ecudata = None, sensorId = None, previousId = F
 		# A new sensor, clear row
 		lcd.set_cursor_position(1, row)
 		lcd.write("%3s" % (sensorId))
-		lcd.set_cursor_position(settings.MATRIX_DATA_START_COL, row)
+		lcd.set_cursor_position(start_col, row)
 		
 		# Write new bar graph
 		lcd._write_command([0xC0, settings.MATRIX_FONT_BANK])
-		for n in range(0, total_segments - 1):
+		for n in range(0, total_segments):
 			lcd.write(chr(settings.MATRIX_FONT_BOX_FILLED))
-		lcd.write(chr(settings.MATRIX_FONT_RIGHT_ANGLE))
 		for n in range(total_segments, max_cols - 1):
 			lcd.write(" ")
 		return None
@@ -160,7 +196,15 @@ def MatrixIO(ecudata, datamanager):
 	##############################################################
 	logger.info("Initialising LCD driver")
 	try:
-		lcd = LcdBackpack(serial_device = settings.MATRIX_SERIAL_PORT, baud_rate = settings.MATRIX_BAUD)
+		if settings.MATRIX_MODE == "serial":
+			logger.info("Bringing up USB/Serial LCD driver")
+			lcd = LcdBackpack(serial_device = settings.MATRIX_SERIAL_PORT, baud_rate = settings.MATRIX_BAUD)
+		elif settings.MATRIX_MODE == "i2c":
+			logger.info("Bringing up I2C LCD driver")
+			lcd = i2clcd()
+		else:
+			logger.fatal("No supported MATRIX_MODE in settings.py: [MATRIX_MODE=%s]" % settings.MATRIX_MODE)
+			exit(1)
 		lcd.connect()
 		lcd.display_off()
 		lcd.set_lcd_size(columns = settings.MATRIX_COLS, rows = settings.MATRIX_ROWS)
@@ -182,13 +226,15 @@ def MatrixIO(ecudata, datamanager):
 		lcd.write("LCD Driver!")
 		time.sleep(0.5)
 		lcdFadeOut(lcd)
+		lcd.clear()
 		
 		# Sleep to show the splash mesage
-		logger.info("LCD serial port initialiased")
+		logger.info("LCD Driver initialiased")
 		time.sleep(1)
 		lcd.clear()
 		
 		# Fade in a sensors loading message
+		lcd.set_cursor_position(1,1)
 		lcd.write("Sensors loading...")
 		lcd.set_cursor_position(1,2)
 		lcd.write("...please wait")
@@ -200,7 +246,6 @@ def MatrixIO(ecudata, datamanager):
 		lcd.clear()
 		time.sleep(0.5)
 		lcd.set_brightness(255)
-		
 	except Exception as e:
 		# We couldnt connect
 		logger.error("LCD character display not available")
@@ -217,6 +262,8 @@ def MatrixIO(ecudata, datamanager):
 		local_matrix_config[k]['peak'] = False
 		local_matrix_config[k]['peak_counter'] = settings.MATRIX_PEAK_COUNT
 		local_matrix_config[k]['peak_segments'] = 0
+		local_matrix_config[k]['previous'] = False
+		local_matrix_config[k]['prev_sensorIdx'] = False
 	i = 0
 	previousId = False
 	while True:
@@ -288,22 +335,32 @@ def MatrixIO(ecudata, datamanager):
 						if (t >= settings.MATRIX_CONFIG[row]['value_refreshTime']):
 	
 							# Display sensor information
-							previousId = True if current_sensorIdx == next_sensorIdx else False
+							if current_sensorIdx == local_matrix_config[row]['prev_sensorIdx']:
+								previousId = True
+								local_matrix_config[row]['previous'] = ecudata.data[sensorId][0]
+							else:
+								previousId = False
+								local_matrix_config[row]['previous'] = False
+							
 							if settings.MATRIX_MODE_BAR in local_matrix_config[row]['mode']:
 								lcdWriteBarGraph(lcd = lcd,
 									ecudata = ecudata,
 									sensorId = sensorId,
-									previousId = previousId,
+									previous = local_matrix_config[row]['previous'],
 									row = row,
 									peak = False)
 							else:
 								lcdWriteNumeric(lcd = lcd,
 									ecudata = ecudata,
 									sensorId = sensorId,
-									previousId = previousId,
+									previous = local_matrix_config[row]['previous'],
 									row = row,
 									peak = False)
 								
+							if previousId:
+								local_matrix_config[row]['previous'] = ecudata.data[sensorId][0]
+
+							local_matrix_config[row]['prev_sensorIdx'] = current_sensorIdx
 							# restart timer
 							local_matrix_config[row]['value_refreshTimer'] = timeit.default_timer()
 						else:
@@ -332,7 +389,7 @@ def MatrixIO(ecudata, datamanager):
 								peak_data = lcdWriteBarGraph(lcd = lcd,
 									ecudata = ecudata,
 									sensorId = sensorId,
-									previousId = previousId,
+									previous = local_matrix_config[row]['previous'],
 									row = row,
 									peak = peak,
 									peak_segments = local_matrix_config[row]['peak_segments'])
@@ -340,7 +397,7 @@ def MatrixIO(ecudata, datamanager):
 								peak_data = lcdWriteNumeric(lcd = lcd,
 									ecudata = ecudata,
 									sensorId = sensorId,
-									previousId = previousId,
+									previous = local_matrix_config[row]['previous'],
 									row = row,
 									peak = peak)
 								
@@ -361,7 +418,7 @@ def MatrixIO(ecudata, datamanager):
 									local_matrix_config[row]['peak_counter'] = 0
 															 
 							local_matrix_config[row]['value_refreshTimer'] = timeit.default_timer()
-							previousId = True
+							local_matrix_config[row]['previous'] = ecudata.data[sensorId][0]
 						else:
 							pass
 					

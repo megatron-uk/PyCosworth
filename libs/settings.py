@@ -42,18 +42,18 @@ TYPE_STATUS = "STATUS_MSG"
 ##############################################################
 
 # Selct the various worker modules
-USE_MATRIX = False			# Output to a Matrix Orbital compatible character mode LCD
+USE_MATRIX = True			# Output to a Matrix Orbital compatible character mode LCD
 USE_CONSOLE = False			# Output to a standard terminal / command prompt
 USE_BUTTONS = True			# Run a process which monitors Raspberry Pi GPIO buttons for button presses
 USE_GRAPHICS = True			# Output to OLED modules or on-screen graphics
 USE_DATALOGGER = True		# Run the datalogger module to record ecudata to disk
 USE_OLED_GRAPHICS = False 	# Try to output to an OLED module
-USE_SDL_GRAPHICS = True  	# Try to output to on-screen windows
+USE_SDL_GRAPHICS = False  	# Try to output to on-screen windows
 
 # Sensor modules
 USE_GEAR_INDICATOR = True	# Try to read gear indicator position via GPIO 
 USE_COSWORTH = True 		# Try to connect to a Cosworth L8/P8 ECU
-USE_SENSOR_DEMO = False 	# Enable demo data mode from the SensorIO module instead of real data
+USE_SENSOR_DEMO = True 	# Enable demo data mode from the SensorIO module instead of real data
 
 # Should INFO category messages be shown
 INFO = True
@@ -119,11 +119,20 @@ COSWORTH_ECU_USB = "/dev/ttyUSB0"
 #
 ##########################################################
 				
-# Serial port for the (optional) Matrix Orbital character mode LCD
+MATRIX_MODE = "i2c"
+#MATRIX_MODE = "serial"
+
+# I2C config for the (optional) Matrix Orbital character mode LCD using a I2C backpack
+MATRIX_I2C_PORT = 1
+MATRIX_I2C_ADDRESS = 0x27
+
+# Size of LCD
+MATRIX_ROWS = 4
+MATRIX_COLS = 20
+
+# Serial port for the (optional) Matrix Orbital character mode LCD using a usb to serial backpack
 # see Matrix.py for more details
 MATRIX_SERIAL_PORT = "/dev/ttyACM0"
-MATRIX_ROWS = 2
-MATRIX_COLS = 16
 MATRIX_SPLASH = "PyCosworth\nLCD Driver loaded!"
 MATRIX_BAUD = 57600
 
@@ -131,7 +140,7 @@ MATRIX_BAUD = 57600
 # WARNING: less time between refresh will cause
 # a faster response, but will introduce flickering.
 # Sensible values = 0.1 (10 updates/sec) to 0.5 (2 updates/sec)
-MATRIX_REFRESH = 0.05
+MATRIX_REFRESH = 0.15
 
 # LCD brightness, font contrast and backlight colour (if applicable)
 MATRIX_BACKLIGHT_RGB = (150, 0, 0)
@@ -142,18 +151,29 @@ MATRIX_BACKLIGHT_MAX_BRIGHTNESS = 125
 # the longest sensor name. i.e. if all of your sensorId names are 3 characters long, then set it to 5:
 MATRIX_DATA_START_COL = 5
 
-# A default for how long each sensor is shown, when that row is set to cycle
-MATRIX_ROW_TIME = 2.5
+# A default for how many seconds each sensor is shown, when that row is set to cycle
+MATRIX_ROW_TIME = 2
 
 # How many data value refreshes a peak indicator remains on-screen
-MATRIX_PEAK_COUNT = 30
+# i.e. value_refreshTime in the MATRIX_CONFIG section.
+# MATRIX_PEAK_COUNT * value_refreshTime == peak hold time in seconds
+MATRIX_PEAK_COUNT = 4
 
 # Slots to store custom LCD fonts in
-MATRIX_FONT_BANK = 1
-MATRIX_FONT_BOX_FILLED = 1
-MATRIX_FONT_BOX_OUTLINE = 2
-MATRIX_FONT_RIGHT_ANGLE = 3
-MATRIX_FONT_PEAK = 4
+if MATRIX_MODE == "i2c":
+	# I2C doesnt yet have custom fonts
+	MATRIX_FONT_BANK = 1
+	MATRIX_FONT_BOX_FILLED = 255
+	MATRIX_FONT_BOX_OUTLINE = 255
+	MATRIX_FONT_RIGHT_ANGLE = 62
+	MATRIX_FONT_PEAK = 124
+elif MATRIX_MODE == "serial":
+	# I2C doesnt yet have custom fonts
+	MATRIX_FONT_BANK = 1
+	MATRIX_FONT_BOX_FILLED = 1
+	MATRIX_FONT_BOX_OUTLINE = 2
+	MATRIX_FONT_RIGHT_ANGLE = 3
+	MATRIX_FONT_PEAK = 4
 
 # Some definitions of available Matrix LCD modes
 # CYCLE = Rotate through a list of sensors, in turn
@@ -208,22 +228,40 @@ MATRIX_MODE_BAR = 2
 #
 MATRIX_CONFIG = {
 	1 : {
-		'setting'					: MATRIX_SETTING_FIXED,
+		'setting'				: MATRIX_SETTING_FIXED,
 		'mode'					: [MATRIX_MODE_BAR, MATRIX_MODE_PEAK],
 		'sensorIds'				: ['RPM'],
 		'current_sensorIdx'		: 0,
-		'next_sensorIdx'			: 0,
+		'next_sensorIdx'		: 0,
 		'row_cycleTime'			: 0,
 		'value_refreshTime'		: 0.2,
 	},
 	2 : {
-		'setting'					: MATRIX_SETTING_FIXED,
-		'mode'					: [],
-		'sensorIds'				: ['TPS'],
+		'setting'				: MATRIX_SETTING_FIXED,
+		'mode'					: [MATRIX_MODE_BAR, MATRIX_MODE_PEAK],
+		'sensorIds'				: ['MAP'],
 		'current_sensorIdx'		: 0,
-		'next_sensorIdx'			: 0,
+		'next_sensorIdx'		: 0,
 		'row_cycleTime'			: 2,
-		'value_refreshTime'		: 1,
+		'value_refreshTime'		: 0.5,
+	},
+	3 : {
+		'setting'				: MATRIX_SETTING_CYCLE,
+		'mode'					: [],
+		'sensorIds'				: ['IAT', 'ECT'],
+		'current_sensorIdx'		: 0,
+		'next_sensorIdx'		: 0,
+		'row_cycleTime'			: 4,
+		'value_refreshTime'		: 0.5,
+	},
+	4 : {
+		'setting'				: MATRIX_SETTING_CYCLE,
+		'mode'					: [],
+		'sensorIds'				: ['INJDUR', 'CO', 'BAT'],
+		'current_sensorIdx'		: 0,
+		'next_sensorIdx'		: 0,
+		'row_cycleTime'			: 4,
+		'value_refreshTime'		: 0.5,
 	},
 }
 
