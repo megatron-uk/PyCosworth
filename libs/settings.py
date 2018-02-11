@@ -48,12 +48,12 @@ USE_BUTTONS = True			# Run a process which monitors Raspberry Pi GPIO buttons fo
 USE_GRAPHICS = True			# Output to OLED modules or on-screen graphics
 USE_DATALOGGER = True		# Run the datalogger module to record ecudata to disk
 USE_OLED_GRAPHICS = False 	# Try to output to an OLED module
-USE_SDL_GRAPHICS = False  	# Try to output to on-screen windows
+USE_SDL_GRAPHICS = True  	# Try to output to on-screen windows
 
 # Sensor modules
 USE_GEAR_INDICATOR = True	# Try to read gear indicator position via GPIO 
 USE_COSWORTH = True 		# Try to connect to a Cosworth L8/P8 ECU
-USE_SENSOR_DEMO = True 	# Enable demo data mode from the SensorIO module instead of real data
+USE_SENSOR_DEMO = False 	# Enable demo data mode from the SensorIO module instead of real data
 
 # Should INFO category messages be shown
 INFO = True

@@ -12,7 +12,11 @@ Made available under GNU GENERAL PUBLIC LICENSE
 
 """
 #
-import smbus
+try:
+	import smbus
+except Exception as e:
+	print("Danger - smbus package not available!")
+	
 import time
 
 # commands

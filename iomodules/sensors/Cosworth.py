@@ -285,20 +285,26 @@ class CosworthSensors():
 			raw_value = None
 			get_start_time = timeit.default_timer()
 
-			if len(sensorData['controlCodes']) == 1:
-				self.serial.write(bytes([sensorData['controlCodes'][0]]))
-				raw_value = self.serial.read(1)[0]
-				
-			elif len(sensorData['controlCodes']) == 2:
-				[sensorData['controlCodes'][0]]
-				self.serial.write(bytes([sensorData['controlCodes'][0]]))
-				raw_value_1 = self.serial.read(1)[0]
-				self.serial.write(bytes([sensorData['controlCodes'][1]]))
-				raw_value_2 = self.serial.read(1)[0]
-				raw_value = (raw_value_1 << 8) + raw_value_2
-				
-			else:
-				logger.error("Unsupported number of control codes for sensor %s" % sensorData['sensorId'])
+			try:
+
+				if len(sensorData['controlCodes']) == 1:
+					self.serial.write(bytes([sensorData['controlCodes'][0]]))
+					raw_value = self.serial.read(1)[0]
+					
+				elif len(sensorData['controlCodes']) == 2:
+					[sensorData['controlCodes'][0]]
+					self.serial.write(bytes([sensorData['controlCodes'][0]]))
+					raw_value_1 = self.serial.read(1)[0]
+					self.serial.write(bytes([sensorData['controlCodes'][1]]))
+					raw_value_2 = self.serial.read(1)[0]
+					raw_value = (raw_value_1 << 8) + raw_value_2
+					
+				else:
+					logger.error("Unsupported number of control codes for sensor %s" % sensorData['sensorId'])
+					return None, None
+			except Exception as e:
+				#logger.error("Error communicating with serial port!")
+				#logger.error(e)
 				return None, None
 		else:
 			logger.debug("Serial port is not open")
