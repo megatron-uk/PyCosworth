@@ -33,7 +33,6 @@ from libs.EcuData import EcuData
 # Any worker methods
 from iomodules.SensorIO import SensorIO
 from iomodules.ConsoleIO import ConsoleIO
-from iomodules.MatrixIO import MatrixIO
 from iomodules.GPIOButtonIO import GPIOButtonIO
 from iomodules.GraphicsIO import GraphicsIO
 from iomodules.DataLoggerIO import DataLoggerIO
@@ -51,10 +50,6 @@ def sensorWorker(transmitQueue, receiveQueue, controlQueue):
 def consoleWorker(ecudata, controlQueue):
 	""" Print sensor data to the terminal screen """
 	ConsoleIO(ecudata, controlQueue)
-
-def matrixLCDWorker(ecudata, controlQueue):
-	""" Output sensor data to a Matrix Orbital text mode LCD """
-	MatrixIO(ecudata, controlQueue)
 
 def graphicsWorker(ecudata, controlQueue, actionQueue):
 	""" Output sensor data to a Matrix Orbital text mode LCD """
@@ -88,7 +83,6 @@ if __name__ == '__main__':
 	
 	# A new ecu data structure
 	dataManager = multiprocessing.Manager()
-	ecuMatrixLCDDict = dataManager.dict(settings.MATRIX_CONFIG)
 	ecuDataDict = dataManager.dict()
 	ecuStatusDict = dataManager.dict()
 	ecuSensorDict = dataManager.dict()
@@ -102,7 +96,6 @@ if __name__ == '__main__':
 		ecuCounter = ecuCounter, 
 		ecuErrors = ecuErrors, 
 		ecuSampleTime = ecuSampleTime, 
-		ecuMatrixLCDDict = ecuMatrixLCDDict,
 		ecuStatusDict = ecuStatusDict)
 	#for sensor in settings.SENSORS:
 	#	ecuData.setSensorData(sensor = sensor)
@@ -137,17 +130,6 @@ if __name__ == '__main__':
 		workers.append(console_p)
 		messageQueues.append(consoleControlQueue)
 		datalogger_listeners.append(consoleControlQueue)
-	
-	# Start the Matrix LCD process
-	if settings.USE_MATRIX:
-		# The MatrixLCD worker has a controle queue that it listens for incoming
-		# control messages on.
-		matrixControlQueue = multiprocessing.Queue() # takes messages
-		matrix_p = multiprocessing.Process(target=matrixLCDWorker, args=(ecuData, matrixControlQueue,))
-		matrix_p.start()
-		workers.append(matrix_p)
-		messageQueues.append(matrixControlQueue)
-		datalogger_listeners.append(matrixControlQueue)
     
     # Start the process to capture Raspberry Pi GPIO button presses
 	if settings.USE_BUTTONS:
@@ -231,9 +213,9 @@ if __name__ == '__main__':
 		except Exception as e:
 			pass
 		
-		# Check for any GPIO button message
+		# Check for any GPIO/keyboard button message
 		if gpioActionQueue.empty() == False:
-			logger.debug("Message in the control queue")
+			logger.info("Message in the control queue")
 			gpioMessage = gpioActionQueue.get()
 			# Distribute the messages to all processes
 			# so that each process (apart from gpio) can decide what to do with it
@@ -242,7 +224,7 @@ if __name__ == '__main__':
 		
 		# Message passed back up from the master display graphics class
 		if masterActionQueue.empty() == False:
-			logger.debug("Message from master display")
+			logger.info("Message from master display")
 			masterMessage = masterActionQueue.get()
 			# Put it in all queues (apart from the graphics one)
 			for q in messageQueues:

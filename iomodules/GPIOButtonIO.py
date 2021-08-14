@@ -101,6 +101,8 @@ def GPIOButtonIO(actionQueue, stdin):
 			# Scan for any button presses on the GPIO pins
 			######################################################
 		
+			logger.info("Received GPIO input")
+		
 			#cdata = ControlData()
 			#cdata.setButton(mybutton)
 			#cdata.setDuration(myduration)
@@ -119,7 +121,7 @@ def GPIOButtonIO(actionQueue, stdin):
 			else:
 				myInput = raw_input()
 			
-			logger.debug("Received keyboard input: [%s]" % myInput)
+			logger.info("Received keyboard input: [%s]" % myInput)
 			
 			######################################################
 			# We only pass through control signals that are 
@@ -131,7 +133,7 @@ def GPIOButtonIO(actionQueue, stdin):
 				cdata = ControlData()
 				cdata.setButton(mybutton)
 				actionQueue.put(cdata)
-				logger.debug("Send controldata message: BUTTON[%s] DESTINATION[%s]" % (mybutton, mydest))
+				logger.info("Send controldata message: BUTTON[%s] DESTINATION[%s]" % (mybutton, mydest))
 			
 		######################################################
 		# Sleep until next time

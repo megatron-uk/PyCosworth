@@ -25,6 +25,7 @@ import os
 
 # Sensor back end libraries
 from iomodules.sensors.Cosworth import CosworthSensors
+from iomodules.sensors.AEM import AEMSensors
 from iomodules.sensors.Demo import DemoSensors
 
 # Settings file
@@ -54,7 +55,14 @@ def SensorIO(transmitQueue, receiveQueue, controlQueue):
 	else:
 		cosworth = None
 		cosworth_sensors = []
-		
+	
+	if settings.USE_AEM:
+		aem = AEMSensors()
+		aem_sensors = aem.available()
+	else:
+		aem = None
+		aem_sensors = []
+	
 	if settings.USE_SENSOR_DEMO:
 		SENSOR_DEMO = True
 		demo = DemoSensors()
@@ -78,6 +86,9 @@ def SensorIO(transmitQueue, receiveQueue, controlQueue):
 		if sensorId in cosworth_sensors:
 			sensorData = cosworth.sensor(sensorId, force = True)
 			timerData = cosworth.performance(sensorId)
+		if sensorId in aem_sensors:
+			sensorData = aem.sensor(sensorId, force = True)
+			timerData = aem.performance(sensorId)
 		if SENSOR_DEMO:
 			if (sensorData is False) and (sensorId in demo_sensors):
 				sensorData = demo.sensor(sensorId, force = True)
@@ -147,12 +158,11 @@ def SensorIO(transmitQueue, receiveQueue, controlQueue):
 				if sensorId in cosworth_sensors:
 					sensorData = cosworth.sensor(sensorId)
 					timerData = cosworth.performance(sensorId)
-				# is it a gearbox sensor?
-				#elif sensorId in gearbox_sensors:
-				#	pass
-				# is it a wibble sensor?
-				#elif sensorId in wibble_sensors:
-				#	pass
+					
+				# Is this a cosworth sensor?
+				if sensorId in aem_sensors:
+					sensorData = aem.sensor(sensorId)
+					timerData = aem.performance(sensorId)
 			else:
 				# Otherwise read from the demo sensors, if demo mode is active
 				if (sensorData is False) and (sensorId in demo_sensors):

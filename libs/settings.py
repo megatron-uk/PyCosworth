@@ -42,18 +42,19 @@ TYPE_STATUS = "STATUS_MSG"
 ##############################################################
 
 # Selct the various worker modules
-USE_MATRIX = True			# Output to a Matrix Orbital compatible character mode LCD
+USE_MATRIX = False			# Output to a Matrix Orbital compatible character mode LCD
 USE_CONSOLE = False			# Output to a standard terminal / command prompt
 USE_BUTTONS = True			# Run a process which monitors Raspberry Pi GPIO buttons for button presses
 USE_GRAPHICS = True			# Output to OLED modules or on-screen graphics
 USE_DATALOGGER = True		# Run the datalogger module to record ecudata to disk
-USE_OLED_GRAPHICS = False 	# Try to output to an OLED module
+USE_OLED_GRAPHICS = True 	# Try to output to an OLED module
 USE_SDL_GRAPHICS = True  	# Try to output to on-screen windows
 
 # Sensor modules
-USE_GEAR_INDICATOR = True	# Try to read gear indicator position via GPIO 
-USE_COSWORTH = True 		# Try to connect to a Cosworth L8/P8 ECU
-USE_SENSOR_DEMO = False 	# Enable demo data mode from the SensorIO module instead of real data
+USE_GEAR_INDICATOR = False	# Try to read gear indicator position via GPIO 
+USE_COSWORTH = False 		# Try to connect to a Cosworth L8/P8 ECU over serial
+USE_AEM = False				# Try to connect to an AEM Wideband AFR module over serial
+USE_SENSOR_DEMO = True 	# Enable demo data mode from the SensorIO module instead of real data
 
 # Should INFO category messages be shown
 INFO = True
@@ -81,16 +82,17 @@ DEBUG = False
 
 # This needs to be simplified to remove min/max, unit, refresh etc. as it is all now defined per sensor module backend (see iomodules/sensors/Cosworth.py, demo.py etc.)
 SENSORS = [
-	{ 	'sensorId'	: 'RPM',	'minValue' : 0,		'maxValue'	: 7500, 'warnValue' : 6000,	},
-	{	'sensorId' 	: 'ECT',	'minValue' : 0,		'maxValue'	: 150,	'warnValue' : 110, 	},
-	{	'sensorId'	: 'IAT',	'minValue' : 0,		'maxValue'	: 60,	'warnValue' : 50,	},
-	{	'sensorId' 	: 'MAP',	'minValue' : -350,	'maxValue'	: 3000,	'warnValue' : 2500,	},
-	{	'sensorId' 	: 'TPS',	'minValue' : -0.3,	'maxValue'	: 90,	'warnValue' : 100,	},
-	{	'sensorId' 	: 'CO',		'minValue' : 0,		'maxValue'	: 50,	'warnValue' : 100,	},
-	{	'sensorId' 	: 'BAT',	'minValue' : 0,		'maxValue'	: 14,	'warnValue' : 15,	},
-	{	'sensorId' 	: 'INJDUR',	'minValue' : 0,		'maxValue'	: 5,	'warnValue' : 20,	},
+	{	'sensorId' 	: 'AFR',		'minValue' : 0,		'maxValue'	: 20,	'warnValue' : 15,	},
 	{	'sensorId' 	: 'AMAL',	'minValue' : 0,		'maxValue'	: 100,	'warnValue' : 110,	},
+	{	'sensorId' 	: 'BAT',		'minValue' : 0,		'maxValue'	: 14,	'warnValue' : 15,	},
+	{	'sensorId' 	: 'CO',		'minValue' : 0,		'maxValue'	: 50,	'warnValue' : 100,	},	
+	{	'sensorId' 	: 'ECT',		'minValue' : 0,		'maxValue'	: 150,	'warnValue' : 110, 	},
+	{	'sensorId'	: 'IAT',		'minValue' : 0,		'maxValue'	: 60,	'warnValue' : 50,	},
 	{	'sensorId' 	: 'IGNADV',	'minValue' : 0,		'maxValue'	: 40,	'warnValue' : 36,	},
+	{	'sensorId' 	: 'INJDUR',	'minValue' : 0,		'maxValue'	: 5,		'warnValue' : 20,	},	
+	{	'sensorId' 	: 'MAP',		'minValue' : -350,	'maxValue'	: 3000,	'warnValue' : 2500,	},
+	{ 	'sensorId'	: 'RPM',		'minValue' : 0,		'maxValue'	: 7500, 'warnValue' : 6000,	},
+	{	'sensorId' 	: 'TPS',		'minValue' : -0.3,	'maxValue'	: 90,	'warnValue' : 100,	},
 ]
 # A list of all sensor id's
 SENSOR_IDS = []
@@ -113,158 +115,13 @@ COSWORTH_ECU_TYPE = "L8 Pectel" # see iomodules/sensors/CosworthSensors.py for a
 # Which USB interface your USB to serial device is on
 COSWORTH_ECU_USB = "/dev/ttyUSB0" 
 	
-##########################################################
+#########################################################
 #
-# Matrix Orbital / Adafruit USB type LCD character display
+# AEM Wideband AFR settings
 #
-##########################################################
-				
-MATRIX_MODE = "i2c"
-#MATRIX_MODE = "serial"
-
-# I2C config for the (optional) Matrix Orbital character mode LCD using a I2C backpack
-MATRIX_I2C_PORT = 1
-MATRIX_I2C_ADDRESS = 0x27
-
-# Size of LCD
-MATRIX_ROWS = 4
-MATRIX_COLS = 20
-
-# Serial port for the (optional) Matrix Orbital character mode LCD using a usb to serial backpack
-# see Matrix.py for more details
-MATRIX_SERIAL_PORT = "/dev/ttyACM0"
-MATRIX_SPLASH = "PyCosworth\nLCD Driver loaded!"
-MATRIX_BAUD = 57600
-
-# Time we wait between LCD display loops, in seconds.
-# WARNING: less time between refresh will cause
-# a faster response, but will introduce flickering.
-# Sensible values = 0.1 (10 updates/sec) to 0.5 (2 updates/sec)
-MATRIX_REFRESH = 0.15
-
-# LCD brightness, font contrast and backlight colour (if applicable)
-MATRIX_BACKLIGHT_RGB = (150, 0, 0)
-MATRIX_FONT_MAX_CONTRAST = 175
-MATRIX_BACKLIGHT_MAX_BRIGHTNESS = 125
-
-# Where the data on the LCD character screen starts, this should be two spaces after
-# the longest sensor name. i.e. if all of your sensorId names are 3 characters long, then set it to 5:
-MATRIX_DATA_START_COL = 5
-
-# A default for how many seconds each sensor is shown, when that row is set to cycle
-MATRIX_ROW_TIME = 2
-
-# How many data value refreshes a peak indicator remains on-screen
-# i.e. value_refreshTime in the MATRIX_CONFIG section.
-# MATRIX_PEAK_COUNT * value_refreshTime == peak hold time in seconds
-MATRIX_PEAK_COUNT = 4
-
-# Slots to store custom LCD fonts in
-if MATRIX_MODE == "i2c":
-	# I2C doesnt yet have custom fonts
-	MATRIX_FONT_BANK = 1
-	MATRIX_FONT_BOX_FILLED = 255
-	MATRIX_FONT_BOX_OUTLINE = 255
-	MATRIX_FONT_RIGHT_ANGLE = 62
-	MATRIX_FONT_PEAK = 124
-elif MATRIX_MODE == "serial":
-	# I2C doesnt yet have custom fonts
-	MATRIX_FONT_BANK = 1
-	MATRIX_FONT_BOX_FILLED = 1
-	MATRIX_FONT_BOX_OUTLINE = 2
-	MATRIX_FONT_RIGHT_ANGLE = 3
-	MATRIX_FONT_PEAK = 4
-
-# Some definitions of available Matrix LCD modes
-# CYCLE = Rotate through a list of sensors, in turn
-# FIXED = Show a single sensor only
-# EXTRA_ABOVE = Show further details for the immediately prior row
-# EXTRA_BELOW = Show further details for the immediately following row
-MATRIX_SETTING_CYCLE = 1
-MATRIX_SETTING_FIXED = 2
-MATRIX_SETTING_FOR_ABOVE = 3
-MATRIX_SETTING_FOR_BELOW = 4
-
-# Modifiers to the behaviour of an individual row
-# BAR = Enable output in graphical bar chart form, 
-#		rather than showing the number
-# PEAK = Show a peak reading indicator for this sensor. Only useable if the
-#		row is not in CYCLE setting and is also in BAR mode.
-MATRIX_MODE_PEAK = 1
-MATRIX_MODE_BAR = 2
-
-# MATRIX_CONFIG
-# This configuration determines what should be shown on the LCD
-# character display, the speed at which the data is refreshed
-#
-# 1						The row number of the LCD display
-# 'setting'				The MATRIX_SETTING mode that the row should use, generally 
-#						either cycle or fixed. Type: SINGLE VALUE
-# 'mode'				The MATRIX_MODE setting that should be used for this row
-#						when showing data. Type: LIST
-# 'sensorIds'			A list of sensorId names from the SENSORS list. This determines which
-#						sensor data values should be shown on this line. A single name
-#						will disable cycle mode. Type: LIST
-# 'current_sensorIdx'	Used internally to keep track of which sensor should be showing. Do not alter.
-# 'next_sensorIdx'		Used internally to keep track of which sensor should be showing next. Do not alter.
-# 'row_cycleTime'		How long a single sensor should be shown on this row, in cycle mode, before the 
-#						we change to the next sensor in the list.
-# 'value_refreshTime'	How long we wait until refreshing the value shown for the current sensor on this line.
-#
-# Example MATRIX_CONFIG
-# An example Matrix LCD configuration is shown below.
-# It defines the config for a 2-row LCD:
-# Row 1: 
-#	Fixed display of RPM sensor.
-#	Instead of a numeric display, a bar chart is used.
-#	A peak indicator shows the last highest reading.
-#	Refresh the value shown on the row every 0.2 seconds
-#
-# Row 2:
-#	A cycling display through all sensor readings.
-#	Numeric display.
-#	Change between each sensor every 2 seconds.
-#	Refresh the value shown on the row every 1 second.
-#
-MATRIX_CONFIG = {
-	1 : {
-		'setting'				: MATRIX_SETTING_FIXED,
-		'mode'					: [MATRIX_MODE_BAR, MATRIX_MODE_PEAK],
-		'sensorIds'				: ['RPM'],
-		'current_sensorIdx'		: 0,
-		'next_sensorIdx'		: 0,
-		'row_cycleTime'			: 0,
-		'value_refreshTime'		: 0.2,
-	},
-	2 : {
-		'setting'				: MATRIX_SETTING_FIXED,
-		'mode'					: [MATRIX_MODE_BAR, MATRIX_MODE_PEAK],
-		'sensorIds'				: ['MAP'],
-		'current_sensorIdx'		: 0,
-		'next_sensorIdx'		: 0,
-		'row_cycleTime'			: 2,
-		'value_refreshTime'		: 0.5,
-	},
-	3 : {
-		'setting'				: MATRIX_SETTING_CYCLE,
-		'mode'					: [],
-		'sensorIds'				: ['IAT', 'ECT'],
-		'current_sensorIdx'		: 0,
-		'next_sensorIdx'		: 0,
-		'row_cycleTime'			: 4,
-		'value_refreshTime'		: 0.5,
-	},
-	4 : {
-		'setting'				: MATRIX_SETTING_CYCLE,
-		'mode'					: [],
-		'sensorIds'				: ['INJDUR', 'CO', 'BAT'],
-		'current_sensorIdx'		: 0,
-		'next_sensorIdx'		: 0,
-		'row_cycleTime'			: 4,
-		'value_refreshTime'		: 0.5,
-	},
-}
-
+#########################################################
+AEM_USB = "/dev/ttyUSB1"
+	
 #######################################################
 #
 # Demo data module config
@@ -304,6 +161,10 @@ BUTTON_LOGGING_STOPPED 		= "l" # Logging is stopped
 BUTTON_LOGGING_STATUS 		= "S" # Logging status/heartbeat response
 BUTTON_RESET_COSWORTH_ECU 	= "R" # Reset Cosworth ECU serial comms
 
+# For the simple, 3 button interface
+BUTTON_LOGGING		 		= "1" # Logging is stopped or started
+BUTTON_SENSOR_NEXT			= "2" # Select next sensor
+
 # Button message types
 MESSAGE_TYPE_PRESS 	= 0x01 # message is a button press
 MESSAGE_TYPE_PAUSE 	= 0xFE # message is to pause logging/display
@@ -336,6 +197,7 @@ BUTTON_MAP = {
 	BUTTON_RESET_COSWORTH_ECU	: { 'dest' : BUTTON_DEST_SENSORIO }, # Toggle demo start/stop
 	BUTTON_LOGGING_RUNNING		: { 'dest' : BUTTON_DEST_DATALOGGER }, # Toggle demo start/stop
 	BUTTON_LOGGING_STOPPED		: { 'dest' : BUTTON_DEST_DATALOGGER }, # Toggle demo start/stop
+	BUTTON_SENSOR_NEXT			: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Show next sensor
 }
 
 #######################################################
@@ -348,7 +210,7 @@ BUTTON_MAP = {
 # This is the master screen that shows settings, config
 # and higher resolution data
 # NOTE: The on-desktop SDL window will be created at the same size
-GFX_MASTER_SIZE = (256, 64)
+GFX_MASTER_SIZE = (128, 64)
 
 # Size of the OLED miniature screen.
 # These are the sub-screens that generally display a single gauge or sensor.
@@ -361,7 +223,7 @@ GFX_CACHE_DIR = "cache/"
 
 # Boot up logo for the OLED screens
 GFX_BOOT_LOGO 		= "logo/cosworth.bmp"
-GFX_BOOT_LOGO_BIG 	= "logo/cosworth_256.bmp"
+#GFX_BOOT_LOGO_BIG 	= "logo/cosworth_256.bmp"
 GFX_BOOT_LOGO_BIG 	= "logo/cosworth_outline.bmp"
 
 # Font used for most on-screen text
@@ -411,70 +273,40 @@ GFX_SETTING_FIXED = 0x02
 # LINE	
 #	A logarithmic vertical line chart with the same X-resolution as the
 #	number of pixels your OLED display is in width.
+# NUMERIC
+#	A simple number display
 GFX_MODE_WAVEFORM = "Waveform"
 GFX_MODE_SEGMENTS = "LED Segment"
 GFX_MODE_CLOCK = "Clock"
 GFX_MODE_LINE = "Log Graph"
+GFX_MODE_NUMERIC = "Numeric"
 GFX_MODE_OFF = "OFF"
 
 # Available modes that a sensor can be shown in
-GFX_MODES = [GFX_MODE_WAVEFORM, GFX_MODE_SEGMENTS, GFX_MODE_CLOCK, GFX_MODE_LINE, GFX_MODE_OFF]
-
-# Similar to MATRIX_CONFIG, this defines what sensors should be shown
-# in each window (where we have more than one OLED screen connected
-# to our Raspberry Pi).
-GFX_WINDOWS = {
-	#"primary": {
-	#	'windowName'		: 'primary',
-	#	'oledType'			: 'sh1106',
-	#	'i2cAddress'		: 0x3C,
-	#	'spiAddress'		: None,
-	#	'setting'			: GFX_SETTING_FIXED,
-	#	'mode'				: [GFX_MODE_SEGMENTS, GFX_MODE_LINE, GFX_MODE_SEGMENTS, GFX_MODE_WAVEFORM],
-	#	'currentModeIdx'	: 0,
-	#	'currentMode'		: None,
-	#	'sensorIds'			: ['RPM', 'TPS'],
-	#	'currentSensorIdx'	: 0,
-	#	'screen_cycleTime'	: 5,
-	#	'value_refreshTime'	: 0.1,
-	#	'screen_refreshTime': 0.05,
-	#	'sdlWindow'			: None,
-	#	'sdl_framebuffer'	: None,
-	#	'luma_framebuffer'	: None,
-	#	'luma_driver'		: None,
-	#},
-	#'secondary': {
-	#	'windowName'		: 'secondary',
-	#	'oledType'			: 'sh1106',
-	#	'i2cAddress'		: 0x02,
-	#	'spiAddress'		: None,
-	#	'setting'			: GFX_SETTING_CYCLE,
-	#	'mode'				: [GFX_MODE_WAVEFORM, GFX_MODE_SEGMENTS, GFX_MODE_CLOCK, GFX_MODE_WAVEFORM],
-	#	'currentModeIdx'	: 0,
-	#	'currentMode'		: None,		
-	#	'sensorIds'			: ['MAP', 'ACT'],
-	#	'currentSensorIdx'	: 0,
-	#	'screen_cycleTime'	: 5,
-	#	'screen_refreshTime': 0.05,
-	#	'value_refreshTime'	: 0.1,
-	#	'sdlWindow'			: None,
-	#	'sdl_framebuffer'	: None,
-	#	'luma_framebuffer'	: None,
-	#	'luma_driver'		: None,
-	#}
-}
+#GFX_MODES = [GFX_MODE_WAVEFORM, GFX_MODE_SEGMENTS, GFX_MODE_CLOCK, GFX_MODE_LINE, GFX_MODE_OFF]
+GFX_MODES = [GFX_MODE_NUMERIC]
 
 GFX_MASTER_WINDOW = {
-	'windowName'		: 'Master',
-	'oledType'		: 'ssd1322',
-	'width'			: 256,
-	'height'		: 64,
-	'spiAddress'		: 0,
+	'windowName'			: 'Master',
+	'oledType'			: 'sh1106',
+	'width'				: 128,
+	'height'				: 64,
+	'spiAddress'			: 0,
 	'value_refreshTime'	: 0.05,
 	'sdl_framebuffer'	: None,
 	'luma_framebuffer'	: None,
 	'luma_driver'		: None,
 	'screen_refreshTime': 0.02,
+	'i2cAddress'			: 0x3C,
+	'setting'			: GFX_SETTING_FIXED,
+	'mode'				: [GFX_MODE_NUMERIC],
+	'currentModeIdx'		: 0,
+	'currentMode'		: GFX_MODE_NUMERIC,
+	'sensorIds'			: ['AFR', 'AMAL', 'BAT', 'CO', 'ECT', 'IAT', 'IGNADV', 'INJDUR', 'MAP', 'RPM', 'TPS'],
+	'currentSensorIdx'	: 0,
+	'screen_cycleTime'	: 5,
+	'value_refreshTime'	: 0.1,
+	'screen_refreshTime': 0.05,
 }
 
 # All of the bitmaps that make up the main menu control screen
@@ -567,7 +399,6 @@ GFX_FONTS = {
 	},
 	'pixel'	: {
 		'plain' 	: { 'font' : GFX_ASSETS_DIR + 'fonts/pixelmix_8px.ttf' },
-		#'plain' 	: { 'font' : GFX_ASSETS_DIR + 'fonts/Minecraftia-Regular_8px.ttf' },
 		'large' 	: { 'font' : GFX_ASSETS_DIR + 'fonts/Minecraft_16px.ttf' },
 		'header' 	: { 'font' : GFX_ASSETS_DIR + 'fonts/neoletters_16px.ttf' },
 	},

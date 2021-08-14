@@ -123,15 +123,17 @@ class DemoSensors():
 		
 		# Sensor types
 		self.all_sensors = {
-			'RPM' 		: { 'classId' : 'Demo.RPM', 		'sensorId' : 'RPM', 		'sensorUnit' : 'rpm', 		'refresh' : 0.1, 	'maxValue' : 7500, 	'minValue' : 0,	'demo_data' : [], 'demo_idx' : 0, 'description' : 'DEMO engine speed' },
+			'RPM' 		: { 'classId' : 'Demo.RPM', 		'sensorId' : 'RPM', 		'sensorUnit' : 'rpm', 		'refresh' : 0.1, 	'maxValue' : 7500, 	'minValue' : 0,		'demo_data' : [], 'demo_idx' : 0, 'description' : 'DEMO engine speed' },
 			'MAP' 		: { 'classId' : 'Demo.MAP', 		'sensorId' : 'MAP',	 	'sensorUnit' : 'mbar', 		'refresh' : 0.2, 	'maxValue' : 2850, 	'minValue' : -200,	'demo_data' : [], 'demo_idx' : 0, 'description' : 'DEMO Inlet manifold pressure' },
-			'IAT'			: { 'classId' : 'Demo.IAT', 		'sensorId' : 'IAT',		'sensorUnit' : 'deg C.',		'refresh' : 0.5,	'maxValue' : 60, 		'minValue' : 0,	'demo_data' : [], 'demo_idx' : 0, 'description' : 'DEMO Inlet manifold air temperature in degrees Celsius' },
-			'ECT'		: { 'classId' : 'Demo.ECT', 		'sensorId' : 'ECT',		'sensorUnit' : 'deg C.',		'refresh' : 0.5,	'maxValue' : 120, 		'minValue' : 0,	'demo_data' : [], 'demo_idx' : 0, 'description' : 'DEMO Engine coolant temperature in degrees Celsius' },
-			'TPS'		: { 'classId' : 'Demo.TPS', 		'sensorId' : 'TPS',		'sensorUnit' : 'deg',		'refresh' : 0.1,	'maxValue' : 90, 		'minValue' : -2,	'demo_data' : [], 'demo_idx' : 0, 'description' : 'DEMO Open angle of throttle plate in degrees ' },
-			'IGNADV'		: { 'classId' : 'Demo.IGNADV', 	'sensorId' : 'IGNADV',	'sensorUnit' : 'deg',	'refresh' : 0.2,	'maxValue' : 40, 		'minValue' : 0,	'demo_data' : [], 'demo_idx' : 0, 'description' : 'DEMO Ignition timing in degrees before top dead centre' },
-			'INJDUR'		: { 'classId' : 'Demo.INJDUR', 	'sensorId' : 'INJDUR',	'sensorUnit' : 'ms',			'refresh' : 0.1,	'maxValue' : 5, 		'minValue' : 0,	'demo_data' : [], 'demo_idx' : 0, 'description' : 'DEMO Injector pulse width duration in milliseconds' },
-			'BAT'		: { 'classId' : 'Demo.BAT', 		'sensorId' : 'BAT',		'sensorUnit' : 'v',			'refresh' : 0.5,	'maxValue' : 16, 		'minValue' : 0,	'demo_data' : [], 'demo_idx' : 0, 'description' : 'DEMO Battery or supply circuit voltage' },
-			'AMAL'		: { 'classId' : 'Demo.AMAL', 		'sensorId' : 'AMAL',	'sensorUnit' : '% duty',		'refresh' : 0.2,	'maxValue' : 100, 		'minValue' : 0,	'demo_data' : [], 'demo_idx' : 0, 'description' : 'DEMO Duty cycle of boost control valve' },
+			'IAT'		: { 'classId' : 'Demo.IAT', 		'sensorId' : 'IAT',		'sensorUnit' : 'deg C.',		'refresh' : 0.5,		'maxValue' : 60, 	'minValue' : 0,		'demo_data' : [], 'demo_idx' : 0, 'description' : 'DEMO Inlet manifold air temperature in degrees Celsius' },
+			'ECT'		: { 'classId' : 'Demo.ECT', 		'sensorId' : 'ECT',		'sensorUnit' : 'deg C.',		'refresh' : 0.5,		'maxValue' : 120, 	'minValue' : 0,		'demo_data' : [], 'demo_idx' : 0, 'description' : 'DEMO Engine coolant temperature in degrees Celsius' },
+			'TPS'		: { 'classId' : 'Demo.TPS', 		'sensorId' : 'TPS',		'sensorUnit' : 'deg',		'refresh' : 0.1,		'maxValue' : 90, 	'minValue' : -2,		'demo_data' : [], 'demo_idx' : 0, 'description' : 'DEMO Open angle of throttle plate in degrees ' },
+			'IGNADV'		: { 'classId' : 'Demo.IGNADV', 	'sensorId' : 'IGNADV',	'sensorUnit' : 'deg',		'refresh' : 0.2,		'maxValue' : 40, 	'minValue' : 0,		'demo_data' : [], 'demo_idx' : 0, 'description' : 'DEMO Ignition timing in degrees before top dead centre' },
+			'INJDUR'		: { 'classId' : 'Demo.INJDUR', 	'sensorId' : 'INJDUR',	'sensorUnit' : 'ms',			'refresh' : 0.1,		'maxValue' : 5, 		'minValue' : 0,		'demo_data' : [], 'demo_idx' : 0, 'description' : 'DEMO Injector pulse width duration in milliseconds' },
+			'BAT'		: { 'classId' : 'Demo.BAT', 		'sensorId' : 'BAT',		'sensorUnit' : 'v',			'refresh' : 0.5,		'maxValue' : 16, 	'minValue' : 0,		'demo_data' : [], 'demo_idx' : 0, 'description' : 'DEMO Battery or supply circuit voltage' },
+			'AMAL'		: { 'classId' : 'Demo.AMAL', 	'sensorId' : 'AMAL',		'sensorUnit' : '% duty',		'refresh' : 0.2,		'maxValue' : 100, 	'minValue' : 0,		'demo_data' : [], 'demo_idx' : 0, 'description' : 'DEMO Duty cycle of boost control valve' },
+			'CO'			: { 'classId' : 'Demo.CO', 		'sensorId' : 'CO',		'sensorUnit' : '% trim',		'refresh' : 0.5,		'maxValue' : 100, 	'minValue' : 0,		'demo_data' : [], 'demo_idx' : 0, 'description' : 'DEMO Trim level of base fueling' },
+			'AFR'		: { 'classId' : 'Demo.AFR', 		'sensorId' : 'AFR',		'sensorUnit' : 'a.f.r',		'refresh' : 0.1,		'maxValue' : 18, 	'minValue' : 0,		'demo_data' : [], 'demo_idx' : 0, 'description' : 'DEMO Air Fuel Ratio reading' },
 		}
 		
 		# Available sensors
@@ -150,6 +152,8 @@ class DemoSensors():
 		idx = self.all_sensors[sensorId]['demo_idx']
 		value = self.all_sensors[sensorId]['demo_data'][idx]
 			
+		logger.debug("Getting Sensor: %s, Demo data idx: %d, Value: %d", sensorId, idx, value)
+			
 		if self.all_sensors[sensorId]['demo_idx'] < (len (self.all_sensors[sensorId]['demo_data']) - 1):
 			self.all_sensors[sensorId]['demo_idx'] += 1
 		else:
@@ -167,7 +171,7 @@ class DemoSensors():
 		sensorIds.sort()
 		for sensorId in sensorIds:
 			# Generate the sequence of demo data
-			logger.debug("Adding sensor [%s]" % self.all_sensors[sensorId]['classId'])
+			logger.info("Adding sensor [%s]" % self.all_sensors[sensorId]['classId'])
 			demo_step_size = (self.all_sensors[sensorId]['maxValue'] * 1.0) / self.demo_steps
 			d_value = self.all_sensors[sensorId]['minValue']
 			for d in range(0, self.demo_steps):
