@@ -171,7 +171,7 @@ def addDemoStatus(pilImage, windowSettings):
 	
 	return pilImage
 
-def gaugeNumeric(ecudata, sensor, font, windowSettings, sensorData):
+def gaugeNumeric(ecudata, sensor, windowSettings, sensorData):
 	""" Simple numeric display, with the sensor name in one corner """
 	
 	sensorValueString = "%.f" % (sensor['previousValues'][-1])

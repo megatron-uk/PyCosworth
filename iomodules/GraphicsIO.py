@@ -163,12 +163,6 @@ def GraphicsIO(ecudata, controlQueue):
 				updateSDLWindow(pilImage = image, windowSettings = settings.GFX_MASTER_WINDOW)
 			time.sleep(0.5)
 	
-	# Load a font
-	try:
-		font = ImageFont.truetype(settings.GFX_ASSETS_DIR + settings.GFX_FONT, 8)	
-	except:
-		font = ImageFont.load_default()
-	
 	####################################################################################
 	#
 	# Now begin the main display loop
@@ -352,7 +346,6 @@ def GraphicsIO(ecudata, controlQueue):
 				# Simple numeric display
 				image = gaugeNumeric(ecudata = ecudata,
 					sensor = windowSettings['displayModes'][currentSensorId],
-					font = font,
 					windowSettings = windowSettings,
 					sensorData = sensorData
 				)

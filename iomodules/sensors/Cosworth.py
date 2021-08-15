@@ -174,7 +174,7 @@ class CosworthSensors():
 				'classId' : 'Cosworth.IAT',
 				'sensorId' : 'IAT',
 				'sensorUnit' : 'deg C.',
-				'refresh' : 0.5,
+				'refresh' : 2,
 				'controlCodes' : [0x83],
 				'supportedECU' : ['L8 Pectel', 'P8'],
 				'description' : 'Inlet manifold air temperature in degrees Celsius' 
@@ -183,7 +183,7 @@ class CosworthSensors():
 				'classId' : 'Cosworth.ECT',
 				'sensorId' : 'ECT',
 				'sensorUnit' : 'deg C.',
-				'refresh' : 0.5,
+				'refresh' : 3,
 				'controlCodes' : [0x84],
 				'supportedECU' : ['L8 Pectel', 'P8'],
 				'description' : 'Engine coolant temperature in degrees Celsius' 
@@ -219,7 +219,7 @@ class CosworthSensors():
 				'classId' : 'Cosworth.BAT',
 				'sensorId' : 'BAT',
 				'sensorUnit' : 'v',
-				'refresh' : 0.5,
+				'refresh' : 4,
 				'controlCodes' : [0x89],
 				'supportedECU' : ['L8 Pectel', 'P8'],
 				'description' : 'Battery or supply circuit voltage' 
@@ -228,7 +228,7 @@ class CosworthSensors():
 				'classId' : 'Cosworth.AMAL', 
 				'sensorId' : 'AMAL',
 				'sensorUnit' : '% duty',
-				'refresh' : 0.2,
+				'refresh' : 0.1,
 				'controlCodes' : [0x90],
 				'supportedECU' : ['L8 Pectel', 'P8'],
 				'description' : 'Boost control valve duty cycle' 

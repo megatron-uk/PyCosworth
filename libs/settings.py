@@ -221,7 +221,7 @@ GFX_MASTER_SIZE = (128, 64)
 # Size of the OLED miniature screen.
 # These are the sub-screens that generally display a single gauge or sensor.
 # NOTE: The on-desktop SDL window will be created at the same size
-GFX_OLED_SIZE = (128, 64)
+GFX_OLED_SIZE = GFX_MASTER_SIZE
 
 # Where we keep images, icons etc.
 GFX_ASSETS_DIR = "images/"
@@ -231,10 +231,6 @@ GFX_CACHE_DIR = "cache/"
 GFX_BOOT_LOGO 		= "logo/cosworth.bmp"
 #GFX_BOOT_LOGO_BIG 	= "logo/cosworth_256.bmp"
 GFX_BOOT_LOGO_BIG 	= "logo/cosworth_outline.bmp"
-
-# Font used for most on-screen text
-GFX_FONT 		= "pixelmix.ttf"
-GFX_FONT_BIG 	= "neoletters.ttf"
 
 # Time to sleep between graphics updates
 # The lower the sleep time, the smoother the gfx display,
@@ -268,8 +264,8 @@ GFX_MODES = [GFX_MODE_NUMERIC]
 GFX_MASTER_WINDOW = {
 	'windowName'			: 'Master',
 	'oledType'			: 'sh1106',
-	'width'				: 128,
-	'height'				: 64,
+	'width'				: GFX_MASTER_SIZE[0],
+	'height'				: GFX_MASTER_SIZE[1],
 	'spiAddress'			: 0,
 	'value_refreshTime'	: 0.05,
 	'sdl_framebuffer'	: None,
@@ -307,9 +303,6 @@ GFX_FONTS = {
 	},
 }
 
-# Size of font for each menu
-GFX_MASTER_SUBMENU_FONTSIZE = 11
-GFX_MASTER_HELP_FONTSIZE = 10
 
 #######################################################
 #
