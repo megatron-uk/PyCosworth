@@ -102,3 +102,6 @@ ENV/
 
 # csv log files
 logs/
+
+# cached image fragments
+cache/
