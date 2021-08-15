@@ -54,7 +54,7 @@ USE_SDL_GRAPHICS = True  	# Try to output to on-screen windows
 USE_GEAR_INDICATOR = False	# Try to read gear indicator position via GPIO 
 USE_COSWORTH = False 		# Try to connect to a Cosworth L8/P8 ECU over serial
 USE_AEM = False				# Try to connect to an AEM Wideband AFR module over serial
-USE_SENSOR_DEMO = True 	# Enable demo data mode from the SensorIO module instead of real data
+USE_SENSOR_DEMO = False 	# Enable demo data mode from the SensorIO module instead of real data
 
 # Should INFO category messages be shown
 INFO = True
@@ -148,21 +148,18 @@ BUTTON_TIME_SHORT 	= (0, 	0.3)
 BUTTON_TIME_MEDIUM 	= (0.5, 1.0)
 BUTTON_TIME_LONG 	= (2.0, 5.0)
 
-# Button definitions
-BUTTON_LEFT 				= "\x1b[D" # Left cursor
-BUTTON_RIGHT 				= "\x1b[C" # Right cursor
-BUTTON_UP 					= "\x1b[A" # Up
-BUTTON_DOWN 				= "\x1b[B" # Down
-BUTTON_SELECT 				= " " # Space/select
-BUTTON_CANCEL 				= "x" # Cancel/escape
+# Button/status definitions
 BUTTON_TOGGLE_DEMO 			= "d" # Start/stop demo mode
 BUTTON_LOGGING_RUNNING 		= "L" # Logging is running
 BUTTON_LOGGING_STOPPED 		= "l" # Logging is stopped
+STATUS_ECU_ERROR		 		= "e1" # Main ECU error
+STATUS_AEM_ERROR		 		= "e2" # AEM module error
+STATUS_POW_ERROR		 		= "e3" # AEM module error
 BUTTON_LOGGING_STATUS 		= "S" # Logging status/heartbeat response
 BUTTON_RESET_COSWORTH_ECU 	= "R" # Reset Cosworth ECU serial comms
 
 # For the simple, 3 button interface
-BUTTON_LOGGING		 		= "1" # Logging is stopped or started
+BUTTON_LOGGING_TOGGLE 		= "1" # Logging is stopped or started
 BUTTON_SENSOR_NEXT			= "2" # Select next sensor
 
 # Button message types
@@ -187,17 +184,11 @@ BUTTON_DEST_DATALOGGER 	= 0x06 # send to datalogger process
 # Mapping of buttons to modules
 # i.e. button 1 and 2 to GraphicsIO, button 3 to datalogger, etc
 BUTTON_MAP = {
-	BUTTON_LEFT 				: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Left
-	BUTTON_RIGHT 				: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Right
-	BUTTON_UP 					: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Up
-	BUTTON_DOWN 				: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Down
-	BUTTON_SELECT 				: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Select
-	BUTTON_CANCEL				: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Cancel
 	BUTTON_TOGGLE_DEMO			: { 'dest' : BUTTON_DEST_SENSORIO }, # Toggle demo start/stop
-	BUTTON_RESET_COSWORTH_ECU	: { 'dest' : BUTTON_DEST_SENSORIO }, # Toggle demo start/stop
-	BUTTON_LOGGING_RUNNING		: { 'dest' : BUTTON_DEST_DATALOGGER }, # Toggle demo start/stop
-	BUTTON_LOGGING_STOPPED		: { 'dest' : BUTTON_DEST_DATALOGGER }, # Toggle demo start/stop
+	BUTTON_LOGGING_TOGGLE		: { 'dest' : BUTTON_DEST_DATALOGGER }, # Toggle demo start/stop
 	BUTTON_SENSOR_NEXT			: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Show next sensor
+	BUTTON_LOGGING_RUNNING		: { 'dest' : BUTTON_DEST_ALL }, # Logging is running
+	BUTTON_LOGGING_STOPPED		: { 'dest' : BUTTON_DEST_ALL }, # Logging is stopped
 }
 
 #######################################################
@@ -252,33 +243,6 @@ GFX_SLEEP_TIME = 0.01
 # How long a period to measure framerate over
 GFX_FRAME_COUNT_TIME = 5
 
-# As with the MATRIX_CONFIG, the OLED screens can either be
-# set to show a single sensor all the time (until manually changed), 
-# or can cycle through a number of sensors in turn after a 
-# pre-determined amount of time.
-#
-# NOTE: Currently CYCLE is not supported
-GFX_SETTING_CYCLE = 0x01
-GFX_SETTING_FIXED = 0x02
-
-# We have multiple different visualisation options:
-#
-# WAVEFORM
-#	An oscilloscope-like display
-# SEGMENTS
-#	A 'retro' style display with multiple bar graph segments which
-#	display in turn as the sensor value increase
-# CLOCK
-#	An analogue clock / gauge with needle
-# LINE	
-#	A logarithmic vertical line chart with the same X-resolution as the
-#	number of pixels your OLED display is in width.
-# NUMERIC
-#	A simple number display
-GFX_MODE_WAVEFORM = "Waveform"
-GFX_MODE_SEGMENTS = "LED Segment"
-GFX_MODE_CLOCK = "Clock"
-GFX_MODE_LINE = "Log Graph"
 GFX_MODE_NUMERIC = "Numeric"
 GFX_MODE_OFF = "OFF"
 
@@ -298,7 +262,6 @@ GFX_MASTER_WINDOW = {
 	'luma_driver'		: None,
 	'screen_refreshTime': 0.02,
 	'i2cAddress'			: 0x3C,
-	'setting'			: GFX_SETTING_FIXED,
 	'mode'				: [GFX_MODE_NUMERIC],
 	'currentModeIdx'		: 0,
 	'currentMode'		: GFX_MODE_NUMERIC,
@@ -308,84 +271,6 @@ GFX_MASTER_WINDOW = {
 	'value_refreshTime'	: 0.1,
 	'screen_refreshTime': 0.05,
 }
-
-# All of the bitmaps that make up the main menu control screen
-GFX_MASTER_BITMAPS = {
-	'sensor': {
-		'off'	: GFX_ASSETS_DIR + 'buttons/menu button - Sensor.bmp',
-		'on'	: GFX_ASSETS_DIR + 'buttons/menu button - Sensor - selected.bmp',
-		'size'	: (64, 20),
-	},
-	'display': {
-		'off'	: GFX_ASSETS_DIR + 'buttons/menu button - Display.bmp',
-		'on' 	: GFX_ASSETS_DIR + 'buttons/menu button - Display - selected.bmp',
-		'size'	: (64, 20),
-	},
-	'data'	: {
-		'off'	: GFX_ASSETS_DIR + 'buttons/menu button - Data.bmp',
-		'on'	: GFX_ASSETS_DIR + 'buttons/menu button - Data - selected.bmp',
-		'size'	: (64, 20),
-	},	
-	'diag'	: {
-		'off'	: GFX_ASSETS_DIR + 'buttons/menu button - Diag.bmp',
-		'on'	: GFX_ASSETS_DIR + 'buttons/menu button - Diag - selected.bmp',
-		'size'	: (64, 20),
-	},
-	'arrow'	: {
-		'up'	: GFX_ASSETS_DIR + 'buttons/arrow - up.bmp',
-		'down'	: GFX_ASSETS_DIR + 'buttons/arrow - down.bmp',
-		'size'	: (5, 13),
-	},	
-}
-
-# Icons that can be shown in top right to indicate mode
-GFX_ICONS = {
-	'stopwatch' : {
-		'icon'	: GFX_ASSETS_DIR + 'icons/stopwatch.bmp',
-		'alt'	: GFX_ASSETS_DIR + 'icons/stopwatch_alt.bmp',
-		'size'	: (48, 48)
-	},
-	'microchip' : {
-		'icon'	: GFX_ASSETS_DIR + 'icons/microchip.bmp',
-		'alt'	: GFX_ASSETS_DIR + 'icons/microchip.bmp',
-		'size'	: (48, 48)
-	},
-	'sensor' : {
-		'icon'	: GFX_ASSETS_DIR + 'icons/sensor.bmp',
-		'alt'	: GFX_ASSETS_DIR + 'icons/sensor.bmp',
-		'size'	: (48, 48)
-	},
-	'monitor' : {
-		'icon'	: GFX_ASSETS_DIR + 'icons/monitor.bmp',
-		'alt'	: GFX_ASSETS_DIR + 'icons/monitor.bmp',
-		'size'	: (48, 48)
-	},
-	'vis-select' : {
-		'waveform'	: GFX_ASSETS_DIR + 'icons/vis-waveform.bmp',
-		'segment'	: GFX_ASSETS_DIR + 'icons/vis-segment.bmp',
-		'line'		: GFX_ASSETS_DIR + 'icons/vis-segment.bmp',
-		'clock'		: GFX_ASSETS_DIR + 'icons/vis-segment.bmp',
-		'size'	: (48, 48)
-	},
-	'selector' : {
-		'inner'	: GFX_ASSETS_DIR + 'icons/selector-inner.bmp',
-		'outer'	: GFX_ASSETS_DIR + 'icons/selector-outer.bmp',
-		'size'	: (16, 16)
-	},
-}
-
-# Size of each menu
-GFX_MASTER_BASE_MENU_SIZE = (GFX_MASTER_SIZE[0], 20)
-GFX_MASTER_SUBMENU_SIZE = (85,43)
-
-# Where to draw the first menu vertical divider line
-GFX_MASTER_ARROW_1_XPOS = 80
-GFX_MASTER_LINE_1_XPOS = GFX_MASTER_ARROW_1_XPOS + GFX_MASTER_BITMAPS['arrow']['size'][0]
-# Where to draw the second menu divider line
-GFX_MASTER_ARROW_2_XPOS = 165
-GFX_MASTER_LINE_2_XPOS = GFX_MASTER_ARROW_2_XPOS + GFX_MASTER_BITMAPS['arrow']['size'][0]
-GFX_UP_ARROW_YPOS = 0
-GFX_DOWN_ARROW_YPOS = 30
 
 # All of the fonts used in the graphics routines
 #
@@ -411,12 +296,6 @@ GFX_FONTS = {
 GFX_MASTER_SUBMENU_FONTSIZE = 11
 GFX_MASTER_HELP_FONTSIZE = 10
 
-# Number of segments in a LED segment style visualisation
-# This should always be a power of 2 so that it divides cleanly
-# in to the width of all OLED screens.
-GFX_LED_SEGMENT_NUMBER = 16
-GFX_LED_SEGMENT_NUMBER_MASTER = 32
-
 #######################################################
 #
 # Logging module config
@@ -428,8 +307,8 @@ LOGGING_HEARTBEAT_TIMER = 1
 
 # How often to sleep between loops, should be no more than the sensor module
 # otherwise we may miss datapoints
-LOGGING_ACTIVE_SLEEP = 0.02 # How long to sleep while recording
-LOGGING_SLEEP = 1 # How long to sleep while recording inactive
+LOGGING_ACTIVE_SLEEP = 0.1 	# How long to sleep while recording (interval between data recorded to log file)
+LOGGING_SLEEP = 1 			# How long to sleep while recording inactive
 
 LOGGING_DIR = "logs"
 LOGGING_FILE_PREFIX = "pycosworth_"

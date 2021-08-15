@@ -108,6 +108,20 @@ def blankImage(windowSettings):
 	}
 	return d
 
+def addLogStatus(pilImage, windowSettings):
+	""" Adds a 'we are logging' status display to any current screen """
+	
+	draw = ImageDraw.Draw(pilImage)
+	
+	font = ImageFont.truetype(settings.GFX_FONTS["pixel"]["header"]['font'], size = 10)
+	
+	statusString = "Logging"
+	text_size = font.getsize(statusString)
+	
+	draw.text((windowSettings['x_size'] - text_size[0], windowSettings['y_size'] - text_size[1]), statusString, fill="white", font = font)
+	
+	return pilImage
+
 def gaugeNumeric(ecudata, sensor, font, windowSettings, sensorData):
 	""" Simple numeric display, with the sensor name in one corner """
 	
@@ -141,12 +155,12 @@ def gaugeNumeric(ecudata, sensor, font, windowSettings, sensorData):
 		
 	if sensorData:
 		# Add raw sensor value at middle left
-		text_size = font.getsize(sensorValueString)
+		text_size = font_small.getsize(sensorData['sensorUnit'])
 		text_big_size = font_big.getsize(sensorValueString)
 		# Raw value
-		draw.text((0, text_size[1] + 4), sensorValueString, fill="white", font = font_big)
+		draw.text((windowSettings['x_size'] - text_size[0] - text_big_size[0], text_size[1] + 2), sensorValueString, fill="white", font = font_big)
 		# Units
-		draw.text((text_big_size[0], text_size[1] + 4), sensorData['sensorUnit'], fill="white", font = font_small)
+		draw.text((windowSettings['x_size'] - text_size[0], text_size[1] + 2), sensorData['sensorUnit'], fill="white", font = font_small)
 		
 	t2 = timeit.default_timer() - t1
 	logger.debug("gaugeNumeric Draw time: %0.4fms" % (t2 * 1000))
@@ -265,6 +279,5 @@ def sensorGraphicsInit(sensor = None, windowSettings = None, scale_x = 1):
 	for n in range(0, x_size):
 		sensorParams['previousValues'].append(0)
 				
-	print(sensorParams)
 	return sensorParams
 	

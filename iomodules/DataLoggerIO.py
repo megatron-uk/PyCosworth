@@ -36,6 +36,14 @@ logger = newlog(__name__)
 def getNextLogfile():
 	""" Find the next free logfile name. """
 	
+	if os.path.exists(settings.LOGGING_DIR):
+		logger.info("Log directory [%s] already exists" % settings.LOGGING_DIR)
+		pass
+	else:
+		logger.info("Log directory [%s] is missing, creating..." % settings.LOGGING_DIR)
+		os.mkdir(settings.LOGGING_DIR, mode=0o775)
+		logger.info("Done")
+	
 	reMatch = '%s[0-9][0-9][0-9]%s' % (settings.LOGGING_FILE_PREFIX, settings.LOGGING_FILE_SUFFIX)
 	currentFilenames = [f for f in os.listdir(settings.LOGGING_DIR + "/") if re.match(r'%s' % reMatch, f)]
 	
@@ -101,10 +109,21 @@ def DataLoggerIO(ecudata, controlQueue, actionQueue):
 			if cdata.isMine(myButtonId):
 				logger.info("Got a control message")
 				cdata.show()
-					
-				# Start logging
-				if cdata.button == settings.BUTTON_LOGGING_RUNNING:
-					if logging != True:
+												
+				# toggle logging
+				if cdata.button == settings.BUTTON_LOGGING_TOGGLE:
+					if logging is True:
+						# stop
+						logger.info("Stop logging")
+						logging = False
+						stats = {
+							'status' : False
+						}
+						# send message to say stopped
+						# close logfile
+						if f:
+							f.close()
+					elif logging is False:
 						# start
 						logger.info("Start logging")
 						stats = {}
@@ -117,32 +136,17 @@ def DataLoggerIO(ecudata, controlQueue, actionQueue):
 						stats['logFile'] = filename
 						# open logfile
 						try:
+							t_start = time.time()
 							f = open(settings.LOGGING_DIR + "/" + filename, 'w')
 							header = "Counter,Time,"
 							for sensorId in sensorIds:
 								header = header + sensorId + ","
 							header = header + "\n"
 							f.write(header)
-							t_start = time.time()
 						except Exception as e:
 							logger.error("Unable to open logfile")
 							logger.error("%s" % e)
 							f = False
-			
-				# Stop logging
-				if cdata.button == settings.BUTTON_LOGGING_STOPPED:
-					if logging != False:
-						# stop
-						logger.info("Stop logging")
-						logging = False
-						stats = {
-							'status' : False
-						}
-						# send message to say stopped
-						# close logfile
-						if f:
-							f.close()
-						
 		
 		# Send heartbeat message indicating logging status
 		if (timeit.default_timer() - heartbeat_timer) >= settings.LOGGING_HEARTBEAT_TIMER:
@@ -162,4 +166,4 @@ def DataLoggerIO(ecudata, controlQueue, actionQueue):
 		if logging is False:
 			time.sleep(settings.LOGGING_SLEEP)
 		else:
-			time.sleep(0.005)
+			time.sleep(settings.LOGGING_ACTIVE_SLEEP)

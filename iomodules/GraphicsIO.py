@@ -47,7 +47,6 @@ from libs import settings
 
 # Control data
 from libs.ControlData import ControlData
-from libs.MasterMenu import MasterMenu
 
 # Start a new logger
 from libs.newlog import newlog
@@ -184,16 +183,6 @@ def GraphicsIO(ecudata, controlQueue, actionQueue):
 		logger.warn("Graphics frame limiter disabled - frames will be rendered as fast as possible")
 		logger.warn("This may result in uneven performance!")
 
-	# Spin up the master window control menu 
-	subWindows = {}
-	master = MasterMenu(windowSettings = settings.GFX_MASTER_WINDOW,
-		subWindowSettings = subWindows,
-		actionQueue = actionQueue,
-		ecudata = ecudata, 
-		use_sdl = USE_SDL_GRAPHICS, 
-		use_oled = USE_OLED_GRAPHICS_MASTER
-	)
-
 	# Set display mode defaults
 	settings.GFX_MASTER_WINDOW['displayModes'] = {}
 	for sensor in settings.SENSORS:
@@ -222,13 +211,31 @@ def GraphicsIO(ecudata, controlQueue, actionQueue):
 		USE_OLED_GRAPHICS = USE_OLED_GRAPHICS
 	)
 	
-	
+	# Default state of various indicators
+	IS_LOGGING = False
+	IS_POWERED = True
+	IS_ECU_ERROR = False
+	IS_AEM_ERROR = False
 	
 	while True:
 		
 		# Set a timer for this loop
 		if settings.INFO:
 			t1 = timeit.default_timer()
+		
+		####################################################
+		#
+		# Listen for action messages
+		#
+		####################################################
+		
+		if actionQueue.empty() == False:
+			cdata = controlQueue.get()
+			if cdata.isMine(myButtonId):
+				logger.info("Got an action message")
+				cdata.show()
+			
+				
 		
 		####################################################
 		#
@@ -240,8 +247,34 @@ def GraphicsIO(ecudata, controlQueue, actionQueue):
 			if cdata.isMine(myButtonId):
 				logger.debug("Got a control message")
 				cdata.show()
-				
-				master.processControlData(cdata)
+
+				##########################################################
+				# Logging status
+				##########################################################
+				if cdata.button and (cdata.button == settings.BUTTON_LOGGING_STATUS):
+					if cdata.data['status'] is True:
+						IS_LOGGING = True
+					else:
+						if IS_LOGGING:
+							IS_LOGGING = False
+
+				##########################################################
+				# Power is off / timer until shutdown/ignition turned back on
+				##########################################################
+				if cdata.button and (cdata.button == settings.STATUS_POW_ERROR):
+					pass
+
+				##########################################################
+				# ECU connection error
+				##########################################################
+				if cdata.button and (cdata.button == settings.STATUS_ECU_ERROR):
+					pass
+
+				##########################################################
+				# AEM connection error
+				##########################################################
+				if cdata.button and (cdata.button == settings.STATUS_AEM_ERROR):
+					pass
 
 				##########################################################
 				# Change sensor for the window
@@ -305,6 +338,10 @@ def GraphicsIO(ecudata, controlQueue, actionQueue):
 				)
 			else:
 				pass
+			
+			# Display any warning/errors/status messages
+			if IS_LOGGING:
+				addLogStatus(pilImage = image, windowSettings = windowSettings)
 			
 			if USE_OLED_GRAPHICS:
 				# Update the OLED screen

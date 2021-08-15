@@ -232,7 +232,7 @@ if __name__ == '__main__':
 		
 		# Message passed back up from the data logger class
 		if loggerActionQueue.empty() == False:
-			logger.debug("Message from data logger")
+			logger.info("Message from data logger")
 			loggerMessage = loggerActionQueue.get()
 			# Put it in all queues (apart from the graphics one)
 			for q in datalogger_listeners:
