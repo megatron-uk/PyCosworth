@@ -229,27 +229,47 @@ def buildImageAssets(use_oled_master = False, use_sdl_master = False):
 
 	assets = {}
 	assets['boot_logo'] = {}
+	assets['boot_logo1'] = {}
+	assets['boot_logo2'] = {}
+	
+	# Boot logo - part 0 - master window
+	# Load the Ford logo from disk
+	sub_res = "%sx%s" % (settings.GFX_OLED_SIZE[0], settings.GFX_OLED_SIZE[1])
+	logo = Image.open(settings.GFX_ASSETS_DIR + settings.GFX_BOOT_LOGO)
+	pasted = Image.new('1', (settings.GFX_OLED_SIZE[0], settings.GFX_OLED_SIZE[1]))
+	pasted.paste(logo,(0,0))
+	assets['boot_logo'][sub_res] = pasted
 	
 	# Boot logo - part 1 - master window
 	# Load the Cosworth logo from disk
 	sub_res = "%sx%s" % (settings.GFX_OLED_SIZE[0], settings.GFX_OLED_SIZE[1])
-	logo_small = Image.open(settings.GFX_ASSETS_DIR + settings.GFX_BOOT_LOGO)
-	i = Image.new('1', (settings.GFX_OLED_SIZE[0], settings.GFX_OLED_SIZE[1]))
+	logo = Image.open(settings.GFX_ASSETS_DIR + settings.GFX_BOOT_LOGO1)
 	pasted = Image.new('1', (settings.GFX_OLED_SIZE[0], settings.GFX_OLED_SIZE[1]))
-	pasted.paste(i,(4,8))
-	assets['boot_logo'][sub_res] = pasted
-	res_list = [(settings.GFX_OLED_SIZE[0], settings.GFX_OLED_SIZE[1])]
+	pasted.paste(logo,(0,0))
+	assets['boot_logo1'][sub_res] = pasted
+
+	
+	# Boot logo - part 2 - master window
+	# Load the PyCosworth logo from disk
+	sub_res = "%sx%s" % (settings.GFX_OLED_SIZE[0], settings.GFX_OLED_SIZE[1])
+	logo = Image.open(settings.GFX_ASSETS_DIR + settings.GFX_BOOT_LOGO2)
+	pasted = Image.new('1', (settings.GFX_OLED_SIZE[0], settings.GFX_OLED_SIZE[1]))
+	pasted.paste(logo,(0,0))
+	assets['boot_logo2'][sub_res] = pasted
+
 	
 	# Boot logo - part 1 - master window
 	# Load the Cosworth logo from disk
-	if use_oled_master or use_sdl_master:
-		master_res = "%sx%s" % (settings.GFX_MASTER_SIZE[0], settings.GFX_MASTER_SIZE[1])
-		logo_big = Image.open(settings.GFX_ASSETS_DIR + settings.GFX_BOOT_LOGO_BIG)
-		i = Image.new('1', (settings.GFX_MASTER_SIZE[0], settings.GFX_MASTER_SIZE[1]))
-		pasted = Image.new('1', (settings.GFX_MASTER_SIZE[0], settings.GFX_MASTER_SIZE[1]))
-		pasted.paste(i,(0,8))
-		assets['boot_logo'][master_res] = pasted
-		res_list.append((settings.GFX_MASTER_SIZE[0], settings.GFX_MASTER_SIZE[1]))
+#	if use_oled_master or use_sdl_master:
+#		master_res = "%sx%s" % (settings.GFX_MASTER_SIZE[0], settings.GFX_MASTER_SIZE[1])
+#		logo_big = Image.open(settings.GFX_ASSETS_DIR + settings.GFX_BOOT_LOGO_BIG)
+#		i = Image.new('1', (settings.GFX_MASTER_SIZE[0], settings.GFX_MASTER_SIZE[1]))
+#		pasted = Image.new('1', (settings.GFX_MASTER_SIZE[0], settings.GFX_MASTER_SIZE[1]))
+#		pasted.paste(i,(0,8))
+#		assets['boot_logo'][master_res] = pasted
+#		res_list.append((settings.GFX_MASTER_SIZE[0], settings.GFX_MASTER_SIZE[1]))
+	
+	res_list = [(settings.GFX_OLED_SIZE[0], settings.GFX_OLED_SIZE[1])]
 	
 	###########################################################
 	
@@ -261,43 +281,43 @@ def buildImageAssets(use_oled_master = False, use_sdl_master = False):
 		assets['wait_sequence'][r] = []
 	
 		if res[0] == settings.GFX_OLED_SIZE[0]:
-			logo = logo_small
+			logo = Image.open(settings.GFX_ASSETS_DIR + settings.GFX_BOOT_LOGO2)
 		else:
-			logo = logo_big
+			logo = Image.open(settings.GFX_ASSETS_DIR + settings.GFX_BOOT_LOGO2)
 	
 		i = Image.new('1', (res[0], res[1]))
-		i.paste(logo,(4,8))
+		i.paste(logo,(0,8))
 		draw = ImageDraw.Draw(i)
 		draw.text((4, res[1] - 11), "Initialising |", fill="white", font = font)
 		assets['wait_sequence'][r].append(i)
 		
 		i = Image.new('1', (res[0], res[1]))
 		draw = ImageDraw.Draw(i)
-		i.paste(logo,(4,8))
+		i.paste(logo,(0,8))
 		draw.text((4, res[1] - 11), "Initialising /", fill="white", font = font)
 		assets['wait_sequence'][r].append(i)
 		
 		i = Image.new('1', (res[0], res[1]))
 		draw = ImageDraw.Draw(i)
-		i.paste(logo,(4,8))
+		i.paste(logo,(0,8))
 		draw.text((4, res[1] - 11), "Initialising -", fill="white", font = font)
 		assets['wait_sequence'][r].append(i)
 		
 		i = Image.new('1', (res[0], res[1]))
 		draw = ImageDraw.Draw(i)
-		i.paste(logo,(4,8))
+		i.paste(logo,(0,8))
 		draw.text((4, res[1] - 11), "Initialising \\", fill="white", font = font)
 		assets['wait_sequence'][r].append(i)
 		
 		i = Image.new('1', ( res[0], res[1]))
 		draw = ImageDraw.Draw(i)
-		i.paste(logo,(4,8))
+		i.paste(logo,(0,8))
 		draw.text((4, res[1] - 11), 'Initialising |', fill="white", font = font)
 		assets['wait_sequence'][r].append(i)
 		
 		i = Image.new('1', ( res[0], res[1]))
 		draw = ImageDraw.Draw(i)
-		i.paste(logo,(4,8))
+		i.paste(logo,(0,8))
 		draw.text((4, res[1] - 11), "Please wait .....", fill="white", font = font)
 		assets['wait_sequence'][r].append(i)
 	

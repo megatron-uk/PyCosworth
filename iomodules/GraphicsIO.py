@@ -140,14 +140,36 @@ def GraphicsIO(ecudata, controlQueue):
 	
 	# Show the splash logo
 	r = "%sx%s" % (settings.GFX_MASTER_SIZE[0], settings.GFX_MASTER_SIZE[1])
-	if r in image_assets['boot_logo'].keys():
+	#time.sleep(1.5)
+	
+	print(image_assets)
+	
+	# Splash logo 0 - Ford
+	for i in ['boot_logo', 'boot_logo1']:
+		print(i)
+		image = image_assets[i][r].copy()
 		if USE_OLED_GRAPHICS_MASTER:
-			updateOLEDScreen(pilImage = image_assets['boot_logo'][r], windowSettings = settings.GFX_MASTER_WINDOW)
+			updateOLEDScreen(pilImage = image, windowSettings = settings.GFX_MASTER_WINDOW)
 		if USE_SDL_GRAPHICS:
-			updateSDLWindow(pilImage = image_assets['boot_logo'][r], windowSettings = settings.GFX_MASTER_WINDOW)
+			updateSDLWindow(pilImage = image, windowSettings = settings.GFX_MASTER_WINDOW)
+
+		# Slide out intro screen....
+		time.sleep(1.5)
+		slideBitmapVertical(
+			bitmap = image,
+			x_start = 0, 
+			y_start = 0, 
+			y_end = settings.GFX_MASTER_WINDOW['y_size'], 
+			direction = "down", 
+			steps = 30,
+			sleep = 0.025,
+			windowSettings = settings.GFX_MASTER_WINDOW,
+			USE_SDL_GRAPHICS = USE_SDL_GRAPHICS,
+			USE_OLED_GRAPHICS = USE_OLED_GRAPHICS
+		)		
 		
 	# Show a 'please wait' loading sequence - just so that the serial port can 
-	# start collecting data
+	# start collecting data or finish setting up.
 	r = "%sx%s" % (settings.GFX_MASTER_SIZE[0], settings.GFX_MASTER_SIZE[1])
 	res_list = list(image_assets['wait_sequence'].keys())	
 	frame_count = len(res_list[0])

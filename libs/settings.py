@@ -228,8 +228,9 @@ GFX_ASSETS_DIR = "images/"
 GFX_CACHE_DIR = "cache/"
 
 # Boot up logo for the OLED screens
-GFX_BOOT_LOGO 		= "logo/cosworth.bmp"
-#GFX_BOOT_LOGO_BIG 	= "logo/cosworth_256.bmp"
+GFX_BOOT_LOGO 		= "logo/ford.bmp"
+GFX_BOOT_LOGO1 		= "logo/cosworth.bmp"
+GFX_BOOT_LOGO2 		= "logo/pycosworth.bmp"
 GFX_BOOT_LOGO_BIG 	= "logo/cosworth_outline.bmp"
 
 # Time to sleep between graphics updates
