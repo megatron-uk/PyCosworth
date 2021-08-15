@@ -132,6 +132,7 @@ def GPIOButtonIO(actionQueue, stdin):
 				mydest = settings.BUTTON_MAP[mybutton]['dest']
 				cdata = ControlData()
 				cdata.setButton(mybutton)
+				cdata.setPayload(data = {'status' : True, 'description' : "Button press detected"})
 				actionQueue.put(cdata)
 				logger.info("Send controldata message: BUTTON[%s] DESTINATION[%s]" % (mybutton, mydest))
 			

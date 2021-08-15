@@ -52,7 +52,7 @@ USE_SDL_GRAPHICS = True  	# Try to output to on-screen windows
 
 # Sensor modules
 USE_GEAR_INDICATOR = False	# Try to read gear indicator position via GPIO 
-USE_COSWORTH = False 		# Try to connect to a Cosworth L8/P8 ECU over serial
+USE_COSWORTH = True 		# Try to connect to a Cosworth L8/P8 ECU over serial
 USE_AEM = False				# Try to connect to an AEM Wideband AFR module over serial
 USE_SENSOR_DEMO = False 	# Enable demo data mode from the SensorIO module instead of real data
 
@@ -105,6 +105,9 @@ SENSOR_MAX_HISTORY = 256
 # The amount of time, in seconds, that the SensorIO process sleeps between each loop
 SENSOR_SLEEP_TIME = 0.05
 
+# How often to sleep between broadcasting ECU/comms error messages
+SENSOR_ERROR_HEARTBEAT_TIMER = 5
+
 ##########################################################
 #
 # Cosworth ECU settings
@@ -155,12 +158,19 @@ BUTTON_LOGGING_STOPPED 		= "l" # Logging is stopped
 STATUS_ECU_ERROR		 		= "e1" # Main ECU error
 STATUS_AEM_ERROR		 		= "e2" # AEM module error
 STATUS_POW_ERROR		 		= "e3" # AEM module error
+STATUS_ECU_OK	 			= "o1" # Main ECU error
+STATUS_AEM_OK		 		= "o2" # AEM module error
+STATUS_POW_OK		 		= "o3" # AEM module error
+STATUS_DEMO_ENABLED	 		= "d1" #
+STATUS_DEMO_DISABLED	 		= "d2" # 
 BUTTON_LOGGING_STATUS 		= "S" # Logging status/heartbeat response
 BUTTON_RESET_COSWORTH_ECU 	= "R" # Reset Cosworth ECU serial comms
+BUTTON_RESET_AEM_ECU 		= "r" # Reset AEM serial comms
 
 # For the simple, 3 button interface
 BUTTON_LOGGING_TOGGLE 		= "1" # Logging is stopped or started
 BUTTON_SENSOR_NEXT			= "2" # Select next sensor
+BUTTON_RESET_ECU				= "3" # Reset all comms
 
 # Button message types
 MESSAGE_TYPE_PRESS 	= 0x01 # message is a button press
@@ -184,11 +194,16 @@ BUTTON_DEST_DATALOGGER 	= 0x06 # send to datalogger process
 # Mapping of buttons to modules
 # i.e. button 1 and 2 to GraphicsIO, button 3 to datalogger, etc
 BUTTON_MAP = {
+	BUTTON_RESET_ECU				: { 'dest' : BUTTON_DEST_ALL }, # Attempt comms reset
 	BUTTON_TOGGLE_DEMO			: { 'dest' : BUTTON_DEST_SENSORIO }, # Toggle demo start/stop
 	BUTTON_LOGGING_TOGGLE		: { 'dest' : BUTTON_DEST_DATALOGGER }, # Toggle demo start/stop
 	BUTTON_SENSOR_NEXT			: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # Show next sensor
 	BUTTON_LOGGING_RUNNING		: { 'dest' : BUTTON_DEST_ALL }, # Logging is running
 	BUTTON_LOGGING_STOPPED		: { 'dest' : BUTTON_DEST_ALL }, # Logging is stopped
+	STATUS_ECU_ERROR				: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # ECU comms problem
+	STATUS_AEM_ERROR				: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # AEM AFR comms problem
+	STATUS_ECU_OK				: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # ECU comms problem
+	STATUS_AEM_OK				: { 'dest' : BUTTON_DEST_GRAPHICSIO }, # AEM AFR comms problem
 }
 
 #######################################################
@@ -303,7 +318,7 @@ GFX_MASTER_HELP_FONTSIZE = 10
 #######################################################
 
 # Broadcast logging status every 'X' seconds
-LOGGING_HEARTBEAT_TIMER = 1
+LOGGING_HEARTBEAT_TIMER = 3
 
 # How often to sleep between loops, should be no more than the sensor module
 # otherwise we may miss datapoints

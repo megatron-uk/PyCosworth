@@ -92,11 +92,11 @@ class ControlData():
 		
 	def show(self):
 		""" Print control message contents """
-		logger.debug("Control data contents:")
-		logger.debug("self.button 		= [%s]" % self.button)
-		logger.debug("self.duration 		= [%s]" % self.duration)
-		logger.debug("self.destination	= [%s]" % self.destination)
-		logger.debug("self.created		= [%s]" % self.created)
-		logger.debug("self.data			: %s" % self.data)
-		logger.debug("")
+		logger.info("Control data contents:")
+		logger.info("self.button 		= [%s]" % self.button)
+		logger.info("self.duration 	= [%s]" % self.duration)
+		logger.info("self.destination	= [%s]" % self.destination)
+		logger.info("self.created		= [%s]" % self.created)
+		logger.info("self.data		: %s" % self.data)
+		logger.info("")
 		

@@ -445,6 +445,7 @@ class CosworthSensors():
 	def __disconnectECU__(self):
 		""" Disconnect from ECU """
 		try:
+			self.connected = False
 			self.serial.close()
 			logger.info("Closed serial port for Cosworth ECU module")
 			self.serial = False

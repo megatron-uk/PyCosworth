@@ -28,7 +28,7 @@ from libs import settings
 from libs.newlog import newlog
 logger = newlog(__name__)
 
-def ConsoleIO(ecudata, controlQueue):
+def ConsoleIO(ecudata):
 	""" Console IO - a poor mans digital dashboard! 
 	Seriously, all we are doing here is printing out the 
 	sensor values :) """

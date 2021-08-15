@@ -62,7 +62,7 @@ def getNextLogfile():
 		nextFilename = settings.LOGGING_FILE_PREFIX + str(nextFilenumberStr) + settings.LOGGING_FILE_SUFFIX
 	return nextFilename
 
-def DataLoggerIO(ecudata, controlQueue, actionQueue):
+def DataLoggerIO(ecudata, dataQueue, controlQueue):
 	""" Logs ecu data to disk """
 	
 	myButtonId = settings.BUTTON_DEST_DATALOGGER
@@ -73,6 +73,7 @@ def DataLoggerIO(ecudata, controlQueue, actionQueue):
 	heartbeat_timer = timeit.default_timer()
 	stats = {
 		'status' 	: False,
+		'description' : "Logger stopped."
 	}
 	f = False
 	sensorIds = []
@@ -108,7 +109,6 @@ def DataLoggerIO(ecudata, controlQueue, actionQueue):
 			cdata = controlQueue.get()
 			if cdata.isMine(myButtonId):
 				logger.info("Got a control message")
-				cdata.show()
 												
 				# toggle logging
 				if cdata.button == settings.BUTTON_LOGGING_TOGGLE:
@@ -117,7 +117,8 @@ def DataLoggerIO(ecudata, controlQueue, actionQueue):
 						logger.info("Stop logging")
 						logging = False
 						stats = {
-							'status' : False
+							'status' : False,
+							'description' : "Logger stopped."
 						}
 						# send message to say stopped
 						# close logfile
@@ -126,7 +127,10 @@ def DataLoggerIO(ecudata, controlQueue, actionQueue):
 					elif logging is False:
 						# start
 						logger.info("Start logging")
-						stats = {}
+						stats = {
+							'status' : True,
+							'description' : "Logger started."
+						}
 						logging = True
 						sensorIds = ecudata.getSensorIds()
 						sensorIds.sort()
@@ -153,13 +157,13 @@ def DataLoggerIO(ecudata, controlQueue, actionQueue):
 			logger.debug("Sending heartbeat - logging:%s" % logging)
 			cdata = ControlData()
 			cdata.button = settings.BUTTON_LOGGING_STATUS
-			cdata.destination = settings.BUTTON_DEST_ALL
+			cdata.destination = settings.BUTTON_DEST_GRAPHICSIO
 			stats['status'] = logging
 			if logging and f:
 				f_stat = os.stat(settings.LOGGING_DIR + "/" + filename)
 				stats['fileSize'] = f_stat.st_size / 1024 / 1024
 			cdata.setPayload(data = stats)
-			actionQueue.put(cdata)
+			dataQueue.put(cdata)
 			# Reset timer
 			heartbeat_timer = timeit.default_timer()
 			

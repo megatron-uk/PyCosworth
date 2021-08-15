@@ -54,7 +54,7 @@ logger = newlog(__name__)
 
 ###########################################################################################
 
-def GraphicsIO(ecudata, controlQueue, actionQueue):
+def GraphicsIO(ecudata, controlQueue):
 	""" GraphicsIO - output sensor data to graphics options: OLED screens or SDL windows on your desktop """
 	
 	# Our process name
@@ -216,26 +216,13 @@ def GraphicsIO(ecudata, controlQueue, actionQueue):
 	IS_POWERED = True
 	IS_ECU_ERROR = False
 	IS_AEM_ERROR = False
+	IS_DEMO_ENABLED = False
 	
 	while True:
 		
 		# Set a timer for this loop
 		if settings.INFO:
 			t1 = timeit.default_timer()
-		
-		####################################################
-		#
-		# Listen for action messages
-		#
-		####################################################
-		
-		if actionQueue.empty() == False:
-			cdata = controlQueue.get()
-			if cdata.isMine(myButtonId):
-				logger.info("Got an action message")
-				cdata.show()
-			
-				
 		
 		####################################################
 		#
@@ -246,16 +233,33 @@ def GraphicsIO(ecudata, controlQueue, actionQueue):
 			cdata = controlQueue.get()
 			if cdata.isMine(myButtonId):
 				logger.debug("Got a control message")
-				cdata.show()
+
+				##########################################################
+				# ECU Reset underware
+				##########################################################
+				if cdata.button and (cdata.button == settings.BUTTON_RESET_ECU):
+					logger.info("Showing comms reset message")
+					image = addResetStatus(pilImage = image, windowSettings = windowSettings)
+					if USE_OLED_GRAPHICS:
+						# Update the OLED screen
+						updateOLEDScreen(pilImage = image, windowSettings = windowSettings)
+					
+					if USE_SDL_GRAPHICS:
+						# Update the SDL window
+						updateSDLWindow(pilImage = image, windowSettings = windowSettings)
+					time.sleep(5)
 
 				##########################################################
 				# Logging status
 				##########################################################
 				if cdata.button and (cdata.button == settings.BUTTON_LOGGING_STATUS):
 					if cdata.data['status'] is True:
-						IS_LOGGING = True
+						if IS_LOGGING is False:
+							logger.info("Enabling logging status message")
+							IS_LOGGING = True
 					else:
 						if IS_LOGGING:
+							logger.info("Disabling logging status message")
 							IS_LOGGING = False
 
 				##########################################################
@@ -263,18 +267,32 @@ def GraphicsIO(ecudata, controlQueue, actionQueue):
 				##########################################################
 				if cdata.button and (cdata.button == settings.STATUS_POW_ERROR):
 					pass
+				if cdata.button and (cdata.button == settings.STATUS_POW_OK):
+					pass
 
 				##########################################################
 				# ECU connection error
 				##########################################################
 				if cdata.button and (cdata.button == settings.STATUS_ECU_ERROR):
-					pass
+					IS_ECU_ERROR = True
+				if cdata.button and (cdata.button == settings.STATUS_ECU_OK):
+					IS_ECU_ERROR = False
 
 				##########################################################
 				# AEM connection error
 				##########################################################
 				if cdata.button and (cdata.button == settings.STATUS_AEM_ERROR):
-					pass
+					IS_AEM_ERROR = True
+				if cdata.button and (cdata.button == settings.STATUS_AEM_OK):
+					IS_AEM_ERROR = False
+
+				##########################################################
+				# Demo mode
+				##########################################################
+				if cdata.button and (cdata.button == settings.STATUS_DEMO_ENABLED):
+					IS_DEMO_ENABLED = True
+				if cdata.button and (cdata.button == settings.STATUS_DEMO_DISABLED):
+					IS_DEMO_ENABLED = False
 
 				##########################################################
 				# Change sensor for the window
@@ -305,7 +323,9 @@ def GraphicsIO(ecudata, controlQueue, actionQueue):
 						USE_SDL_GRAPHICS = USE_SDL_GRAPHICS,
 						USE_OLED_GRAPHICS = USE_OLED_GRAPHICS
 					)					
-				
+					time.sleep(0.2)
+			#time.sleep(0.2)
+			
 		##############################################################
 		#
 		# Update each OLED or SDL gfx sub-window in turn
@@ -342,6 +362,19 @@ def GraphicsIO(ecudata, controlQueue, actionQueue):
 			# Display any warning/errors/status messages
 			if IS_LOGGING:
 				addLogStatus(pilImage = image, windowSettings = windowSettings)
+			
+			# Display any demo mode status
+			if IS_DEMO_ENABLED:
+				addDemoStatus(pilImage = image, windowSettings = windowSettings)
+			
+			# Display ECU error connection status
+			if IS_ECU_ERROR:
+				addECUStatus(pilImage = image, windowSettings = windowSettings)
+			else:
+				# We only print the AEM AFR error status if the main ECU is 
+				# not already in error!
+				if IS_AEM_ERROR:
+					addAEMStatus(pilImage = image, windowSettings = windowSettings)
 			
 			if USE_OLED_GRAPHICS:
 				# Update the OLED screen

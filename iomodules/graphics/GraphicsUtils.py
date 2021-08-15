@@ -113,12 +113,61 @@ def addLogStatus(pilImage, windowSettings):
 	
 	draw = ImageDraw.Draw(pilImage)
 	
-	font = ImageFont.truetype(settings.GFX_FONTS["pixel"]["header"]['font'], size = 10)
+	font = ImageFont.truetype(settings.GFX_FONTS["pixel"]["plain"]['font'], size = 8)
 	
 	statusString = "Logging"
 	text_size = font.getsize(statusString)
 	
 	draw.text((windowSettings['x_size'] - text_size[0], windowSettings['y_size'] - text_size[1]), statusString, fill="white", font = font)
+	
+	return pilImage
+
+def addResetStatus(pilImage, windowSettings):
+	""" Adds a 'WAIT' message while the comms are being reset """
+
+	statusString1 = "Comms Reset"
+	statusString2 = "WAIT..."
+	image = Image.new('1', (windowSettings['x_size'], windowSettings['y_size']))
+	draw = ImageDraw.Draw(image)
+	font = ImageFont.truetype(settings.GFX_FONTS["pixel"]["header"]['font'], size = 16)
+	font_big = ImageFont.truetype(settings.GFX_FONTS["sans"]["bolditalic"]['font'], size = 32)
+	text_size = font.getsize(statusString1)
+	text_big_size = font.getsize(statusString2)
+	draw.text((0, 0), statusString1, fill="white", font = font)
+	draw.text((0, text_size[1] + 8), statusString2, fill="white", font = font_big)
+	
+	return image
+
+def addECUStatus(pilImage, windowSettings):
+	""" Adds an error message indication no connection to ECU """
+
+	statusString = "ECU Error!!!"
+	draw = ImageDraw.Draw(pilImage)
+	font = ImageFont.truetype(settings.GFX_FONTS["pixel"]["plain"]['font'], size = 8)
+	text_size = font.getsize(statusString)
+	draw.text((0, windowSettings['y_size'] - text_size[1]), statusString, fill="white", font = font)
+	
+	return pilImage
+
+def addAEMStatus(pilImage, windowSettings):
+	""" Adds an error message indication no connection to AEM AFR """
+
+	statusString = "AEM Error!!!"
+	draw = ImageDraw.Draw(pilImage)
+	font = ImageFont.truetype(settings.GFX_FONTS["pixel"]["plain"]['font'], size = 8)
+	text_size = font.getsize(statusString)
+	draw.text((0, windowSettings['y_size'] - text_size[1]), statusString, fill="white", font = font)
+	
+	return pilImage
+
+def addDemoStatus(pilImage, windowSettings):
+	""" Adds an message indicating demo mode is active """
+
+	statusString = "Demo Mode"
+	draw = ImageDraw.Draw(pilImage)
+	font = ImageFont.truetype(settings.GFX_FONTS["pixel"]["plain"]['font'], size = 8)
+	text_size = font.getsize(statusString)
+	draw.text((windowSettings['x_size'] - text_size[0], 0), statusString, fill="white", font = font)
 	
 	return pilImage
 
@@ -160,7 +209,7 @@ def gaugeNumeric(ecudata, sensor, font, windowSettings, sensorData):
 		# Raw value
 		draw.text((windowSettings['x_size'] - text_size[0] - text_big_size[0], text_size[1] + 2), sensorValueString, fill="white", font = font_big)
 		# Units
-		draw.text((windowSettings['x_size'] - text_size[0], text_size[1] + 2), sensorData['sensorUnit'], fill="white", font = font_small)
+		draw.text((windowSettings['x_size'] - text_size[0], text_size[1] + 8), sensorData['sensorUnit'], fill="white", font = font_small)
 		
 	t2 = timeit.default_timer() - t1
 	logger.debug("gaugeNumeric Draw time: %0.4fms" % (t2 * 1000))
