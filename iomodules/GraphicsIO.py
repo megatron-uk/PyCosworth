@@ -140,11 +140,7 @@ def GraphicsIO(ecudata, controlQueue):
 	
 	# Show the splash logo
 	r = "%sx%s" % (settings.GFX_MASTER_SIZE[0], settings.GFX_MASTER_SIZE[1])
-	#time.sleep(1.5)
-	
-	print(image_assets)
-	
-	# Splash logo 0 - Ford
+	# Splash logo sequence
 	for i in ['boot_logo', 'boot_logo1']:
 		print(i)
 		image = image_assets[i][r].copy()
