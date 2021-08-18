@@ -17,9 +17,7 @@ These products are great for their intended use, but are either *a: very expensi
 
 # Using PyCosworth
 
-Further details about PyCosworth are on my website:
-
-   * https://www.target-earth.net/wiki/doku.php?id=blog:car_stuff_pycosworth
+Further details about PyCosworth are [on my website](https://www.target-earth.net/wiki/doku.php?id=blog:car_stuff_pycosworth).
 
 ## Hardware Requirements
 
@@ -70,7 +68,7 @@ It it not designed to work (and I have no way to test) on the Fiat/Lancia or *Fe
 
 There are too many variables to say *this is exactly how to do it*, but I've documented how *my* setup is connected together in the hardware guide on my website:
 
-   * https://www.target-earth.net/wiki/doku.php?id=blog:car_stuff_pycosworth_hardware
+   * [Example PyCosworth hardware configuration](https://www.target-earth.net/wiki/doku.php?id=blog:car_stuff_pycosworth_hardware)
 
 ## Software Requirements
 
