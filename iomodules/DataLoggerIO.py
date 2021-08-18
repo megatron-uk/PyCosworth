@@ -21,6 +21,7 @@ import multiprocessing
 import time
 import timeit 
 import os
+import sys
 import re
 
 # Controldata messages
@@ -67,7 +68,7 @@ def DataLoggerIO(ecudata, dataQueue, controlQueue):
 	
 	myButtonId = settings.BUTTON_DEST_DATALOGGER
 	
-	logger.info("DataLoggerIO process now running")
+	logger.debug("DataLoggerIO process now running")
 	
 	logging = False
 	heartbeat_timer = timeit.default_timer()
@@ -108,8 +109,17 @@ def DataLoggerIO(ecudata, dataQueue, controlQueue):
 		if controlQueue.empty() == False:
 			cdata = controlQueue.get()
 			if cdata.isMine(myButtonId):
-				logger.info("Got a control message")
-												
+				logger.debug("Got a control message")
+											
+				# exit
+				if cdata.button == settings.STATUS_SHUTDOWN:
+					if logging is True:
+						if f:
+							f.close()
+					logger.critical("Shutting down")
+					sys.exit(0)
+						
+				
 				# toggle logging
 				if cdata.button == settings.BUTTON_LOGGING_TOGGLE:
 					if logging is True:

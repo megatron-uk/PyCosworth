@@ -52,13 +52,16 @@ USE_SDL_GRAPHICS = True  	# Try to output to on-screen windows
 
 # Sensor modules
 USE_GEAR_INDICATOR = False	# Try to read gear indicator position via GPIO 
-USE_COSWORTH = True 		# Try to connect to a Cosworth L8/P8 ECU over serial
-USE_AEM = False				# Try to connect to an AEM Wideband AFR module over serial
+USE_COSWORTH = False 		# Try to connect to a Cosworth L8/P8 ECU over serial
+USE_AEM = True				# Try to connect to an AEM Wideband AFR module over serial
 USE_SENSOR_DEMO = False 	# Enable demo data mode from the SensorIO module instead of real data
 
 # Should INFO category messages be shown
 INFO = True
 DEBUG = False
+
+# Enable/Disable support for the Super Watchdog V2 Raspberry Pi hat
+USE_PI_WATCHDOG = True
 
 ##############################################################
 #
@@ -161,6 +164,7 @@ STATUS_POW_ERROR		 		= "e3" # AEM module error
 STATUS_ECU_OK	 			= "o1" # Main ECU error
 STATUS_AEM_OK		 		= "o2" # AEM module error
 STATUS_POW_OK		 		= "o3" # AEM module error
+STATUS_SHUTDOWN				= "xxx"
 STATUS_DEMO_ENABLED	 		= "d1" #
 STATUS_DEMO_DISABLED	 		= "d2" # 
 BUTTON_LOGGING_STATUS 		= "S" # Logging status/heartbeat response
@@ -273,7 +277,8 @@ GFX_MASTER_WINDOW = {
 	'luma_framebuffer'	: None,
 	'luma_driver'		: None,
 	'screen_refreshTime': 0.02,
-	'i2cAddress'			: 0x3C,
+	'i2cPort'			: 8,
+	'i2cAddress'		: 0x3c,
 	'mode'				: [GFX_MODE_NUMERIC],
 	'currentModeIdx'		: 0,
 	'currentMode'		: GFX_MODE_NUMERIC,
@@ -322,3 +327,24 @@ LOGGING_SLEEP = 1 			# How long to sleep while recording inactive
 LOGGING_DIR = "logs"
 LOGGING_FILE_PREFIX = "pycosworth_"
 LOGGING_FILE_SUFFIX = ".csv"
+
+########################################################
+#
+# Watchdog timers and Power Monitoring
+# 
+########################################################
+
+# How often, in seconds, to send a 'alive' message to the 
+# watchdog timer on the Raspberry Pi UPS hat
+WATCHDOG_HEARTBEAT_TIMER = 30
+
+# How often, in seconds, to detect the current power state
+# of the Raspberry Pi
+WATCHDOG_POWER_TIMER = 5
+
+# How long to run the Pi on battery backup after a power-loss is
+# detected, until we begin a controlled shutdown
+WATCHDOG_POWER_SHUTDOWN_TIMER = 20
+
+# How many volts should be nominal input
+WATCHDOG_POWER_NOMINAL = 5.0

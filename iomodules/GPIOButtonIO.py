@@ -48,7 +48,7 @@ def GPIOButtonIO(actionQueue, stdin):
 		USE_GPIO = True
 	except Exception as e:
 		logger.warn("GPIO library not available! - Are we running on a Pi and have you installed RPi.GPIO?")
-		logger.debug("%s" % traceback.print_exc())
+		#logger.debug("%s" % traceback.print_exc())
 		USE_GPIO = False
 		
 	######################################################

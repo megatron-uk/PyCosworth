@@ -1,0 +1,8 @@
+#!/bin/bash
+
+echo "Remove i2c-tiny-usb kernel driver..."
+sudo rmmod i2c-tiny-usb
+echo "Load i2c-tiny-usb kernel driver..."
+sudo modprobe i2c-tiny-usb delay=10
+echo "Set device permissions..."
+sudo chmod 666 /dev/i2c-8

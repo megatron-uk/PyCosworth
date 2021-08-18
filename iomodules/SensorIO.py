@@ -69,7 +69,7 @@ def SensorIO(dataQueue, controlQueue):
 	if settings.USE_AEM:
 		logger.info("Trying AEM Wideband AFR sensors...")
 		aem = AEMSensors()
-		if aem.__is__connected__():
+		if aem.__is_connected__():
 			aem_sensors = aem.available()
 		else:
 			logger.warn("Unable to initialise AEM Wideband AFR comms")
@@ -128,7 +128,11 @@ def SensorIO(dataQueue, controlQueue):
 		if controlQueue.empty() == False:
 			cdata = controlQueue.get()
 			if cdata.isMine(myButtonId):
-				logger.info("Got a control message")
+				logger.debug("Got a control message")
+				
+				if cdata.button == settings.STATUS_SHUTDOWN:
+					logger.critical("Shutting down")
+					sys.exit(0)
 				
 				# Toggle demo mode
 				if (cdata.button == settings.BUTTON_TOGGLE_DEMO):

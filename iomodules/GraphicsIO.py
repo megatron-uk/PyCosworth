@@ -118,9 +118,9 @@ def GraphicsIO(ecudata, controlQueue):
 	
 	# Summary of available devices
 	logger.info("SDL graphics: %s" % USE_SDL_GRAPHICS)
-	logger.info("SDL graphics: %s (master)" % USE_SDL_GRAPHICS_MASTER)
+	#logger.info("SDL graphics: %s (master)" % USE_SDL_GRAPHICS_MASTER)
 	logger.info("OLED graphics: %s" % USE_OLED_GRAPHICS)
-	logger.info("OLED graphics: %s (master)" % USE_OLED_GRAPHICS_MASTER)
+	#logger.info("OLED graphics: %s (master)" % USE_OLED_GRAPHICS_MASTER)
 	
 	if (USE_SDL_GRAPHICS is False) and (USE_SDL_GRAPHICS_MASTER is False) and (USE_OLED_GRAPHICS is False) and (USE_OLED_GRAPHICS_MASTER is False):
 		logger.fatal("There are NO display devices available")
@@ -142,7 +142,6 @@ def GraphicsIO(ecudata, controlQueue):
 	r = "%sx%s" % (settings.GFX_MASTER_SIZE[0], settings.GFX_MASTER_SIZE[1])
 	# Splash logo sequence
 	for i in ['boot_logo', 'boot_logo1']:
-		print(i)
 		image = image_assets[i][r].copy()
 		if USE_OLED_GRAPHICS_MASTER:
 			updateOLEDScreen(pilImage = image, windowSettings = settings.GFX_MASTER_WINDOW)
@@ -199,8 +198,7 @@ def GraphicsIO(ecudata, controlQueue):
 	settings.GFX_MASTER_WINDOW['displayModes'] = {}
 	for sensor in settings.SENSORS:
 		sensorId = sensor['sensorId']
-		logger.info("Adjusting %s sensor defaults for the current %dx%d output device" % (sensorId, settings.GFX_MASTER_WINDOW['x_size'],settings.GFX_MASTER_WINDOW['y_size']))
-		
+		logger.debug("Adjusting %s sensor defaults for the current %dx%d output device" % (sensorId, settings.GFX_MASTER_WINDOW['x_size'],settings.GFX_MASTER_WINDOW['y_size']))
 		settings.GFX_MASTER_WINDOW['displayModes'][sensorId] = sensorGraphicsInit(sensor, settings.GFX_MASTER_WINDOW)
 
 	logger.info("Entering main graphics loop now...")
@@ -245,6 +243,10 @@ def GraphicsIO(ecudata, controlQueue):
 			cdata = controlQueue.get()
 			if cdata.isMine(myButtonId):
 				logger.debug("Got a control message")
+
+				if cdata.button == settings.STATUS_SHUTDOWN:
+					logger.critical("Shutting down")
+					sys.exit(0)
 
 				##########################################################
 				# ECU Reset underware
@@ -402,11 +404,10 @@ def GraphicsIO(ecudata, controlQueue):
 		
 		# Timers to work out average latency for updating all windows
 		# as well as a rough approximation of frames generated per second
-		if settings.INFO:
+		if settings.DEBUG:
 			fps += 1
 			t2 = timeit.default_timer()
-			if settings.DEBUG:
-				logger.debug("Update latency this loop: %6.4fms" % ((t2 - t1) * 1000))
+			logger.debug("Update latency this loop: %6.4fms" % ((t2 - t1) * 1000))
 			t = t2 - t0
 			if t >= settings.GFX_FRAME_COUNT_TIME:
 				logger.debug("Image update speed approximately: %sfps [%s frames / %6.3fs]" % (fired_windows / settings.GFX_FRAME_COUNT_TIME, fired_windows, t))

@@ -23,12 +23,15 @@ import multiprocessing
 import time
 import sys
 import os
+import timeit
 
 # Settings file
 from libs import settings
 
 # ECU data storage structure
 from libs.EcuData import EcuData
+# Controldata messages
+from libs.ControlData import ControlData
 
 # Any worker methods
 from iomodules.SensorIO import SensorIO
@@ -42,6 +45,14 @@ from libs.newlog import newlog
 if getattr(sys, 'frozen', False):
 	__file__ = os.path.dirname(sys.executable)
 logger = newlog(__file__)
+
+try:
+	if settings.USE_PI_WATCHDOG:
+		logger.info("Importing WDT library for Super Watchdog V2")
+		from iomodules.watchdog.wdt import * 
+except Exception as e:
+	logger.warning("WDT library for Super Watchdog V2 unavailable")
+	settings.USE_PI_WATCHDOG = False
 
 def sensorWorker(dataQueue, controlQueue):
 	""" Runs the sensor IO process to send and receive data from the ECU and any other sensors """
@@ -75,6 +86,8 @@ def dataLoggerWorker(ecudata, dataQueue, actionQueue):
 ######################################################
 
 if __name__ == '__main__':
+	
+	logger.info("Main SensorDashboard process starting...")
 	
 	# A new ecu data structure
 	dataManager = multiprocessing.Manager()
@@ -115,14 +128,18 @@ if __name__ == '__main__':
 	
 	# Start the console IO process
 	if settings.USE_CONSOLE:
+		logger.info("ConsoleIO is enabled")
 		# The Console worker has a control queue that it listens for incoming control
 		# messages on.
 		console_p = multiprocessing.Process(target=consoleWorker, args=(ecuData))
 		console_p.start()
 		workers.append(console_p)
+	else:
+		logger.info("ConsoleIO is *disabled*")
     
     # Start the process to capture Raspberry Pi GPIO button presses
 	if settings.USE_BUTTONS:
+		logger.info("GPIO/Input is enabled")
 		# The GPIO/Button worker has an action queue that it PUTS message onto,
 		# but it DOESNT need to access the ecuData data structure.
 		gpioDataQueue = multiprocessing.Queue() # passes messages back up (button 1 pressed, etc)
@@ -130,9 +147,12 @@ if __name__ == '__main__':
 		gpio_button_p = multiprocessing.Process(target=gpioButtonWorker, args=(gpioDataQueue, my_stdin))
 		gpio_button_p.start()
 		workers.append(gpio_button_p)
+	else:
+		logger.info("GPIO/Input is *disabled*")
       
     # Start the OLED/SDL graphics process
 	if settings.USE_GRAPHICS:
+		logger.info("SDL and/or OLED graphics is enabled")
 		# The OLED/SDL worker has a control queue that it listens for incoming
 		# control messages on.
 		graphicsControlQueue = multiprocessing.Queue() # Takes messages (change sensor, show that ecu is disconnected, etc)
@@ -141,9 +161,12 @@ if __name__ == '__main__':
 		workers.append(matrix_p)
 		messageQueues.append(graphicsControlQueue) # we want the gfx display to listen for messages from input devices
 		datalogger_listeners.append(graphicsControlQueue) # we want the gfx display to listen for messages from the logger
+	else:
+		logger.info("SDL and/or OLED graphics is *disabled*")
 	
 	# Start the data logger process
 	if settings.USE_DATALOGGER:
+		logger.info("Datalogger is enabled")
 		# The logger worker has a control queue that it listens for incoming
 		# control messages on.
 		loggerControlQueue = multiprocessing.Queue() # takes messages (start the logger, stop the logger, etc)
@@ -152,18 +175,88 @@ if __name__ == '__main__':
 		logger_p.start()
 		workers.append(logger_p)
 		messageQueues.append(loggerControlQueue) # we want the logger to listen for messages from input devices
-    
-	# Start gathering data
-	i = 0
+	else:
+		logger.info("Datalogger is *disabled*")
+    	
+
+	# If we are using the Pi watchdog timer, initialise counters
+	if settings.USE_PI_WATCHDOG:
+		try:
+			v = wdt_getVin()
+			logger.info("Pi Super Watchdog support is enabled")
+			watchdog_heartbeat = timeit.default_timer()
+			watchdog_power = timeit.default_timer()
+			watchdog_shutdown = 9999999
+		except Exception as e:
+			logger.error("Warning, unable to check PSU power state")
+			logger.error("Disabling Pi Super Watchdog support")
+			settings.USE_PI_WATCHDOG = False
+	else:
+		logger.info("Pi Super Watchdog support is *disabled*")
+	
+	# ENter the main loop and run forever
 	while True:
 		
-		if i == 10000:
-			logger.debug("Still running [main process]")
-			i = 0
-		# Get latest data  
-		# If the receive queue has any data back...
-		#if sensorReceiveQueue.empty() == False:
-		
+		if settings.USE_PI_WATCHDOG:
+			now_time = timeit.default_timer()
+			
+			# Send a heartbeat to the Pi watchdog UPS system to
+			# prevent a system reboot
+			if now_time - watchdog_heartbeat > settings.WATCHDOG_HEARTBEAT_TIMER:
+				logger.info("Firing watchdog heartbeat")
+				try:
+					wdt_reload()
+				except Exception as e:
+					logger.error("Error while firing watchdog timer heartbeat")
+					logger.error(e)
+				watchdog_heartbeat = timeit.default_timer()
+				
+			# Detect the current power state of the Pi UPS system
+			if now_time - watchdog_power > settings.WATCHDOG_POWER_TIMER:
+				logger.info("Checking PSU power state")
+				watchdog_power = timeit.default_timer()
+				try:
+					v = wdt_getVin()
+					if v < settings.WATCHDOG_POWER_NOMINAL:
+						# Send shutdown message and start shutdown timer
+						logger.warning("PSU power state returned [%d], should be [%.2fv]" % (v, settings.WATCHDOG_POWER_NOMINAL))
+						# Only do this if we haven't already already started the shutdown timer
+						if watchdog_shutdown == 9999999:
+							logger.warning("Starting shutdown timer for %ds" % settings.WATCHDOG_POWER_SHUTDOWN_TIMER)
+							watchdog_shutdown = timeit.default_timer()
+						else:
+							logger.warning("Shutdown in %ds" % ((settings.WATCHDOG_POWER_SHUTDOWN_TIMER - (now_time - watchdog_shutdown))))
+					else:
+						if watchdog_shutdown != 9999999:
+							logger.info("PSU power state returned to normal [%dv]" % v)
+						# Reset the countdown timer
+						watchdog_shutdown = 9999999
+				except Exception as e:
+					logger.error("Error while checking PSU power state")
+					logger.error(e)
+					
+			# Did we begin a shutdown timer
+			if now_time - watchdog_shutdown > settings.WATCHDOG_POWER_SHUTDOWN_TIMER:
+				logger.critical("Shutdown timer exceeded %ds" % settings.WATCHDOG_POWER_SHUTDOWN_TIMER)
+				
+				# Send a control message to all PyCosworth processes to quit
+				cdata = ControlData()
+				cdata.button = settings.STATUS_SHUTDOWN
+				cdata.destination = settings.BUTTON_DEST_ALL
+				stats = {
+					'status' : True,
+					'description' : "System shutdown initiated"
+				}
+				cdata.setPayload(data = stats)
+				for q in messageQueues:
+					logger.critical("Sending shutdown message to a process")
+					q.put(cdata)
+					
+				# Start system shutdown
+				time.sleep(3)
+				logger.critical("Exit application")
+				sys.exit(1)
+				
 		try:
 			if sensorDataQueue.empty() == False:
 				d = sensorDataQueue.get(block = True, timeout = 0.01)
@@ -209,10 +302,8 @@ if __name__ == '__main__':
 			loggerMessage = loggerDataQueue.get()
 			# Put it in all queues (apart from the graphics one)
 			for q in datalogger_listeners:
-				q.put(loggerMessage)			
-		
-		i += 1
-    
+				q.put(loggerMessage)	
+				    
 	# Wait for the workers to finish
 	sensorTransmitQueue.close()
 	sensorTransmitQueue.join_thread()
